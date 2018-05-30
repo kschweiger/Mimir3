@@ -81,13 +81,22 @@ class ListItem(Item):
         Returns:
             bool : Is sucessful
         """
-        if isinstance(val2Add, str):
-            self.value.append(val2Add)
-        elif isinstance(val2Add, list):
-            self.value = self.value + val2Add
-        else:
+        if not isinstance(val2Add, (str, list)):
             raise TypeError
-        return True
+
+        if isinstance(val2Add, str):
+            val2Add = [val2Add]
+
+        uniqueElem = []    
+        for newElem in val2Add:
+            if newElem not in self.value:
+                uniqueElem.append(newElem)
+
+        if len(uniqueElem) == 0:
+            return False
+        else:
+            self.value = self.value + uniqueElem
+            return True
 
     def remove(self, toRemove):
         """
@@ -101,11 +110,33 @@ class ListItem(Item):
             IndexError : If index out of range
             ValueError : If value not in value list
         """
-        pass
+        if not isinstance(toRemove, (str, int)):
+            raise TypeError
+        #Remove by Value
+        if isinstance(toRemove, str):
+            if toRemove not in self.value:
+                raise ValueError
+            self.value.remove(toRemove)
+        if isinstance(toRemove, int):
+            if toRemove > len(self.value)-1:
+                raise IndexError
+            self.value.pop(toRemove)
 
     def replace(self, oldValue, newValue):
         """
         Replaces value of ListItem either by value or index
 
         """
-        pass
+        if not isinstance(oldValue, (str, int)):
+            raise TypeError
+        if not isinstance(newValue, (str, int, float)):
+            raise TypeError
+        #Replace by Value
+        if isinstance(oldValue, str):
+            if oldValue not in self.value:
+                raise ValueError
+            self.value[self.value.index(oldValue)] = newValue
+        if isinstance(oldValue, int):
+            if oldValue > len(self.value)-1:
+                raise IndexError
+            self.value[oldValue] = newValue
