@@ -18,7 +18,7 @@ class DataBaseEntry(object):
     def __init__(self, initItems):
         if not isinstance(initItems, list):
             raise TypeError("Entry initialization need to be a list")
-        for iItem, initialItem in enumerate(initItems):
+        for initialItem in initItems:
             if not isinstance(initialItem, tuple):
                 raise TypeError("Every item in the initialization list needs to be a tuple")
             else:
@@ -32,7 +32,7 @@ class DataBaseEntry(object):
                         raise TypeError("Item {0} has invalid type {1}".format(name_, type_))
                     if type_ == "Single" and not isinstance(value_, str):
                         raise RuntimeError("Item {0} is type {1} but {2} is not of type string".format(name_, type_, value_))
-                    if type_ == "List" and not isinstance(value_, (str,list)):
+                    if type_ == "List" and not isinstance(value_, (str, list)):
                         raise RuntimeError("Item {0} is type {1} but {2} is not of type string or list".format(name_, type_, value_))
         self.names = []
         self.items = {}
@@ -65,7 +65,7 @@ class DataBaseEntry(object):
         """
         if not isinstance(newItem_name, str):
             raise TypeError("New name {0} is type {1} not string".format(newItem_name, type(newItem_name)))
-        if not newItem_type in ["Single","List"]:
+        if not newItem_type in ["Single", "List"]:
             raise RuntimeError("New item {0} has ivalid type: {1}".format(newItem_name, newItem_type))
         if not isinstance(newItem_value, (str, list)):
             raise TypeError("New name {0} of type {1} has invalid value type {2}".format(newItem_name, type(newItem_name), type(newItem_value)))
@@ -102,7 +102,7 @@ class DataBaseEntry(object):
         """
         self.removeItemValue(itemName, oldValue)
         self.addItemValue(itemName, newValue)
-            
+
 class Item(object):
     '''
     Entry that contains a list of specs
@@ -141,7 +141,7 @@ class ListItem(Item):
         value (str or list) : Here are all value of the ListItem are saved
 
     Raises:
-        TypError: Raises error when valies is not str or list 
+        TypError: Raises error when valies is not str or list
     '''
     def __init__(self, name, values):
         super().__init__(name, None)
@@ -157,7 +157,7 @@ class ListItem(Item):
 
         Args:
             val2Add (str or list) : Value or values to be added to
-        
+
         Returns:
             bool : Is sucessful
         """
@@ -167,12 +167,12 @@ class ListItem(Item):
         if isinstance(val2Add, str):
             val2Add = [val2Add]
 
-        uniqueElem = []    
+        uniqueElem = []
         for newElem in val2Add:
             if newElem not in self.value:
                 uniqueElem.append(newElem)
 
-        if len(uniqueElem) == 0:
+        if not uniqueElem: #apperently this is very pythonic
             return False
         else:
             self.value = self.value + uniqueElem
@@ -202,6 +202,7 @@ class ListItem(Item):
                 raise IndexError
             self.value.pop(toRemove)
 
+    #Obsolete. Can just remove and add.... I'll keep it for now
     def replace(self, oldValue, newValue):
         """
         Replaces value of ListItem either by value or index
