@@ -130,19 +130,5 @@ class TestItem(unittest.TestCase):
         with self.assertRaises(IndexError):
             newitem.replace(3, "newValue")
         
-"""
-indices = ( (0, True),
-            (3, False) )
-
-@pytest.mark.parametrize('n,expected', indices)
-def test_ListItem_replace_item_byIndex(n, expected):
-    values = ["InitValue1", "InitValue2", "InitValue3"]
-    newitem = ListItem("TestName", values)
-    replRet = newitem.replace(n, "newValue")
-    assert replRet is expected
-    if replRet:
-        assert "newValue" == newitem.value[n]
-"""
-        
 if __name__ == "__main__":
     unittest.main()
