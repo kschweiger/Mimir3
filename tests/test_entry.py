@@ -41,6 +41,11 @@ class TestItem(unittest.TestCase):
         assert addRet is True 
         assert "newValue" in newitem.value
 
+    def test_ListItem_add_item(self):
+        newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
+        with self.assertRaises(TypeError):
+            addRet = newitem.add(3.1415)
+        
     def test_ListItem_add_item_multiple(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         newValues = ["newValue1", "newValue2"]
@@ -91,13 +96,13 @@ class TestItem(unittest.TestCase):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         with self.assertRaises(ValueError):
             newitem.remove("InitValue5")
-
+    """
     def test_ListItem_replace_item_byValue_fail(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         newValue = "newValue"
         with self.assertRaises(ValueError):
             newitem.replace("InitValue5", newValue)
-    
+    """
     def test_ListItem_replace_item_byValue(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         newValue = "newValue"
@@ -117,7 +122,7 @@ class TestItem(unittest.TestCase):
         newitem = ListItem("TestName", values)
         with self.assertRaises(IndexError):
             newitem.remove(3)
-
+    """
     def test_ListItem_replace_item_byIndex(self):
         values = ["InitValue1", "InitValue2", "InitValue3"]
         newitem = ListItem("TestName", values)
@@ -129,6 +134,6 @@ class TestItem(unittest.TestCase):
         newitem = ListItem("TestName", values)
         with self.assertRaises(IndexError):
             newitem.replace(3, "newValue")
-        
+    """ 
 if __name__ == "__main__":
     unittest.main()

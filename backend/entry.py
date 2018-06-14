@@ -26,14 +26,7 @@ class DataBaseEntry(object):
                     raise RuntimeError("Tuple {0} has != 3 objects".format(initialItem))
                 else:
                     name_, type_, value_ = initialItem
-                    if not isinstance(name_, str):
-                        raise TypeError("Item name {0} is not of type string".format(name_))
-                    if not (type_ == "Single" or type_ == "List"):
-                        raise TypeError("Item {0} has invalid type {1}".format(name_, type_))
-                    if type_ == "Single" and not isinstance(value_, str):
-                        raise RuntimeError("Item {0} is type {1} but {2} is not of type string".format(name_, type_, value_))
-                    if type_ == "List" and not isinstance(value_, (str, list)):
-                        raise RuntimeError("Item {0} is type {1} but {2} is not of type string or list".format(name_, type_, value_))
+                    self.checkPassedItems(name_, type_, value_)
         self.names = []
         self.items = {}
         for itemName, itemType, itemValue in initItems:
@@ -63,12 +56,7 @@ class DataBaseEntry(object):
         """
         Add a new item to the DataBaseEntry
         """
-        if not isinstance(newItem_name, str):
-            raise TypeError("New name {0} is type {1} not string".format(newItem_name, type(newItem_name)))
-        if not newItem_type in ["Single", "List"]:
-            raise RuntimeError("New item {0} has ivalid type: {1}".format(newItem_name, newItem_type))
-        if not isinstance(newItem_value, (str, list)):
-            raise TypeError("New name {0} of type {1} has invalid value type {2}".format(newItem_name, type(newItem_name), type(newItem_value)))
+        self.checkPassedItems(newItem_name, newItem_type, newItem_value)
         if newItem_name in self.names:
             raise RuntimeError("Entry already has item with name {0}".format(newItem_name))
         self.names.append(newItem_name)
@@ -82,19 +70,34 @@ class DataBaseEntry(object):
         """
         Change value if a Item
         """
-        pass
+        self.checkPassedItems(itemName)
+        if not self.hasItem(itemName):
+            raise KeyError("Name {0} is not in names".format(itemName))
+        if type(self.items[itemName]) is not Item:
+            raise RuntimeError("Item {0} is not if type Item".format(itemName))
+        self.items[itemName].replace(newValue)
 
     def addItemValue(self, itemName, newValue):
         """
         Add a value to a ListItem
         """
-        pass
+        self.checkPassedItems(itemName)
+        if not self.hasItem(itemName):
+            raise KeyError("Name {0} is not in names".format(itemName))
+        if type(self.items[itemName]) is not ListItem:
+            raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
+        self.getItem(itemName).add(newValue)
 
     def removeItemValue(self, itemName, oldValue):
         """
         Remove a Value from a ListItem
         """
-        pass
+        self.checkPassedItems(itemName)
+        if not self.hasItem(itemName):
+            raise KeyError("Name {0} is not in names".format(itemName))
+        if type(self.items[itemName]) is not ListItem:
+            raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
+        self.getItem(itemName).remove(oldValue)
 
     def replaceItemValue(self, itemName, newValue, oldValue):
         """
@@ -102,6 +105,21 @@ class DataBaseEntry(object):
         """
         self.removeItemValue(itemName, oldValue)
         self.addItemValue(itemName, newValue)
+
+    @staticmethod
+    def checkPassedItems(passedName=None, passedType=None, passedValue=None):
+        """
+        Helper function for checking items passed to DataBaseEntry and raising exceptions
+        """
+        if not isinstance(passedName, str) and passedName is not None:
+            msg = "New name {0} is type {1} not string".format(passedName, type(passedName))
+            raise TypeError(msg)
+        if not passedType in ["Single", "List"] and passedType is not None:
+            msg = "New item {0} has ivalid type: {1}".format(passedName, passedType)
+            raise RuntimeError(msg)
+        if not isinstance(passedValue, (str, list))  and passedValue is not None:
+            msg = "New name {0} of type {1} has invalid value type {2}".format(passedName, passedType, type(passedValue))
+            raise TypeError(msg)
 
 class Item(object):
     '''
@@ -127,7 +145,7 @@ class Item(object):
         self.value = newValue
 
     def __repr__(self):
-        return "{0} : {1}".format(self.name, self.value)
+        return "{0} : {1}".format(self.name, self.value) #pragma: no cover
 
 class ListItem(Item):
     '''
@@ -162,7 +180,7 @@ class ListItem(Item):
             bool : Is sucessful
         """
         if not isinstance(val2Add, (str, list)):
-            raise TypeError
+            raise TypeError("Value {0} is not str or list".format(val2Add))
 
         if isinstance(val2Add, str):
             val2Add = [val2Add]
@@ -201,13 +219,9 @@ class ListItem(Item):
             if toRemove > len(self.value)-1:
                 raise IndexError
             self.value.pop(toRemove)
-
+    """
     #Obsolete. Can just remove and add.... I'll keep it for now
     def replace(self, oldValue, newValue):
-        """
-        Replaces value of ListItem either by value or index
-
-        """
         if not isinstance(oldValue, (str, int)):
             raise TypeError
         if not isinstance(newValue, (str, int, float)):
@@ -221,3 +235,4 @@ class ListItem(Item):
             if oldValue > len(self.value)-1:
                 raise IndexError
             self.value[oldValue] = newValue
+    """

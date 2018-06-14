@@ -55,11 +55,11 @@ class TestEntry(unittest.TestCase):
         with self.assertRaises(TypeError):
             newEntry = DataBaseEntry([(2.5,"Single","Value")])
         #Exception if type is not "Single" or "List"
-        with self.assertRaises(TypeError):
+        with self.assertRaises(RuntimeError):
             newEntry = DataBaseEntry([("Name","Blubb","Value")])
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(TypeError):
             newEntry = DataBaseEntry([("Name","Single",{})])
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(TypeError):
             newEntry = DataBaseEntry([("Name","List",{})])
 
             
@@ -107,28 +107,67 @@ class TestEntry(unittest.TestCase):
         Items, newEntry = getEntry()
         with self.assertRaises(RuntimeError):
             newEntry.addItem("Item1","Single","AddedItemValue")
-        
+
     ############## Modify existing items  ####################
     def test_entry_change_value_Item(self):
-        assert False
+        Items, newEntry = getEntry()
+        newEntry.changeItemValue("Item1", "ReplacedValue")
+        assert newEntry.getItem("Item1").value == "ReplacedValue"
 
-    def test_entry_change_value_raise_valueError(self):
-        assert False
-    
+    def test_entry_change_value_exception_passedName(self):
+        Items, newEntry = getEntry()
+        with self.assertRaises(TypeError):
+            newEntry.changeItemValue(2.5, "ReplacedValue")
+        with self.assertRaises(KeyError):
+            newEntry.changeItemValue("notExisting", "ReplacedValue")
+
+    def test_entry_change_value_raise_exception_notItem(self):
+        Items, newEntry = getEntry()
+        with self.assertRaises(RuntimeError):
+            newEntry.changeItemValue("ListItem1", "ReplacedValue")
+        
     def test_entry_add_value_to_ListItem(self):
-        assert False
-
+        Items, newEntry = getEntry()
+        newEntry.addItemValue("ListItem1", "AddedListItem1")
+        assert newEntry.getItem("ListItem1").value[-1] == "AddedListItem1"
+        
+    
     def test_entry_add_value_to_Item_raise_exception(self):
-        assert False
+        Items, newEntry = getEntry()
+        with self.assertRaises(TypeError):
+            newEntry.addItemValue(2.5, "ReplacedValue")
+        with self.assertRaises(KeyError):
+            newEntry.addItemValue("notExisting", "ReplacedValue")
 
-    def test_entry_remove_value_to_ListItem(self):
-        assert False
+    def test_entry_change_value_raise_exception_notListItem(self):
+        Items, newEntry = getEntry()
+        with self.assertRaises(RuntimeError):
+            newEntry.addItemValue("Item1", "ReplacedValue")
+    
+    def test_entry_remove_value_from_ListItem(self):
+        Items, newEntry = getEntry()
+        newEntry.removeItemValue("ListItem1", "DefaultListItem1")
+        assert "DefaultListItem1" not in newEntry.getItem("ListItem1").value
+    
+    def test_entry_remove_value_from_Item_raise_exception(self):
+        Items, newEntry = getEntry()
+        with self.assertRaises(TypeError):
+            newEntry.removeItemValue(2.5, "DefaultListItem1")
+        with self.assertRaises(KeyError):
+            newEntry.removeItemValue("notExisting", "DefaultListItem1")
+        with self.assertRaises(ValueError):
+            newEntry.removeItemValue("ListItem1", "SomeNonExistingName")
 
-    def test_entry_remove_value_to_Item_raise_exception(self):
-        assert False
-
-    def test_entry_replace_value_to_ListItem(self):
-        assert False
+    def test_entry_remove_value_from_ListItem_exception_notListItem(self):
+        Items, newEntry = getEntry()
+        with self.assertRaises(RuntimeError):
+            newEntry.removeItemValue("Item1", "DefaultListItem1")
+            
+    def test_entry_replace_value_of_ListItem(self):
+        Items, newEntry = getEntry()
+        newEntry.replaceItemValue("ListItem1", "ReplacedItem", "DefaultListItem1")
+        assert ("ReplacedItem" in newEntry.getItem("ListItem1").value and
+                "DefaultListItem1" not in newEntry.getItem("ListItem1").value)
         
 if __name__ == "__main__":
     unittest.main()
