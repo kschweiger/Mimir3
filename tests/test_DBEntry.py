@@ -77,7 +77,7 @@ class TestEntry(unittest.TestCase):
         isItemType = isinstance(newEntry.getItem("Item1"), Item)
         isListItemType = isinstance(newEntry.getItem("ListItem1"), ListItem)
         assert isItemType or isListItemType
-            
+
     ###########################################################
     #################### Modification #########################
     ###########################################################
@@ -113,7 +113,9 @@ class TestEntry(unittest.TestCase):
         Items, newEntry = getEntry()
         newEntry.changeItemValue("Item1", "ReplacedValue")
         assert newEntry.getItem("Item1").value == "ReplacedValue"
+        assert newEntry.Item1 == "ReplacedValue"
 
+        
     def test_entry_change_value_exception_passedName(self):
         Items, newEntry = getEntry()
         with self.assertRaises(TypeError):

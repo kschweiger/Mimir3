@@ -1,3 +1,4 @@
+import logging
 '''
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
 '''
@@ -8,11 +9,11 @@ class DataBaseEntry(object):
     Args:
         initItems (list) : Each Item has to be a tuple of ItemName, ItemType ("Single" or "List") and InitValues
     Attributes:
-        names (list) : List of all item names in entry
+        names (list) : List of all item names in entry\n
         items (dict) : Dictionary with all Item/ListItem objects
     Raises:
-        TypeError : If initItems is not of type list
-        TypeError : If initItems is no list of tuples
+        TypeError : If initItems is not of type list\n
+        TypeError : If initItems is no list of tuples\n
         RuntimeError : If the tuple of initItems is invalid (not exactly three of type str, typ, str/int/float
     '''
     def __init__(self, initItems):
@@ -35,7 +36,8 @@ class DataBaseEntry(object):
                 self.items[itemName] = ListItem(itemName, itemValue)
             else:
                 self.items[itemName] = Item(itemName, itemValue)
-
+        for item in self.names:
+            setattr(self, item, self.items[item].value)
     def getItem(self, itemName):
         """Returns an item of the Database entry
 
@@ -65,7 +67,8 @@ class DataBaseEntry(object):
         else:
             self.items[newItem_name] = Item(newItem_name, newItem_value)
 
-
+        setattr(self, newItem_name, self.items[newItem_name].value)
+        
     def changeItemValue(self, itemName, newValue):
         """
         Change value if a Item
@@ -76,7 +79,8 @@ class DataBaseEntry(object):
         if type(self.items[itemName]) is not Item:
             raise RuntimeError("Item {0} is not if type Item".format(itemName))
         self.items[itemName].replace(newValue)
-
+        setattr(self, itemName, self.items[itemName].value)
+        
     def addItemValue(self, itemName, newValue):
         """
         Add a value to a ListItem
@@ -87,7 +91,8 @@ class DataBaseEntry(object):
         if type(self.items[itemName]) is not ListItem:
             raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
         self.getItem(itemName).add(newValue)
-
+        setattr(self, itemName, self.items[itemName].value)
+        
     def removeItemValue(self, itemName, oldValue):
         """
         Remove a Value from a ListItem
@@ -126,7 +131,7 @@ class Item(object):
     Entry that contains a list of specs
 
     Args:
-        name (str) : Name of the Item
+        name (str) : Name of the Item\n
         values (str) : Initial value of the item
     Attributes:
         name (str) : This is the name of the Item
@@ -144,6 +149,9 @@ class Item(object):
         """
         self.value = newValue
 
+    def getValue(self):
+        return self.value
+    
     def __repr__(self):
         return "{0} : {1}".format(self.name, self.value) #pragma: no cover
 
@@ -152,10 +160,10 @@ class ListItem(Item):
     Entry that contains a list of specs
 
     Args:
-        name (str) : Name of the Item
+        name (str) : Name of the Item\n
         values (list, str) : Initial values of the item
     Attributes:
-        name (str) : This is the name of the ListItem
+        name (str) : This is the name of the ListItem\n
         value (str or list) : Here are all value of the ListItem are saved
 
     Raises:
@@ -204,8 +212,8 @@ class ListItem(Item):
             toRemove (str, int) : Value or index to be removed
 
         Raises:
-            TypError : If toRemove is not str or int
-            IndexError : If index out of range
+            TypError : If toRemove is not str or int\n
+            IndexError : If index out of range\n
             ValueError : If value not in value list
         """
         if not isinstance(toRemove, (str, int)):

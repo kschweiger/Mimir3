@@ -11,7 +11,7 @@ Welcome to Mimir3's documentation!
    :caption: Contents:
 
    modules
-
+   makeModelDefinition
 
 Indices and tables
 ==================
