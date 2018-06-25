@@ -111,6 +111,17 @@ class DataBaseEntry(object):
         self.removeItemValue(itemName, oldValue)
         self.addItemValue(itemName, newValue)
 
+    def getDictRepr(self):
+        dictRepr = {}
+        for name in self.names:
+            dictRepr[name] = {}
+            if isinstance(self.items[name], ListItem):
+                dictRepr[name]["type"] = "ListItem"
+            else:
+                dictRepr[name]["type"] = "Item"
+            dictRepr[name]["value"] = self.items[name].value
+        return dictRepr
+        
     @staticmethod
     def checkPassedItems(passedName=None, passedType=None, passedValue=None):
         """

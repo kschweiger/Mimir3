@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 from glob import glob
 
 from backend.entry import DataBaseEntry
@@ -22,11 +23,19 @@ class DataBase(object):
         self.databaseRoot = root
         self.entries = []
         self.entrydict = {}
+        self.mimirdir = root+"/.mimir"
+        self.savepath = root+"/.mimir/mainDB.json"
         maxID = 0
         if status == "new":
+            if os.path.exists(self.mimirdir):
+                raise RuntimeError(".mimir directory exiting in ROOT dir. Currently not supported!")
+            else:
+                logging.info("Creating .mimir folder in {0}".format(root))
+                os.makedirs(self.mimirdir)
             #New database always runs a search of the filesystem starting from self.root
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
+                logging.debug("Adding file {0}".format(path2file))
                 e = self.createEntry(path2file, maxID)
                 self.entries.append(e)
                 self.entrydict[str(maxID)] = e
@@ -75,11 +84,22 @@ class DataBase(object):
             entryinit.append((listitem, "List", self.model.items[item]["default"]))
 
         return DataBaseEntry(entryinit)
-    
+
+    def saveMain(self):
+        status = False
+        output = {}
+        for entry in self.entries:
+            output[entry.Path] = entry.getDictRepr()
+        with open(self.savepath, "w") as outfile:
+            json.dump(output, outfile, indent=4)
+            status = True
+        return status
+    """
     def __repr__(self):
         pass
-
+    """
     def getStats(self):
+        """ Check if current status of the database is saved """
         pass
         
 class Model(object):
@@ -124,3 +144,5 @@ class Model(object):
     def updateModel(self):
         pass
     
+def validateDatabaseJSON(database, model, json):
+    pass

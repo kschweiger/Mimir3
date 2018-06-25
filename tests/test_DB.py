@@ -1,13 +1,15 @@
 import sys
 import os
+import shutil 
 import json
 from glob import glob
 sys.path.insert(0, os.path.abspath('..'))
-from backend.database import DataBase, Model
+from backend.database import DataBase, Model, validateDatabaseJSON
 from backend.entry import Item, ListItem
 import unittest
 import pytest
 import coverage
+import os
 
 mimir_dir = os.getcwd()[0:-len("/tests")]
 
@@ -48,6 +50,8 @@ class TestItem(unittest.TestCase):
     def test_DB_init_new(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = os.getcwd()+"/testStructure"
+        if os.path.exists(dbRootPath+"/.mimir"):
+            shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
         filesindbRoot = glob(dbRootPath+"/**/*.mp4", recursive = True)
         allEntriesSaved = True
@@ -57,6 +61,24 @@ class TestItem(unittest.TestCase):
             if entry.Path not in filesindbRoot:
                 allEntriesSaved = False
         assert allEntriesSaved
+
+    def test_DB_raise_RuntimeError_existing_mimirDir(self):
+        config = mimir_dir+"/conf/modeltest.json"
+        dbRootPath = os.getcwd()+"/testStructure"
+        if not os.path.exists(dbRootPath+"/.mimir"):
+            os.makedirs(dbRootPath+"/.mimir")
+        with self.assertRaises(RuntimeError):
+            database = DataBase(dbRootPath, "new", config)
+        os.rmdir(dbRootPath+"/.mimir")
+        
+    def test_DB_save(self):
+        config = mimir_dir+"/conf/modeltest.json"
+        dbRootPath = os.getcwd()+"/testStructure"
+        if os.path.exists(dbRootPath+"/.mimir"):
+            shutil.rmtree(dbRootPath+"/.mimir")
+        database = DataBase(dbRootPath, "new", config)
+        assert database.saveMain()
+        #assert validateDatabaseJSON(database, config, database.savepath)
         
 if __name__ == "__main__":
     unittest.main()
