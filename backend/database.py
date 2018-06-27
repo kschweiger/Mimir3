@@ -12,12 +12,12 @@ class DataBase(object):
     TODO: Document how it is loaded/saved if already exising
 
     Args:
-        root (str) : Base path of the database. This can change between different session\n 
+        root (str) : Base path of the database. This can change between different session\n
                      for example if the data base is on a removable drive\n
         status (str) : Initializes a new Database or loads a existing database in root dir \n
         model (str) : Path to the model used for database initialization
     """
-    def __init__(self,root, status, modelConf):
+    def __init__(self, root, status, modelConf):
         logging.info("Initializing DataBase")
         self.model = Model(modelConf)
         self.databaseRoot = root
@@ -46,9 +46,9 @@ class DataBase(object):
             raise RuntimeError("Unsupported status: {0}".format(status))
 
     def getAllFilesMatchingModel(self):
-        """ 
+        """
         Returns all files matching the file extentions defined in model starting
-        from database root dir. 
+        from database root dir.
         Returns list with all matching file w/o database root dir
         """
         allfiles = glob(self.databaseRoot+"/**/*.*", recursive=True)
@@ -79,10 +79,11 @@ class DataBase(object):
             elif item == "Added":
                 entryinit.append(("Added", "Single", backend.helper.getTimeFormatted("Full")))
             else:
-               entryinit.append((item, "Single", self.model.items[item]["default"]))
+                entryinit.append((item, "Single", self.model.items[item]["default"]))
         for listitem in self.model.listitems:
-            entryinit.append((listitem, "List", self.model.items[item]["default"]))
+            entryinit.append((listitem, "List", self.model.listitems[listitem]["default"]))
 
+        print(entryinit)
         return DataBaseEntry(entryinit)
 
     def saveMain(self):
@@ -101,11 +102,11 @@ class DataBase(object):
     def getStats(self):
         """ Check if current status of the database is saved """
         pass
-        
+
 class Model(object):
     """
     Database model
-    
+
     Args:
         config : Config file for the model
     Attributes:
@@ -126,6 +127,7 @@ class Model(object):
         self.items = {}
         self.listitems = {}
         for key in modelDict:
+            print(key, modelDict[key])
             if key != "General":
                 logging.debug("Found item {0} in model".format(key))
                 newitem = {}
@@ -140,9 +142,9 @@ class Model(object):
                     raise TypeError("Invalid item type in model definition")
 
         #TODO Check if required items are in model
-        
+
     def updateModel(self):
         pass
-    
-def validateDatabaseJSON(database, model, json):
+
+def validateDatabaseJSON(database, model, jsonfile):
     pass
