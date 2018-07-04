@@ -38,6 +38,7 @@ class DataBaseEntry(object):
                 self.items[itemName] = Item(itemName, itemValue)
         for item in self.names:
             setattr(self, item, self.items[item].value)
+
     def getItem(self, itemName):
         """Returns an item of the Database entry
 
@@ -116,12 +117,31 @@ class DataBaseEntry(object):
         for name in self.names:
             dictRepr[name] = {}
             if isinstance(self.items[name], ListItem):
-                dictRepr[name]["type"] = "ListItem"
+                dictRepr[name]["type"] = "List"
             else:
-                dictRepr[name]["type"] = "Item"
+                dictRepr[name]["type"] = "Single"
             dictRepr[name]["value"] = self.items[name].value
         return dictRepr
-        
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            if self.names != other.names:
+                return False
+            for item in self.items:
+                #print("Comparing",self.items[item].getValue(),other.items[item].getValue())
+                if self.items[item].getValue() != other.items[item].getValue():
+                    return False
+            return True
+        else:
+            return NotImplemented
+    
+    def __str__(self):
+        repres = "=========================\n"
+        for item in self.items:
+            repres += "{0} | {1}\n".format(item, self.items[item].value)
+        repres += "=========================\n"
+        return repres
+    
     @staticmethod
     def checkPassedItems(passedName=None, passedType=None, passedValue=None):
         """

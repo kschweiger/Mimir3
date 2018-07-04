@@ -170,6 +170,27 @@ class TestEntry(unittest.TestCase):
         newEntry.replaceItemValue("ListItem1", "ReplacedItem", "DefaultListItem1")
         assert ("ReplacedItem" in newEntry.getItem("ListItem1").value and
                 "DefaultListItem1" not in newEntry.getItem("ListItem1").value)
+
+    ################### Stuff  ########################
+    def test_entry_equal(self):
+        Items, newEntry = getEntry()
+        Items2, newEntry2 = getEntry()
+        assert newEntry == newEntry2
+        
+    def test_entry_notequal_sameNames(self):
+        Items, newEntry = getEntry()
+        Items2, newEntry2 = getEntry()
+        newEntry2.changeItemValue("Item1", "ReplacedValue")
+        assert newEntry != newEntry2
+    def test_entry_notequal_differentNames(self):
+        Items, newEntry = getEntry()
+        Items2, newEntry2 = getEntry()
+        newTupleSingle = ("AddedItem","Single","AddedItemValue")
+        newName, newType, newValue = newTupleSingle
+        newEntry2.addItem(newName, newType, newValue)
+        assert newEntry != newEntry2
+
+    
         
 if __name__ == "__main__":
     unittest.main()
