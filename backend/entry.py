@@ -1,4 +1,3 @@
-import logging
 '''
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
 '''
@@ -39,6 +38,23 @@ class DataBaseEntry(object):
         for item in self.names:
             setattr(self, item, self.items[item].value)
 
+    def getAllValuesbyName(self, names):
+        """ Return all values matching items with name in names """
+        if isinstance(names, str):
+            names = [names]
+        for name in names:
+            if name not in self.names:
+                raise KeyError("ItemName {0} not in DatabaseEntries names".format(name))
+
+        result = []
+        for name in names:
+            value = self.items[name].value
+            if isinstance(value, list):
+                result += value
+            else:
+                result.append(value)
+        return set(result)
+
     def getItem(self, itemName):
         """Returns an item of the Database entry
 
@@ -69,7 +85,7 @@ class DataBaseEntry(object):
             self.items[newItem_name] = Item(newItem_name, newItem_value)
 
         setattr(self, newItem_name, self.items[newItem_name].value)
-        
+
     def changeItemValue(self, itemName, newValue):
         """
         Change value if a Item
@@ -77,11 +93,11 @@ class DataBaseEntry(object):
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if type(self.items[itemName]) is not Item:
+        if not isinstance(self.items[itemName], Item):
             raise RuntimeError("Item {0} is not if type Item".format(itemName))
         self.items[itemName].replace(newValue)
         setattr(self, itemName, self.items[itemName].value)
-        
+
     def addItemValue(self, itemName, newValue):
         """
         Add a value to a ListItem
@@ -89,11 +105,11 @@ class DataBaseEntry(object):
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if type(self.items[itemName]) is not ListItem:
+        if not isinstance(self.items[itemName], ListItem):
             raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
         self.getItem(itemName).add(newValue)
         setattr(self, itemName, self.items[itemName].value)
-        
+
     def removeItemValue(self, itemName, oldValue):
         """
         Remove a Value from a ListItem
@@ -101,7 +117,7 @@ class DataBaseEntry(object):
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if type(self.items[itemName]) is not ListItem:
+        if not isinstance(self.items[itemName], ListItem):
             raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
         self.getItem(itemName).remove(oldValue)
 
@@ -113,6 +129,9 @@ class DataBaseEntry(object):
         self.addItemValue(itemName, newValue)
 
     def getDictRepr(self):
+        """
+        Convert Database entry to a dictionary representation
+        """
         dictRepr = {}
         for name in self.names:
             dictRepr[name] = {}
@@ -124,6 +143,9 @@ class DataBaseEntry(object):
         return dictRepr
 
     def __eq__(self, other):
+        """
+        Implementation of equalitiy relation for DataBaseEntry class
+        """
         if isinstance(other, self.__class__):
             if self.names != other.names:
                 return False
@@ -134,14 +156,14 @@ class DataBaseEntry(object):
             return True
         else:
             return NotImplemented
-    
+
     def __str__(self):
         repres = "=========================\n"
         for item in self.items:
             repres += "{0} | {1}\n".format(item, self.items[item].value)
         repres += "=========================\n"
         return repres
-    
+
     @staticmethod
     def checkPassedItems(passedName=None, passedType=None, passedValue=None):
         """
@@ -182,7 +204,7 @@ class Item(object):
 
     def getValue(self):
         return self.value
-    
+
     def __repr__(self):
         return "{0} : {1}".format(self.name, self.value) #pragma: no cover
 
@@ -258,20 +280,3 @@ class ListItem(Item):
             if toRemove > len(self.value)-1:
                 raise IndexError
             self.value.pop(toRemove)
-    """
-    #Obsolete. Can just remove and add.... I'll keep it for now
-    def replace(self, oldValue, newValue):
-        if not isinstance(oldValue, (str, int)):
-            raise TypeError
-        if not isinstance(newValue, (str, int, float)):
-            raise TypeError
-        #Replace by Value
-        if isinstance(oldValue, str):
-            if oldValue not in self.value:
-                raise ValueError
-            self.value[self.value.index(oldValue)] = newValue
-        if isinstance(oldValue, int):
-            if oldValue > len(self.value)-1:
-                raise IndexError
-            self.value[oldValue] = newValue
-    """

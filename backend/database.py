@@ -1,3 +1,6 @@
+"""
+Toplevel Database class for the Mimir database
+"""
 import logging
 import json
 import os
@@ -20,7 +23,7 @@ class DataBase(object):
     Members:
         maxID (int) : Highes ID in the Database
     """
-    def __init__(self, root, status, modelConf = None):
+    def __init__(self, root, status, modelConf=None):
         logging.info("Initializing DataBase")
         self.databaseRoot = root
         self.entries = []
@@ -33,7 +36,7 @@ class DataBase(object):
             if os.path.exists(self.mimirdir):
                 raise RuntimeError(".mimir directory exiting in ROOT dir. Currently not supported!")
             else:
-                logging.info("Creating .mimir folder in {0}".format(root))
+                logging.info("Creating .mimir folder in %s", root)
                 os.makedirs(self.mimirdir)
                 logging.debug("Saving model in .mimir dir")
                 with open(self.mimirdir+"/model.json", 'w') as outfile:
@@ -41,8 +44,8 @@ class DataBase(object):
             #New database always runs a search of the filesystem starting from self.root
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
-                logging.debug("Adding file {0}".format(path2file))
-                e = self.createNewEntry(path2file, self.maxID)
+                logging.debug("Adding file %s", path2file)
+                self.createNewEntry(path2file, self.maxID)
                 self.maxID += 1
             self.maxID = self.maxID - 1
         elif status == "load":
@@ -53,17 +56,17 @@ class DataBase(object):
             else:
                 self.model = Model(modelConf)
             self.loadMain()
-            
+
         else:
             raise RuntimeError("Unsupported status: {0}".format(status))
 
-    def getAllFilesMatchingModel(self, startdir = ""):
+    def getAllFilesMatchingModel(self, startdir=""):
         """
         Returns all files matching the file extentions defined in model starting
         from database root dir.
         Returns list with all matching file w/o database root dir
         """
-        if not startdir.endswith("/") and not startdir == "":
+        if not startdir.endswith("/") and startdir != "":
             startdir = startdir+"/"
         allfiles = glob(self.databaseRoot+"/"+startdir+"**/*.*", recursive=True)
 
@@ -72,7 +75,7 @@ class DataBase(object):
             try:
                 ext = f.split("/")[-1].split(".")[1]
             except IndexError:
-                logging.warning("Found file not matching expected structure: {0}".format(f))
+                logging.warning("Found file not matching expected structure: %s", f)
                 continue
             if ext in self.model.extentions:
                 matchingfiles.append(f)
@@ -105,12 +108,13 @@ class DataBase(object):
             entryinit.append((listitem, "List", self.model.listitems[listitem]["default"]))
 
         e = DataBaseEntry(entryinit)
-            
+
         self.entries.append(e)
         self.entrydict[str(cID)] = e
         return e
 
     def saveMain(self):
+        """ Save the main database (json file with all entries) as mainDB.json in the .mimir folder of the DB """
         status = False
         output = {}
         for entry in self.entries:
@@ -121,6 +125,7 @@ class DataBase(object):
         return status
 
     def loadMain(self):
+        """ Load the main DB from the .mimir folder """
         with open(self.savepath) as saveFile:
             savedDB = json.load(saveFile)
         for filepath in savedDB:
@@ -136,20 +141,19 @@ class DataBase(object):
             self.entries.append(e)
             self.entrydict[savedEntry["ID"]["value"]] = e
 
-    def findNewFiles(self, startdir = ""):
+    def findNewFiles(self, startdir=""):
         """
         Find new files in starting from the root directory.
 
         Args:
             startdir (str) : Specifiy a subdirectory to start from
         """
-        startingfrom = self.databaseRoot+"/"+startdir
         newFiles = []
         allfiles = self.getAllFilesMatchingModel(startdir)
         IDs = []
         existingFiles = []
         missingIDs = []
-        for nEntry, entry in enumerate(self.entries):
+        for entry in self.entries:
             existingFiles.append(entry.Path)
             IDs.append(int(entry.ID))
 
@@ -159,7 +163,7 @@ class DataBase(object):
         for i in range(len(self.entries)):
             if i not in IDs:
                 missingIDs.append(i)
-        
+
         existingFiles = set(existingFiles)
         for file_ in allfiles:
             if file_ not in existingFiles:
@@ -170,20 +174,20 @@ class DataBase(object):
         for newFile in newFiles:
             if len(missingIDs) > 0:
                 cID = missingIDs[0]
-                missingIDs[1:]
+                missingIDs = missingIDs[1:]
             else:
                 self.maxID += 1
                 cID = self.maxID
             self.createNewEntry(newFile, cID)
         return toret
 
-    def getAllValuebyItemName(self, ItemName):
-        """ Return a set of all values of name ItemName """
-        if ItemName not in self.model.allItems:
-            raise KeyError("Arg {0} not in model items".format(ItemName))
+    def getAllValuebyItemName(self, itemName):
+        """ Return a set of all values of name itemName """
+        if itemName not in self.model.allItems:
+            raise KeyError("Arg {0} not in model items".format(itemName))
         retlist = []
         for entry in self.entries:
-            retlist.append(getattr(entry, ItemName))
+            retlist.append(getattr(entry, itemName))
         return set(retlist)
 
     def getEntryByItemName(self, itemName, itemValue):
@@ -192,20 +196,20 @@ class DataBase(object):
             raise KeyError("Arg {0} not in model items".format(itemName))
         machtingEntries = []
         for entry in self.entries:
-            if isinstance(entry, Item): 
+            if isinstance(entry, Item):
                 if entry.getItem(itemName).value == itemValue:
                     machtingEntries.append(entry)
             else:
                 if itemValue in entry.getItem(itemName).value:
                     machtingEntries.append(entry)
-        return(machtingEntries)
-            
-    def remove(self, value, byID = False, byName = False, byPath = False):
+        return machtingEntries
+
+    def remove(self, value, byID=False, byName=False, byPath=False):
         """
         Remove a entry from the databse by specifing value. Value can be ID, Name\n
         or Path (vector). When calling the function only one can be set to True otherwise a\n
-        exception will be raised 
-        
+        exception will be raised
+
         Args:
             value (int, string) : Value by with the entry will be removed. For can be of\n
                                   type string for all vectors and also int for ID vector
@@ -224,7 +228,7 @@ class DataBase(object):
             if not isinstance(vector, bool):
                 raise TypeError("Vectors are required to be a bool")
             if vector:
-               nVectorsActive += 1
+                nVectorsActive += 1
         if nVectorsActive == 0 or nVectorsActive > 1:
             raise RuntimeError
         if not isinstance(value, (str, int)) and byID:
@@ -252,12 +256,44 @@ class DataBase(object):
         entry2remove = self.getEntryByItemName(removetype, str(value))[0]
         self.entries.remove(entry2remove)
         self.entrydict.pop(entry2remove.Path, None)
-        
-    """
-    def __repr__(self):
-        pass
-    """
+
+    def query(self, itemNames, itemValues, returnIDs=False):
+        """
+        Query database: Will get all values for items with names itemNames and searches\n
+        for all values given in the itemValues parameter
+
+        Args:
+            itemNames (str, list) : itemNames used for the query
+            itemValues (str, list) : itemValues used for the query
+            returnIDs (bool) : If True function will return a list of IDs instead of entries
+
+        Returns:
+            result (list) : list of all entries (ids) matching the query
+        """
+        if isinstance(itemNames, str):
+            itemNames = [itemNames]
+        if isinstance(itemValues, str):
+            itemValues = [itemValues]
+        for name in itemNames:
+            if name not in self.model.allItems:
+                raise KeyError("Arg {0} not in model items".format(name))
+        result = []
+        for entry in self.entries:
+            entryValues = entry.getAllValuesbyName(itemNames)
+            hit = False
+            for value in itemValues:
+                if value in entryValues:
+                    hit = True
+                    break
+            if hit:
+                if returnIDs:
+                    result.append(entry.ID)
+                else:
+                    result.append(entry)
+        return result
+
     def __eq__(self, other):
+        """ Implementation of the equality relation """
         if isinstance(other, self.__class__):
             if len(self.entries) != len(other.entries):
                 return False
@@ -273,8 +309,7 @@ class DataBase(object):
             return True
         else:
             return NotImplemented
-        
-    
+
     def getStats(self):
         """ Check if current status of the database is saved """
         pass
@@ -292,7 +327,7 @@ class Model(object):
         extentions : File extentions that are used as criterion for searching files\n
     """
     def __init__(self, config):
-        logging.debug("Loading model from {0}".format(config))
+        logging.debug("Loading model from %s", config)
         self.fileName = config
         modelDict = None
         with open(config) as f:
@@ -305,7 +340,7 @@ class Model(object):
         self.listitems = {}
         for key in modelDict:
             if key != "General":
-                logging.debug("Found item {0} in model".format(key))
+                logging.debug("Found item %s in model", key)
                 newitem = {}
                 for itemKey in modelDict[key]:
                     if itemKey != "Type":
@@ -316,19 +351,19 @@ class Model(object):
                     self.items.update({key : newitem})
                 else:
                     raise TypeError("Invalid item type in model definition")
-        self.allItems = set(self.items.keys()).union(set(self.listitems.keys()))       
+        self.allItems = set(self.items.keys()).union(set(self.listitems.keys()))
         #TODO Check if required items are in model
 
     def updateModel(self):
+        """ Function for updating the model (not sure if needed) """
         pass
 
 def validateDatabaseJSON(database, jsonfile):
-    """ Function for validating a saved database. This comparison requires the 
+    """ Function for validating a saved database. This comparison requires the
     lastest version of the database to check in memory.
-    
+
     Args:
         databse (DataBase) : Reference database (in Runtime)
         json (str) : Path to json file to be checked
     """
-    checkDB = Database(database.databaseRoot, "load" ,database.model.fileName, jsonfile) 
-    
+    checkDB = Database(database.databaseRoot, "load", database.model.fileName, jsonfile)

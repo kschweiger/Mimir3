@@ -190,7 +190,12 @@ class TestEntry(unittest.TestCase):
         newEntry2.addItem(newName, newType, newValue)
         assert newEntry != newEntry2
 
-    
+    def test_entry_getAllValues_byName(self):
+        Items, newEntry = getEntry()
+        with self.assertRaises(KeyError):
+            allValues = newEntry.getAllValuesbyName(["Blubb"])
+        allValues = newEntry.getAllValuesbyName(["Item1", "ListItem1"])
+        assert list(allValues) == list(set(["DefaultForItem1", "DefaultListItem1"]))
         
 if __name__ == "__main__":
     unittest.main()

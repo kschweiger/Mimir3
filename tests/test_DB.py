@@ -225,6 +225,35 @@ class TestItem(unittest.TestCase):
         assert asEntry
         assert int(newEntry.ID) == lastIDbeforeAppend+1
 
+    def test_13_DB_query(self):
+        config = mimir_dir+"/conf/modeltest.json"
+        dbRootPath = os.getcwd()+"/testStructure"
+        if os.path.exists(dbRootPath+"/.mimir"):
+            shutil.rmtree(dbRootPath+"/.mimir")
+        database = DataBase(dbRootPath, "new", config)
+        updatedEntry1 = database.getEntryByItemName("ID", "0")[0]
+        updatedEntry2 = database.getEntryByItemName("ID", "1")[0]
+        updatedEntry1.changeItemValue("SingleItem", "ReplacedValue")
+        updatedEntry2.addItemValue("ListItem", "AddedValue")
+        ########################################################
+        #First names wrong
+        with self.assertRaises(KeyError):
+            database.query(["Blubb", "SingleItem"], "SomeQuery")
+        #Second names wrong
+        with self.assertRaises(KeyError):
+            database.query(["SingleItem", "Blubb"], "SomeQuery")
+        ########################################################
+        resultEntry = database.query(["SingleItem","ListItem"], ["ReplacedValue", "AddedValue"])
+        resultID = database.query(["SingleItem","ListItem"], ["ReplacedValue", "AddedValue"], returnIDs = True)
+        found1, found2 = False, False
+        if updatedEntry1 in resultEntry:
+            found1 = True
+        if updatedEntry2 in resultEntry:
+            found2 = True
+        assert found1 and found2 and len(resultEntry) == 2
+        
+            
+
         
 if __name__ == "__main__":
     unittest.main()
