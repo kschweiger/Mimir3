@@ -4,6 +4,8 @@ import shutil
 import json
 from glob import glob
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('.'))
+print(sys.path)
 from backend.database import DataBase, Model, validateDatabaseJSON
 from backend.entry import Item, ListItem
 import unittest
@@ -12,8 +14,14 @@ import coverage
 import os
 import copy
 
-mimir_dir = os.getcwd()[0:-len("/tests")]
+if os.getcwd().endswith("tests"):
+    mimir_dir = os.getcwd()[0:-len("/tests")]
+    dir2tests = os.getcwd()
+else:
+    mimir_dir = os.getcwd()
+    dir2tests = os.getcwd()+"/tests"
 
+    
 files = ["testStructure/rootFile1.mp4",
          "testStructure/folder1/folder1file1.mp4",
          "testStructure/folder1/folder1file2.mp4",
@@ -40,7 +48,7 @@ class TestItem(unittest.TestCase):
         allitems.update(testModel.listitems)
         for item in allitems:
             for spec in allitems[item]:
-                 bools.append(jsonModel[item][spec] == allitems[item][spec])
+                bools.append(jsonModel[item][spec] == allitems[item][spec])
 
         res = True
         for b in bools:
@@ -51,10 +59,11 @@ class TestItem(unittest.TestCase):
 
     def test_02_DB_init_new(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
+        print(database.model.listitems)
         filesindbRoot = glob(dbRootPath+"/**/*.mp4", recursive = True)
         allEntriesSaved = True
         for entry in database.entries:
@@ -64,7 +73,7 @@ class TestItem(unittest.TestCase):
 
     def test_03_DB_raise_RuntimeError_existing_mimirDir(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if not os.path.exists(dbRootPath+"/.mimir"):
             os.makedirs(dbRootPath+"/.mimir")
         with self.assertRaises(RuntimeError):
@@ -72,7 +81,7 @@ class TestItem(unittest.TestCase):
         
     def test_04_DB_save(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -81,7 +90,7 @@ class TestItem(unittest.TestCase):
 
     def test_05_DB_equal(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database1 = DataBase(dbRootPath, "new", config)
@@ -92,22 +101,22 @@ class TestItem(unittest.TestCase):
         
     def test_06_DB_notequal(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database1 = DataBase(dbRootPath, "new", config)
-        os.system("rm "+os.getcwd()+"/testStructure/newfile.mp4")
+        os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database2 = DataBase(dbRootPath, "new", config)
-        os.system("touch "+os.getcwd()+"/testStructure/newfile.mp4")
+        os.system("touch "+dir2tests+"/testStructure/newfile.mp4")
         database2.findNewFiles()
-        os.system("rm "+os.getcwd()+"/testStructure/newfile.mp4")
+        os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
         assert database1 != database2
 
     def test_07_DB_load(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -117,7 +126,7 @@ class TestItem(unittest.TestCase):
 
     def test_08_DB_getAllValues(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -129,7 +138,7 @@ class TestItem(unittest.TestCase):
 
     def test_09_DB_getEntrybyItemName(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -146,7 +155,7 @@ class TestItem(unittest.TestCase):
                 
     def test_10_DB_removeEntry_exceptions(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -181,7 +190,7 @@ class TestItem(unittest.TestCase):
             
     def test_11_DB_removeEntry(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -206,19 +215,19 @@ class TestItem(unittest.TestCase):
         
     def test_12_DB_findNewFiles_append(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
         lastIDbeforeAppend = database.maxID 
-        os.system("touch "+os.getcwd()+"/testStructure/newfile.mp4")
+        os.system("touch "+dir2tests+"/testStructure/newfile.mp4")
         newFiles = database.findNewFiles()
-        os.system("rm "+os.getcwd()+"/testStructure/newfile.mp4")
-        assert os.getcwd()+"/testStructure/newfile.mp4" in newFiles
+        os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
+        assert dir2tests+"/testStructure/newfile.mp4" in newFiles
         assert len(newFiles) == 1
         asEntry = False
         for entry in database.entries:
-            if entry.Path == os.getcwd()+"/testStructure/newfile.mp4":
+            if entry.Path == dir2tests+"/testStructure/newfile.mp4":
                 asEntry = True
                 newEntry = entry
                 break
@@ -227,7 +236,7 @@ class TestItem(unittest.TestCase):
 
     def test_13_DB_query(self):
         config = mimir_dir+"/conf/modeltest.json"
-        dbRootPath = os.getcwd()+"/testStructure"
+        dbRootPath = dir2tests+"/testStructure"
         if os.path.exists(dbRootPath+"/.mimir"):
             shutil.rmtree(dbRootPath+"/.mimir")
         database = DataBase(dbRootPath, "new", config)
@@ -250,9 +259,80 @@ class TestItem(unittest.TestCase):
             found1 = True
         if updatedEntry2 in resultEntry:
             found2 = True
-        assert found1 and found2 and len(resultEntry) == 2
+        foundEntry = found1 and found2
+        found1 = "0" in resultID
+        found2 = "1" in resultID
+        foundID = found1 and found2
+        assert foundID and foundEntry and len(resultEntry) == 2
+
+    def test_14_DB_modifyEntry(self):
+        config = mimir_dir+"/conf/modeltest.json"
+        dbRootPath = dir2tests+"/testStructure"
+        if os.path.exists(dbRootPath+"/.mimir"):
+            shutil.rmtree(dbRootPath+"/.mimir")
+        database = DataBase(dbRootPath, "new", config)
+        #--------------------- SingleItem -------------------------
+        #Replace single Item value
+        database.modifySingleEntry("1", "SingleItem", "changedItemValue", byID = True )
+        changedEntry = database.getEntryByItemName("ID", "1")[0]
+        assert  "changedItemValue" in changedEntry.getAllValuesbyName("SingleItem")
+        #Check if Item is present in database
+        with self.assertRaises(KeyError):
+            database.modifySingleEntry("1", "BLubbb", "changedItemValue", byID = True )
+        with self.assertRaises(TypeError):
+            database.modifySingleEntry("1", "ListItem", "changedItemValue", byID = True )
+        #---------------------- ListItem --------------------------
+        #Append
+        print("-------- Append ----------")
+        origEntry = database.getEntryByItemName("ID", "1")[0]
+        databaseAppend = copy.deepcopy(database)
+        with self.assertRaises(TypeError):
+            databaseAppend.modifyListEntry("1", "SingleItem", "appendedItemValue", "Append", byID = True)           
+        databaseAppend.modifyListEntry("1", "ListItem", "appendedItemValue", "Append", byID = True)
+        changedEntry = databaseAppend.getEntryByItemName("ID", "1")[0]
+        assert ( "appendedItemValue" in changedEntry.getAllValuesbyName("ListItem")
+                 and origEntry.getAllValuesbyName("ListItem").issubset(changedEntry.getAllValuesbyName("ListItem")) )
+                #Replace
+        print("-------- Replace ----------")
+        databaseReplace = copy.deepcopy(databaseAppend)
+        databaseReplace.modifyListEntry("1", "ListItem", "replacedItemValue", "Replace", "emptyListItem", byID = True)
+        changedEntry = databaseReplace.getEntryByItemName("ID", "1")[0]
+        assert ("replacedItemValue" in changedEntry.getAllValuesbyName("ListItem")
+                and "emptyListItem" not in changedEntry.getAllValuesbyName("ListItem"))
+
+        #Remove
+        print("-------- Remove I ----------")
+        databaseAppend.modifyListEntry("1", "ListItem", None, "Remove", "appendedItemValue", byID = True)
+        changedEntry = databaseAppend.getEntryByItemName("ID", "1")[0]
+        assert "appendedItemValue" not in changedEntry.getAllValuesbyName("ListItem")
+        #Remove empty entry
+        print("-------- Remove II ----------")
+        databaseReplace.modifyListEntry("1", "ListItem", None, "Remove", "appendedItemValue", byID = True)
+        databaseReplace.modifyListEntry("1", "ListItem", None, "Remove", "replacedItemValue", byID = True)
+        changedEntry = databaseReplace.getEntryByItemName("ID", "1")[0]
+        assert (set(databaseReplace.model.listitems["ListItem"]["default"])  == changedEntry.getAllValuesbyName("ListItem"))
         
-            
+        
+    def test_15_DB_status(self):
+        config = mimir_dir+"/conf/modeltest.json"
+        dbRootPath = dir2tests+"/testStructure"
+        if os.path.exists(dbRootPath+"/.mimir"):
+            shutil.rmtree(dbRootPath+"/.mimir")
+        database = DataBase(dbRootPath, "new", config)
+        #DB not saved
+        assert not database.getStatus()
+        #DB saved
+        database.saveMain()
+        assert database.getStatus()
+        #DB changed - new File
+        os.system("touch "+dir2tests+"/testStructure/newfile.mp4")
+        newFiles = database.findNewFiles()
+        os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
+        assert not database.getStatus()
+        database.saveMain()
+        #DB changed - changed Entry
+        
+
 
         
 if __name__ == "__main__":

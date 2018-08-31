@@ -23,7 +23,7 @@ class DataBase(object):
     Members:
         maxID (int) : Highes ID in the Database
     """
-    def __init__(self, root, status, modelConf=None):
+    def __init__(self, root, status, modelConf=None, dummy=False):
         logging.info("Initializing DataBase")
         self.databaseRoot = root
         self.entries = []
@@ -31,16 +31,20 @@ class DataBase(object):
         self.mimirdir = root+"/.mimir"
         self.savepath = root+"/.mimir/mainDB.json"
         self.maxID = 0
+        self.isdummy = False
         if status == "new":
-            self.model = Model(modelConf)
-            if os.path.exists(self.mimirdir):
+            self._model = Model(modelConf)
+            if os.path.exists(self.mimirdir) and not dummy:
                 raise RuntimeError(".mimir directory exiting in ROOT dir. Currently not supported!")
+            elif dummy:
+                logging.warning("Initializing Database as dummy - Disabling saving")
+                self.isdummy = True
             else:
                 logging.info("Creating .mimir folder in %s", root)
                 os.makedirs(self.mimirdir)
                 logging.debug("Saving model in .mimir dir")
                 with open(self.mimirdir+"/model.json", 'w') as outfile:
-                    json.dump(self.model.initDict, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+                    json.dump(self._model.initDict, outfile, sort_keys=True, indent=4, separators=(',', ': '))
             #New database always runs a search of the filesystem starting from self.root
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
@@ -49,17 +53,24 @@ class DataBase(object):
                 self.maxID += 1
             self.maxID = self.maxID - 1
         elif status == "load":
-            if not os.path.exists(self.mimirdir):
+            if not os.path.exists(self.mimirdir) and not dummy:
                 raise RuntimeError("No .mimir dir existant in {0}".format(root))
+            if dummy:
+                logging.warning("Loading Database from %s as dummy", root)
+                self.isdummy = True
             if modelConf is None:
-                self.model = Model(self.mimirdir+"/model.json")
+                self._model = Model(self.mimirdir+"/model.json")
             else:
-                self.model = Model(modelConf)
+                self._model = Model(modelConf)
             self.loadMain()
 
         else:
             raise RuntimeError("Unsupported status: {0}".format(status))
-
+        
+    @property
+    def model(self):
+        return self._model
+        
     def getAllFilesMatchingModel(self, startdir=""):
         """
         Returns all files matching the file extentions defined in model starting
@@ -115,6 +126,9 @@ class DataBase(object):
 
     def saveMain(self):
         """ Save the main database (json file with all entries) as mainDB.json in the .mimir folder of the DB """
+        if self.isdummy:
+            logging.error("Database isDummy - Saving disabled")
+            return False
         status = False
         output = {}
         for entry in self.entries:
@@ -204,14 +218,14 @@ class DataBase(object):
                     machtingEntries.append(entry)
         return machtingEntries
 
-    def remove(self, value, byID=False, byName=False, byPath=False):
+    def remove(self, identifier, byID=False, byName=False, byPath=False):
         """
-        Remove a entry from the databse by specifing value. Value can be ID, Name\n
+        Remove a entry from the databse by specifing indentifier. Indentifier can be ID, Name\n
         or Path (vector). When calling the function only one can be set to True otherwise a\n
         exception will be raised
 
         Args:
-            value (int, string) : Value by with the entry will be removed. For can be of\n
+            indentifier (int, string) : Indentifier by with the entry will be removed. For can be of\n
                                   type string for all vectors and also int for ID vector
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
@@ -219,32 +233,11 @@ class DataBase(object):
 
         Raises:
             RuntimeError : If more than one vector or no vector was turned on
-            TypeError : If value has a not supported type
-            KeyError : If value is no valid Name, Path or ID
+            TypeError : If indentifier has a not supported type
+            KeyError : If indentifier is no valid Name, Path or ID
         """
         #Exceptions:
-        nVectorsActive = 0
-        for vector in [byID, byName, byPath]:
-            if not isinstance(vector, bool):
-                raise TypeError("Vectors are required to be a bool")
-            if vector:
-                nVectorsActive += 1
-        if nVectorsActive == 0 or nVectorsActive > 1:
-            raise RuntimeError
-        if not isinstance(value, (str, int)) and byID:
-            raise TypeError("byID vector supports str and int but value was type {0}".format(type(value)))
-        if not isinstance(value, str) and (byName or byPath):
-            raise TypeError("byName and byPath vector support str but value was type {0}".format(type(value)))
-        if byID:
-            if str(value) not in self.getAllValuebyItemName("ID"):
-                raise IndexError("Index {0} is out of range of DB".format(value))
-        else:
-            if byName:
-                query = "Name"
-            if byPath:
-                query = "Path"
-            if value not in self.getAllValuebyItemName(query):
-                raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
+        self.checkModVector(identifier, byID, byName, byPath)
 
         #Now the actual function
         if byID:
@@ -253,10 +246,67 @@ class DataBase(object):
             removetype = "Name"
         if byPath:
             removetype = "Path"
-        entry2remove = self.getEntryByItemName(removetype, str(value))[0]
+        entry2remove = self.getEntryByItemName(removetype, str(identifier))[0]
         self.entries.remove(entry2remove)
         self.entrydict.pop(entry2remove.Path, None)
 
+    def modifySingleEntry(self, identifier, itemName, newValue, byID=False, byName=False, byPath=False):
+        """
+        Modify an entry of the Database
+        Args:
+            indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
+                                        type string for all vectors and also int for ID vector
+            itemName (str) : Name of Item to be modified 
+            newValue (str) : New value for the item
+            byID (bool) : Switch for using the ID vector
+            byName (bool) : Switch for using the Name vector
+            byPath (bool) : Switch for using the Path vector
+        """
+        self.checkModVector(identifier, byID, byName, byPath)
+        if byID:
+            Idtype = "ID"
+        if byName:
+            Idtype = "Name"
+        if byPath:
+            Idtype = "Path"
+        modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
+        if not type(modEntry.items[itemName]) == Item:
+            raise TypeError("Called modifySingleEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
+        modEntry.changeItemValue(itemName, newValue)
+        
+    def modifyListEntry(self, identifier, itemName, newValue, method = "Append" , oldValue = None, byID=False, byName=False, byPath=False):
+        """
+        Modify an entry of the Database
+        Args:
+            indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
+                                        type string for all vectors and also int for ID vector
+            itemName (str) : Name of Item to be modified 
+            newValue (str) : New value for the item
+            byID (bool) : Switch for using the ID vector
+            byName (bool) : Switch for using the Name vector
+            byPath (bool) : Switch for using the Path vector
+        """
+        self.checkModVector(identifier, byID, byName, byPath)
+        if byID:
+            Idtype = "ID"
+        if byName:
+            Idtype = "Name"
+        if byPath:
+            Idtype = "Path"
+        modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
+        if not isinstance(modEntry.items[itemName], ListItem):
+            raise TypeError("Called modifyListEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
+        if method == "Append":
+            modEntry.addItemValue(itemName, newValue)
+        elif method == "Replace":
+            modEntry.replaceItemValue(itemName, newValue, oldValue)
+        elif method == "Remove":
+            modEntry.removeItemValue(itemName, oldValue)
+            if len(modEntry.getItem(itemName).value) == 0:                
+                modEntry.addItemValue(itemName, self.model.listitems[itemName]["default"])
+        else:
+            raise NotImplementedError
+    
     def query(self, itemNames, itemValues, returnIDs=False):
         """
         Query database: Will get all values for items with names itemNames and searches\n
@@ -292,6 +342,10 @@ class DataBase(object):
                     result.append(entry)
         return result
 
+    def getEntrybyID(retID):
+        """ Faster method for getting entry by ID """
+        return self.getEntryByItemName("ID", retID)[0]
+
     def __eq__(self, other):
         """ Implementation of the equality relation """
         if isinstance(other, self.__class__):
@@ -310,9 +364,42 @@ class DataBase(object):
         else:
             return NotImplemented
 
-    def getStats(self):
+    def getStatus(self):
         """ Check if current status of the database is saved """
-        pass
+        if not os.path.exists(self.savepath):
+            logging.info("No database saved yet")
+            return False
+        dummyDB = DataBase(self.databaseRoot, "load", dummy=True)
+        if self == dummyDB:
+            return True
+        else:
+            return False
+
+    def checkModVector(self, value, byID, byName, byPath):
+        #Exceptions:
+        nVectorsActive = 0
+        for vector in [byID, byName, byPath]:
+            if not isinstance(vector, bool):
+                raise TypeError("Vectors are required to be a bool")
+            if vector:
+                nVectorsActive += 1
+        if nVectorsActive == 0 or nVectorsActive > 1:
+            raise RuntimeError
+        if not isinstance(value, (str, int)) and byID:
+            raise TypeError("byID vector supports str and int but value was type {0}".format(type(value)))
+        if not isinstance(value, str) and (byName or byPath):
+            raise TypeError("byName and byPath vector support str but value was type {0}".format(type(value)))
+        if byID:
+            if str(value) not in self.getAllValuebyItemName("ID"):
+                raise IndexError("Index {0} is out of range of DB".format(value))
+        else:
+            if byName:
+                query = "Name"
+            if byPath:
+                query = "Path"
+            if value not in self.getAllValuebyItemName(query):
+                raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
+        
 
 class Model(object):
     """
@@ -336,8 +423,9 @@ class Model(object):
         self.modelName = modelDict["General"]["Name"]
         self.modelDesc = modelDict["General"]["Description"]
         self.extentions = modelDict["General"]["Types"]
-        self.items = {}
-        self.listitems = {}
+        self.secondaryDBs = modelDict["General"]["SecondaryDBs"]
+        self._items = {}
+        self._listitems = {}
         for key in modelDict:
             if key != "General":
                 logging.debug("Found item %s in model", key)
@@ -346,18 +434,25 @@ class Model(object):
                     if itemKey != "Type":
                         newitem[itemKey] = modelDict[key][itemKey]
                 if modelDict[key]["Type"] == "ListItem":
-                    self.listitems.update({key : newitem})
+                    self._listitems.update({key : newitem})
                 elif modelDict[key]["Type"] == "Item":
-                    self.items.update({key : newitem})
+                    self._items.update({key : newitem})
                 else:
                     raise TypeError("Invalid item type in model definition")
-        self.allItems = set(self.items.keys()).union(set(self.listitems.keys()))
+        self.allItems = set(self._items.keys()).union(set(self._listitems.keys()))
         #TODO Check if required items are in model
 
     def updateModel(self):
         """ Function for updating the model (not sure if needed) """
         pass
 
+    @property
+    def items(self):
+        return self._items
+    @property
+    def listitems(self):
+        return self._listitems
+    
 def validateDatabaseJSON(database, jsonfile):
     """ Function for validating a saved database. This comparison requires the
     lastest version of the database to check in memory.

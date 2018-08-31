@@ -1,6 +1,6 @@
 import json
 
-def main(outputName, DBtype, items, listitems, dryrun=False):
+def main(outputName, DBtype, items, listitems, secondaryDBs, dryrun=False):
     """
     Function for generating a DataBase model configuration.
     
@@ -38,6 +38,12 @@ def main(outputName, DBtype, items, listitems, dryrun=False):
         model[item]["hide"] = ""
         model[item]["plugin"] = ""
 
+    for item in secondaryDBs:
+        if not (item in items or item in listitems):
+            print("Item {0} in secondaryDBs is no valid item of model. Fix arguments and rerun. Exiting....".format(item))
+            exit()
+    model["General"]["SecondaryDBs"] = secondaryDBs
+        
     if dryrun:
         print(json.dumps(model, sort_keys=True, indent=4, separators=(',', ': ')))
     else:
@@ -86,6 +92,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Only print model json instead of saving it",
     )
-
+    argumentparser.add_argument(
+        "--secondaryDBs",
+        action="store",
+        help="Items for which a seconary database will be created",
+        nargs="+",
+        type=str,
+        default=["SingleItem", "ListItem"]
+    )
+    
     args = argumentparser.parse_args()
-    main(args.output, args.type, args.items, args.listitems, args.dryrun)
+    main(args.output, args.type, args.items, args.listitems, args.secondaryDBs, args.dryrun)

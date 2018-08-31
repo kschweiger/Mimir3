@@ -91,7 +91,7 @@ class TestItem(unittest.TestCase):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         newitem.remove("InitValue2")
         assert "InitValue2" not in newitem.value
-
+        
     def test_ListItem_remove_item_byValue_fail(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         with self.assertRaises(ValueError):

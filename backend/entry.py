@@ -93,7 +93,7 @@ class DataBaseEntry(object):
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if not isinstance(self.items[itemName], Item):
+        if not type(self.items[itemName]) == Item:
             raise RuntimeError("Item {0} is not if type Item".format(itemName))
         self.items[itemName].replace(newValue)
         setattr(self, itemName, self.items[itemName].value)

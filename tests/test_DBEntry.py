@@ -150,7 +150,7 @@ class TestEntry(unittest.TestCase):
         Items, newEntry = getEntry()
         newEntry.removeItemValue("ListItem1", "DefaultListItem1")
         assert "DefaultListItem1" not in newEntry.getItem("ListItem1").value
-    
+        
     def test_entry_remove_value_from_Item_raise_exception(self):
         Items, newEntry = getEntry()
         with self.assertRaises(TypeError):
