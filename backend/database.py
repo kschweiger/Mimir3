@@ -66,11 +66,12 @@ class DataBase(object):
 
         else:
             raise RuntimeError("Unsupported status: {0}".format(status))
-        
+
     @property
     def model(self):
+        """ Returns the model variable """
         return self._model
-        
+
     def getAllFilesMatchingModel(self, startdir=""):
         """
         Returns all files matching the file extentions defined in model starting
@@ -256,7 +257,7 @@ class DataBase(object):
         Args:
             indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
                                         type string for all vectors and also int for ID vector
-            itemName (str) : Name of Item to be modified 
+            itemName (str) : Name of Item to be modified
             newValue (str) : New value for the item
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
@@ -270,17 +271,17 @@ class DataBase(object):
         if byPath:
             Idtype = "Path"
         modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
-        if not type(modEntry.items[itemName]) == Item:
+        if not type(modEntry.items[itemName]) == Item: # pylint: disable=unidiomatic-typecheck
             raise TypeError("Called modifySingleEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
         modEntry.changeItemValue(itemName, newValue)
-        
-    def modifyListEntry(self, identifier, itemName, newValue, method = "Append" , oldValue = None, byID=False, byName=False, byPath=False):
+
+    def modifyListEntry(self, identifier, itemName, newValue, method="Append", oldValue=None, byID=False, byName=False, byPath=False):
         """
         Modify an entry of the Database
         Args:
             indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
                                         type string for all vectors and also int for ID vector
-            itemName (str) : Name of Item to be modified 
+            itemName (str) : Name of Item to be modified
             newValue (str) : New value for the item
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
@@ -302,11 +303,11 @@ class DataBase(object):
             modEntry.replaceItemValue(itemName, newValue, oldValue)
         elif method == "Remove":
             modEntry.removeItemValue(itemName, oldValue)
-            if len(modEntry.getItem(itemName).value) == 0:                
+            if len(modEntry.getItem(itemName).value) == 0:
                 modEntry.addItemValue(itemName, self.model.listitems[itemName]["default"])
         else:
             raise NotImplementedError
-    
+
     def query(self, itemNames, itemValues, returnIDs=False):
         """
         Query database: Will get all values for items with names itemNames and searches\n
@@ -342,7 +343,7 @@ class DataBase(object):
                     result.append(entry)
         return result
 
-    def getEntrybyID(retID):
+    def getEntrybyID(self, retID):
         """ Faster method for getting entry by ID """
         return self.getEntryByItemName("ID", retID)[0]
 
@@ -370,13 +371,13 @@ class DataBase(object):
             logging.info("No database saved yet")
             return False
         dummyDB = DataBase(self.databaseRoot, "load", dummy=True)
-        if self == dummyDB:
+        if self == dummyDB: # pylint: disable=simplifiable-if-statement
             return True
         else:
             return False
 
     def checkModVector(self, value, byID, byName, byPath):
-        #Exceptions:
+        """ Common function for modification methods input chekcing """
         nVectorsActive = 0
         for vector in [byID, byName, byPath]:
             if not isinstance(vector, bool):
@@ -399,7 +400,6 @@ class DataBase(object):
                 query = "Path"
             if value not in self.getAllValuebyItemName(query):
                 raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
-        
 
 class Model(object):
     """
@@ -448,17 +448,20 @@ class Model(object):
 
     @property
     def items(self):
+        """ Retruns all item demfinitons in the model """
         return self._items
     @property
     def listitems(self):
+        """ Retruns all listitem demfinitons in the model """
         return self._listitems
-    
-def validateDatabaseJSON(database, jsonfile):
-    """ Function for validating a saved database. This comparison requires the
-    lastest version of the database to check in memory.
 
-    Args:
-        databse (DataBase) : Reference database (in Runtime)
-        json (str) : Path to json file to be checked
-    """
-    checkDB = Database(database.databaseRoot, "load", database.model.fileName, jsonfile)
+#def validateDatabaseJSON(database, jsonfile):
+#    """
+#    Function for validating a saved database. This comparison requires the
+#    lastest version of the database to check in memory.
+#
+#    Args:
+#        databse (DataBase) : Reference database (in Runtime)
+#        json (str) : Path to json file to be checked
+#    """
+#    checkDB = Database(database.databaseRoot, "load", database.model.fileName, jsonfile)

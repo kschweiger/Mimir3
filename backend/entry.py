@@ -93,7 +93,7 @@ class DataBaseEntry(object):
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if not type(self.items[itemName]) == Item:
+        if not type(self.items[itemName]) == Item:# pylint: disable=unidiomatic-typecheck
             raise RuntimeError("Item {0} is not if type Item".format(itemName))
         self.items[itemName].replace(newValue)
         setattr(self, itemName, self.items[itemName].value)
@@ -203,6 +203,7 @@ class Item(object):
         self.value = newValue
 
     def getValue(self):
+        """ Returns the value of the entry """
         return self.value
 
     def __repr__(self):
