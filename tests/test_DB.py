@@ -6,7 +6,7 @@ from glob import glob
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 print(sys.path)
-from backend.database import DataBase, Model, validateDatabaseJSON
+from backend.database import DataBase, Model
 from backend.entry import Item, ListItem
 import unittest
 import pytest
