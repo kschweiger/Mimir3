@@ -14,6 +14,10 @@ import coverage
 import os
 import copy
 
+
+#DEBUGGING
+import tracemalloc
+
 if os.getcwd().endswith("tests"):
     mimir_dir = os.getcwd()[0:-len("/tests")]
     dir2tests = os.getcwd()
@@ -70,7 +74,8 @@ class TestItem(unittest.TestCase):
             if entry.Path not in filesindbRoot:
                 allEntriesSaved = False
         assert allEntriesSaved
-
+        del database
+        
     def test_03_DB_raise_RuntimeError_existing_mimirDir(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -78,7 +83,8 @@ class TestItem(unittest.TestCase):
             os.makedirs(dbRootPath+"/.mimir")
         with self.assertRaises(RuntimeError):
             database = DataBase(dbRootPath, "new", config)
-        
+            del database
+    
     def test_04_DB_save(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -87,7 +93,8 @@ class TestItem(unittest.TestCase):
         database = DataBase(dbRootPath, "new", config)
         assert database.saveMain()
         #assert validateDatabaseJSON(database, config, database.savepath)
-
+        del database
+        
     def test_05_DB_equal(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -98,6 +105,7 @@ class TestItem(unittest.TestCase):
             shutil.rmtree(dbRootPath+"/.mimir")
         database2 = DataBase(dbRootPath, "new", config)
         assert database1 == database2
+        del database1, database2
         
     def test_06_DB_notequal(self):
         config = mimir_dir+"/conf/modeltest.json"
@@ -113,6 +121,7 @@ class TestItem(unittest.TestCase):
         database2.findNewFiles()
         os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
         assert database1 != database2
+        del database1, database2    
 
     def test_07_DB_load(self):
         config = mimir_dir+"/conf/modeltest.json"
@@ -123,6 +132,7 @@ class TestItem(unittest.TestCase):
         database.saveMain()
         loadedDB = DataBase(dbRootPath, "load")
         assert database == loadedDB
+        del database
 
     def test_08_DB_getAllValues(self):
         config = mimir_dir+"/conf/modeltest.json"
@@ -135,7 +145,8 @@ class TestItem(unittest.TestCase):
         values = database.getAllValuebyItemName("Path")
         filesindbRoot = glob(dbRootPath+"/**/*.mp4", recursive = True)
         assert values == set(filesindbRoot)
-
+        del database
+        
     def test_09_DB_getEntrybyItemName(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -152,7 +163,8 @@ class TestItem(unittest.TestCase):
         assert found
         entrybyItemName = database.getEntryByItemName("Name", "folder2file2")
         assert entry in entrybyItemName
-                
+        del database
+        
     def test_10_DB_removeEntry_exceptions(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -187,7 +199,8 @@ class TestItem(unittest.TestCase):
             database.remove("RandomName", byName = True)
         with self.assertRaises(KeyError):
             database.remove("RandomPath", byPath = True)
-            
+        del database
+        
     def test_11_DB_removeEntry(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -212,6 +225,7 @@ class TestItem(unittest.TestCase):
         entry2Remove = databasePath.getEntryByItemName("Path",path2remove)[0]
         databasePath.remove(path2remove, byPath = True)
         assert not entry2Remove in databasePath.entries
+        del database
         
     def test_12_DB_findNewFiles_append(self):
         config = mimir_dir+"/conf/modeltest.json"
@@ -233,7 +247,8 @@ class TestItem(unittest.TestCase):
                 break
         assert asEntry
         assert int(newEntry.ID) == lastIDbeforeAppend+1
-
+        del database
+        
     def test_13_DB_query(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -264,7 +279,8 @@ class TestItem(unittest.TestCase):
         found2 = "1" in resultID
         foundID = found1 and found2
         assert foundID and foundEntry and len(resultEntry) == 2
-
+        del database
+        
     def test_14_DB_modifyEntry(self):
         config = mimir_dir+"/conf/modeltest.json"
         dbRootPath = dir2tests+"/testStructure"
@@ -282,12 +298,21 @@ class TestItem(unittest.TestCase):
         with self.assertRaises(TypeError):
             database.modifySingleEntry("1", "ListItem", "changedItemValue", byID = True )
         #---------------------- ListItem --------------------------
+        with self.assertRaises(TypeError):
+            database.modifyListEntry("1", "SingleItem", "appendedItemValue", "Append", byID = True)           
+
+        #Append but first default schould be remove when appending the fist actual value
+        origEntry = database.getEntryByItemName("ID", "1")[0]
+        database.modifyListEntry("1", "ListItem", "initialValue", "Append", byID = True)
+        changedEntry = database.getEntryByItemName("ID", "1")[0]
+        #print(database.model.getDefaultValue("ListItem"))
+        assert ("initialValue" in changedEntry.getAllValuesbyName("ListItem")
+                and database.model.getDefaultValue("ListItem") not in changedEntry.getAllValuesbyName("ListItem")
+                and len(changedEntry.getAllValuesbyName("ListItem")) == 1)
         #Append
         print("-------- Append ----------")
         origEntry = database.getEntryByItemName("ID", "1")[0]
         databaseAppend = copy.deepcopy(database)
-        with self.assertRaises(TypeError):
-            databaseAppend.modifyListEntry("1", "SingleItem", "appendedItemValue", "Append", byID = True)           
         databaseAppend.modifyListEntry("1", "ListItem", "appendedItemValue", "Append", byID = True)
         changedEntry = databaseAppend.getEntryByItemName("ID", "1")[0]
         assert ( "appendedItemValue" in changedEntry.getAllValuesbyName("ListItem")
@@ -295,10 +320,10 @@ class TestItem(unittest.TestCase):
                 #Replace
         print("-------- Replace ----------")
         databaseReplace = copy.deepcopy(databaseAppend)
-        databaseReplace.modifyListEntry("1", "ListItem", "replacedItemValue", "Replace", "emptyListItem", byID = True)
+        databaseReplace.modifyListEntry("1", "ListItem", "replacedItemValue", "Replace", "initialValue", byID = True)
         changedEntry = databaseReplace.getEntryByItemName("ID", "1")[0]
         assert ("replacedItemValue" in changedEntry.getAllValuesbyName("ListItem")
-                and "emptyListItem" not in changedEntry.getAllValuesbyName("ListItem"))
+                and "initialValue" not in changedEntry.getAllValuesbyName("ListItem"))
 
         #Remove
         print("-------- Remove I ----------")

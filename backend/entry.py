@@ -1,6 +1,7 @@
-'''
+"""
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
-'''
+"""
+
 class DataBaseEntry(object):
     '''
     The Entry class describes all information stored in an database entry
@@ -125,8 +126,16 @@ class DataBaseEntry(object):
         """
         Replace value oldValue with new Value
         """
-        self.removeItemValue(itemName, oldValue)
-        self.addItemValue(itemName, newValue)
+        self.checkPassedItems(itemName)
+        if not self.hasItem(itemName):
+            raise KeyError("Name {0} is not in names".format(itemName))
+        if not isinstance(self.items[itemName], ListItem):
+            raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
+        self.getItem(itemName).remove(oldValue)
+        self.getItem(itemName).add(newValue)
+        setattr(self, itemName, self.items[itemName].value)
+        #self.removeItemValue(itemName, oldValue)
+        #self.addItemValue(itemName, newValue)
 
     def getDictRepr(self):
         """
@@ -276,7 +285,14 @@ class ListItem(Item):
         if isinstance(toRemove, str):
             if toRemove not in self.value:
                 raise ValueError
-            self.value.remove(toRemove)
+            newVals = []
+            for val in self.value:
+                if val != toRemove:
+                    newVals.append(val)
+            #The python remove method for some reaseon also removes the
+            #database.model._listitems[itemName]["default"] entry.. ¯\_(ツ)_/¯
+            #self.value.remove(toRemove)
+            self.value = newVals
         if isinstance(toRemove, int):
             if toRemove > len(self.value)-1:
                 raise IndexError

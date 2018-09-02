@@ -1,0 +1,76 @@
+{
+    "Added": {
+        "Type": "Item",
+        "default": "emptyAdded",
+        "hide": "",
+        "plugin": ""
+    },
+    "Changed": {
+        "Type": "ListItem",
+        "default": [
+            "emptyChanged"
+        ],
+        "hide": "",
+        "plugin": ""
+    },
+    "General": {
+        "Description": "Description of modeltest",
+        "Name": "modeltest",
+        "SecondaryDBs": [
+            "SingleItem",
+            "ListItem"
+        ],
+        "Types": [
+            "mp4",
+            "wmv",
+            "avi",
+            "mov",
+            "mpg",
+            "mp7",
+            "flv",
+            "mkv",
+            "f4v",
+            "mpeg"
+        ]
+    },
+    "ID": {
+        "Type": "Item",
+        "default": "emptyID",
+        "hide": "",
+        "plugin": ""
+    },
+    "ListItem": {
+        "Type": "ListItem",
+        "default": [
+            "emptyListItem"
+        ],
+        "hide": "",
+        "plugin": ""
+    },
+    "Name": {
+        "Type": "Item",
+        "default": "emptyName",
+        "hide": "",
+        "plugin": ""
+    },
+    "Opened": {
+        "Type": "ListItem",
+        "default": [
+            "emptyOpened"
+        ],
+        "hide": "",
+        "plugin": ""
+    },
+    "Path": {
+        "Type": "Item",
+        "default": "emptyPath",
+        "hide": "",
+        "plugin": ""
+    },
+    "SingleItem": {
+        "Type": "Item",
+        "default": "emptySingleItem",
+        "hide": "",
+        "plugin": ""
+    }
+}

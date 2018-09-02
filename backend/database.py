@@ -298,13 +298,17 @@ class DataBase(object):
         if not isinstance(modEntry.items[itemName], ListItem):
             raise TypeError("Called modifyListEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
         if method == "Append":
-            modEntry.addItemValue(itemName, newValue)
+            if (len(modEntry.getItem(itemName).value) == 1 and modEntry.getItem(itemName).value[0] == self.model.getDefaultValue(itemName)):
+                default = self.model.getDefaultValue(itemName)
+                modEntry.replaceItemValue(itemName, newValue, default)
+            else:
+                modEntry.addItemValue(itemName, newValue)
         elif method == "Replace":
             modEntry.replaceItemValue(itemName, newValue, oldValue)
         elif method == "Remove":
             modEntry.removeItemValue(itemName, oldValue)
             if len(modEntry.getItem(itemName).value) == 0:
-                modEntry.addItemValue(itemName, self.model.listitems[itemName]["default"])
+                modEntry.addItemValue(itemName, self.model.getDefaultValue(itemName))
         else:
             raise NotImplementedError
 
@@ -445,6 +449,15 @@ class Model(object):
     def updateModel(self):
         """ Function for updating the model (not sure if needed) """
         pass
+
+    def getDefaultValue(self, itemName):
+        """ Returns the default item name of the modlue """
+        if itemName in self._items.keys():
+            return self._items[itemName]["default"][0]
+        elif itemName in self._listitems.keys():
+            return self._listitems[itemName]["default"][0]
+        else:
+            raise KeyError
 
     @property
     def items(self):
