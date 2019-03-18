@@ -1,7 +1,7 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath('..'))
-from backend.entry import Item, ListItem
+#sys.path.insert(0, os.path.abspath('..'))
+from mimir.backend.entry import Item, ListItem
 import unittest
 import pytest
 import coverage
@@ -13,7 +13,7 @@ class TestItem(unittest.TestCase):
          newitem = Item("TestName", "TestValue")
          assert newitem.name == "TestName"
          assert newitem.value == "TestValue"
-         
+
     def test_initialization_list(self):
         newitem = ListItem("TestName", ["TestValue"])
         assert newitem.name == "TestName"
@@ -29,23 +29,23 @@ class TestItem(unittest.TestCase):
     def test_initialization_list_exeption_type(self):
         with self.assertRaises(TypeError):
              ListItem("TestName", {})
-        
+
     def test_Item_replace_item(self):
         newitem = Item("TestName", "InitValue")
         newitem.replace("ReplacedValue")
         assert newitem.value == "ReplacedValue"
-        
+
     def test_ListItem_add_item(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         addRet = newitem.add("newValue")
-        assert addRet is True 
+        assert addRet is True
         assert "newValue" in newitem.value
 
     def test_ListItem_add_item(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         with self.assertRaises(TypeError):
             addRet = newitem.add(3.1415)
-        
+
     def test_ListItem_add_item_multiple(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         newValues = ["newValue1", "newValue2"]
@@ -86,12 +86,12 @@ class TestItem(unittest.TestCase):
         newValue = "newValue"
         with self.assertRaises(TypeError):
             newitem.replace("InitValue1", {})
-        
+
     def test_ListItem_remove_item_byValue(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         newitem.remove("InitValue2")
         assert "InitValue2" not in newitem.value
-        
+
     def test_ListItem_remove_item_byValue_fail(self):
         newitem = ListItem("TestName", ["InitValue1", "InitValue2", "InitValue3"])
         with self.assertRaises(ValueError):
@@ -134,6 +134,6 @@ class TestItem(unittest.TestCase):
         newitem = ListItem("TestName", values)
         with self.assertRaises(IndexError):
             newitem.replace(3, "newValue")
-    """ 
+    """
 if __name__ == "__main__":
     unittest.main()

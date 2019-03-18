@@ -6,8 +6,8 @@ import json
 import os
 from glob import glob
 
-from backend.entry import DataBaseEntry, Item, ListItem
-import backend.helper
+from mimir.backend.entry import DataBaseEntry, Item, ListItem
+import mimir.backend.helper
 
 class DataBase(object):
     """
@@ -113,7 +113,7 @@ class DataBase(object):
             elif item == "Name":
                 entryinit.append(("Name", "Single", filename))
             elif item == "Added":
-                entryinit.append(("Added", "Single", backend.helper.getTimeFormatted("Full")))
+                entryinit.append(("Added", "Single", mimir.backend.helper.getTimeFormatted("Full")))
             else:
                 entryinit.append((item, "Single", self.model.items[item]["default"]))
         for listitem in self.model.listitems:

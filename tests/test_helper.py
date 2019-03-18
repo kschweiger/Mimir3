@@ -1,9 +1,9 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('.'))
-print(sys.path)
-import backend.helper
+#sys.path.insert(0, os.path.abspath('..'))
+#sys.path.insert(0, os.path.abspath('.'))
+#print(sys.path)
+import mimir.backend.helper
 import unittest
 import pytest
 import coverage
@@ -13,10 +13,10 @@ import datetime
 class TestItem(unittest.TestCase):
     def test_01_datetime(self):
         #Get all possible outputs from function
-        dateFull = backend.helper.getTimeFormatted("Full")
-        dateFallback = backend.helper.getTimeFormatted("UNDEFINEDARG")
-        dateTime = backend.helper.getTimeFormatted("Time")
-        dateDate = backend.helper.getTimeFormatted("Date")
+        dateFull = mimir.backend.helper.getTimeFormatted("Full")
+        dateFallback = mimir.backend.helper.getTimeFormatted("UNDEFINEDARG")
+        dateTime = mimir.backend.helper.getTimeFormatted("Time")
+        dateDate = mimir.backend.helper.getTimeFormatted("Date")
 
 
         #Get current time
@@ -39,11 +39,9 @@ class TestItem(unittest.TestCase):
         second2test = time.split(":")[2]
         assert (len(splitoutput ) == 2
                 and int(day2test) == day and int(month2test) == month and  int(year2test) == year-2000
-                and int(hour2test) == hour and abs(int(minute2test)-minutes) <= 1 and abs(int(second2test)-sec) <= 3)  
+                and int(hour2test) == hour and abs(int(minute2test)-minutes) <= 1 and abs(int(second2test)-sec) <= 3)
 
         assert dateFull == dateFallback
-        
+
         assert dateTime == time
         assert dateDate == date
-
-
