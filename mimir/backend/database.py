@@ -2,8 +2,10 @@
 Toplevel Database class for the Mimir database
 """
 import logging
+import random
 import json
 import os
+from shutil import copy2
 from glob import glob
 
 from mimir.backend.entry import DataBaseEntry, Item, ListItem
@@ -11,17 +13,27 @@ import mimir.backend.helper
 
 class DataBase(object):
     """
-    Database class that contains Items and all methods for reading/manipulation them
-    TODO: Document how it is loaded/saved if already exising
+    Database class that contains entries which are organized by an unique ID. The class contains methods for operating on the Database (save, load, queries, random entries) and modifing/reading/removing Entries. When a new database is created, a root directory (which contains all files) and a model are required. The Model can be created with makeModelDefinition.py and modified for specific needs. During initialization a .mimir directory will be created in the passed root directory. There the database and all affiliated files (backup, secondary databases) will be saved. The model passed in this process will alse be saved there for future reference.
 
     Args:
-        root (str) : Base path of the database. This can change between different session\n
-                     for example if the data base is on a removable drive\n
-        status (str) : Initializes a new Database or loads a existing database in root dir \n
+        root (str) : Base path of the database. This can change between different session for example if the data base is on a removable drive
+        status (str) : Initializes a new Database or loads a existing database in root dir
         model (str) : Path to the model used for database initialization
 
-    Members:
+    Raises:
+        RuntimeError : Raised if .mimir folder already existis and a new database is being created
+        RuntimeError : Raised if a database is being loaded from a folder that has no initialized database
+        RuntimeError : Raised for invalid status argument
+
+    Attributes:
         maxID (int) : Highes ID in the Database
+        databaseRoot (str) : Points to the root of the database
+        mimirdir (str) : Points to the .mimir dir of the DB
+        savepath (str) : Points to the path where the database is saved
+        entries (list) : List of all Entry Object in the database
+        entrydict (dict) : Dict of all entries with IDs as key
+        _model (Model) : General information of the database model
+        isdummy (bool) : Flag used for dummy databases --> Currently only disables saveing
     """
     def __init__(self, root, status, modelConf=None, dummy=False):
         logging.info("Initializing DataBase")
@@ -101,8 +113,9 @@ class DataBase(object):
             path (str) : Path to file added to DB on filesystem\n
             cID (int) : ID that is used for this entry
 
-        Returns new DataBaseEntry object
-         """
+        Return:
+            new DataBaseEntry object
+        """
         filename = path.split("/")[-1].split(".")[0]
         entryinit = []
         for item in self.model.items:
@@ -126,14 +139,27 @@ class DataBase(object):
         return e
 
     def saveMain(self):
-        """ Save the main database (json file with all entries) as mainDB.json in the .mimir folder of the DB """
+        """
+        Save the main database (json file with all entries)
+        as mainDB.json in the .mimir folder of the DB.
+        Before saving it will create a backup of the current
+        state. Backups are save for days. Will overwrite if already
+        present.
+        """
         if self.isdummy:
             logging.error("Database isDummy - Saving disabled")
             return False
         status = False
+        # Copy current DBfile and save it as backup
+        if os.path.exists(self.savepath):
+            logging.debug("Making backup")
+            backupDate = mimir.backend.helper.getTimeFormatted("Date", "-")
+            copy2(self.savepath, self.savepath.replace(".json",".{0}.backup".format(backupDate)))
+        # Convert database to dict so json save can be used
         output = {}
         for entry in self.entries:
             output[entry.Path] = entry.getDictRepr()
+        logging.debug("Saving database at %s", self.savepath)
         with open(self.savepath, "w") as outfile:
             json.dump(output, outfile, indent=4)
             status = True
@@ -205,6 +231,60 @@ class DataBase(object):
             retlist.append(getattr(entry, itemName))
         return set(retlist)
 
+    def getSortedIDs(self, sortBy, reverseOrder = True):
+        """
+        Returns a list of database IDs sorted by itemName sortBy.
+
+        Args:
+            sortBy (str) : itemName that will be used for sorting. The exact sorting \n
+                           depends on the type set in the model (str, int, datetime)
+        Return:
+            sortedEntries (list[str]) : List of all id sorted by sortBy newValue
+
+        Raises:
+            KeyError : Will be raise if sortBy is no valid itemName for the model
+        """
+        if sortBy not in self.model.allItems:
+            raise KeyError("Arg {0} not in model items".format(sortBy))
+        allIDs = self.getAllValuebyItemName("ID")
+        sortedEntries = []
+        map_id_sortby = {}
+        for ID in allIDs:
+            map_id_sortby[ID] = self.getEntrybyID(ID).getItem(sortBy).value
+        itemType = self.model.getItemType(sortBy)
+        #If sortBy is a ListItem we need to figure out the value to sort by
+        if sortBy in self.model.listitems:
+            for ID in map_id_sortby:
+                if itemType == "datetime":
+                    map_id_sortby[ID] = mimir.backend.helper.sortDateTime(map_id_sortby[ID])[0]
+                else:
+                    #TODO: THink about a way to sort ListItems of type str/int
+                    raise NotImplementedError("Sorting for none datetime listitems not implemented")
+
+        pairs = []
+        for ID in map_id_sortby:
+            pairs.append((ID, map_id_sortby[ID]))
+
+        if itemType == "datetime":
+            sortedPairs = sorted(pairs, key = lambda x : (mimir.backend.helper.convertToDateTime(x[1]),
+                                                          -int(x[0]) if reverseOrder else int(x[0])),
+                                                          reverse = reverseOrder)
+        elif itemType == "int":
+            sortedPairs = sorted(pairs, key = lambda x : (int(x[1]),
+                                                         -int(x[0]) if reverseOrder else int(x[0])),
+                                                         reverse = reverseOrder)
+        elif itemType == "float":
+            sortedPairs = sorted(pairs, key = lambda x : (float(x[1]),
+                                                          -int(x[0]) if reverseOrder else int(x[0])),
+                                                          reverse = reverseOrder)
+        else:
+            sortedPairs = sorted(pairs, key = lambda x : (x[1],
+                                                          -int(x[0]) if reverseOrder else int(x[0])),
+                                                          reverse = reverseOrder)
+
+
+        return [x[0] for x in sortedPairs]
+
     def getEntryByItemName(self, itemName, itemValue):
         """ Get all entries that have value itemValue in Item with itemName """
         if itemName not in self.model.allItems:
@@ -254,6 +334,7 @@ class DataBase(object):
     def modifySingleEntry(self, identifier, itemName, newValue, byID=False, byName=False, byPath=False):
         """
         Modify an entry of the Database
+
         Args:
             indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
                                         type string for all vectors and also int for ID vector
@@ -274,15 +355,19 @@ class DataBase(object):
         if not type(modEntry.items[itemName]) == Item: # pylint: disable=unidiomatic-typecheck
             raise TypeError("Called modifySingleEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
         modEntry.changeItemValue(itemName, newValue)
+        #Update the Changed date of the entry
+        self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
+                             byID=byID, byName=byName, byPath=byPath)
 
     def modifyListEntry(self, identifier, itemName, newValue, method="Append", oldValue=None, byID=False, byName=False, byPath=False):
         """
-        Modify an entry of the Database
+        Modify an entry of the Database.
+
         Args:
-            indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
-                                        type string for all vectors and also int for ID vector
+            indentifier (int, string) : Indentifier by which the entry will selected. It can be of type string for all vectors and also int for ID vector
             itemName (str) : Name of Item to be modified
             newValue (str) : New value for the item
+            oldValue (str) : Required for replacement
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
             byPath (bool) : Switch for using the Path vector
@@ -311,6 +396,30 @@ class DataBase(object):
                 modEntry.addItemValue(itemName, self.model.getDefaultValue(itemName))
         else:
             raise NotImplementedError
+        #Update the Changed date of the entry
+        if itemName != "Changed" and itemName != "Opened":
+            # Exclude changed item since this would lead to inf. loop
+            # Exclude opened since it is not considered a "change" to the entry
+            self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
+                                 byID=byID, byName=byName, byPath=byPath)
+
+    def updateOpened(self, identifier, byID=False, byName=False, byPath=False):
+        """
+        Wrapper for modifyListEntry that is supposed to be called after a file has been openend.
+        For this function the byID is enable on default when none of the arguments is set to true.
+
+        Args:
+            indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
+                                        type string for all vectors and also int for ID vector
+            byID (bool) : Switch for using the ID vector
+            byName (bool) : Switch for using the Name vector
+            byPath (bool) : Switch for using the Path vector
+        """
+        if not byID and not byName and not byPath:
+            byID = True
+        self.modifyListEntry(identifier, "Opened", mimir.backend.helper.getTimeFormatted("Full"),
+                     byID=byID, byName=byName, byPath=byPath)
+
 
     def query(self, itemNames, itemValues, returnIDs=False):
         """
@@ -322,7 +431,7 @@ class DataBase(object):
             itemValues (str, list) : itemValues used for the query
             returnIDs (bool) : If True function will return a list of IDs instead of entries
 
-        Returns:
+        Return:
             result (list) : list of all entries (ids) matching the query
         """
         if isinstance(itemNames, str):
@@ -405,6 +514,36 @@ class DataBase(object):
             if value not in self.getAllValuebyItemName(query):
                 raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
 
+    def getRandomEntry(self, chooseFrom, weighted=False):
+        """
+        Get a random entry from the database out of the ID passed in the chooseFrom variable
+
+        Args:
+            chooseFrom (list, set) : List of ID to choose a random ID from
+            weighted (bool) : Weighted random function (to be implemented)
+        Return:
+            retID (str) : Random ID
+        """
+        if isinstance(chooseFrom, set):
+            chooseFrom = list(chooseFrom)
+        if not weighted:
+            retID = random.choice(chooseFrom)
+        else:
+            raise NotImplementedError
+        return retID
+
+    def getRandomEntryAll(self, weighted=False):
+        """
+        Get a random entry from the database out of all IDs. This is just a wrapper for getRandomEntry
+
+        Args:
+            chooseFrom (list, set) : List of ID to choose a random ID from
+        Returns:
+            retID (str) : Random ID
+        """
+        return self.getRandomEntry(list(self.getAllValuebyItemName("ID")), weighted)
+
+
 class Model(object):
     """
     Database model
@@ -412,10 +551,10 @@ class Model(object):
     Args:
         config : Config file for the model
     Attributes:
-        filename : Path to the model json\n
-        modelName : name of the model\n
-        modelDesc : Description of the model\n
-        extentions : File extentions that are used as criterion for searching files\n
+        filename : Path to the model json
+        modelName : name of the model
+        modelDesc : Description of the model
+        extentions : File extentions that are used as criterion for searching files
     """
     def __init__(self, config):
         logging.debug("Loading model from %s", config)
@@ -456,6 +595,15 @@ class Model(object):
             return self._items[itemName]["default"][0]
         elif itemName in self._listitems.keys():
             return self._listitems[itemName]["default"][0]
+        else:
+            raise KeyError
+
+    def getItemType(self, itemName):
+        """ Returns the default item name of the modlue """
+        if itemName in self._items.keys():
+            return self._items[itemName]["itemType"]
+        elif itemName in self._listitems.keys():
+            return self._listitems[itemName]["itemType"]
         else:
             raise KeyError
 

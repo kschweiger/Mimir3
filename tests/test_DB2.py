@@ -13,7 +13,7 @@ import pytest
 import coverage
 import os
 import copy
-
+import datetime
 
 #DEBUGGING
 import tracemalloc
@@ -33,6 +33,71 @@ files = ["testStructure/rootFile1.mp4",
          "testStructure/folder2/folder2file2.mp4"]
 
 folder = ["folder1", "folder2"]
+
+def getDataTime():
+    currently = datetime.datetime.now()
+    day = currently.day
+    month = currently.month
+    year = currently.year
+    hour = currently.hour
+    minutes = currently.minute
+    sec = currently.second
+    fulldate = "{0:02}{3}{1:02}{3}{2:02}".format(day, month, year-2000, ".")
+    fulltime = "{0:02}:{1:02}:{2:02}".format(hour, minutes, sec)
+    return fulldate, fulltime
+
+
+@pytest.fixture(scope="module")
+def preCreatedDB():
+    config = mimir_dir+"/conf/modeltest.json"
+    dbRootPath = dir2tests+"/testStructure"
+    if os.path.exists(dbRootPath+"/.mimir"):
+        shutil.rmtree(dbRootPath+"/.mimir")
+    database = DataBase(dbRootPath, "new", config)
+    ## Set Ratings for furure tests
+    # Expected Order: ["3", "2", "4", "1", "5", "0"]
+    database.modifySingleEntry("1", "Rating", "2", byID = True )
+    database.modifySingleEntry("2", "Rating", "4", byID = True )
+    database.modifySingleEntry("3", "Rating", "5", byID = True )
+    database.modifySingleEntry("4", "Rating", "3", byID = True )
+    database.modifySingleEntry("5", "Rating", "1", byID = True )
+    # Expected Order: ["5", "4", "3", "2", "1", "0"]
+    database.modifySingleEntry("0", "SingleItem", "Xi", byID = True )
+    database.modifySingleEntry("1", "SingleItem", "Tau", byID = True )
+    database.modifySingleEntry("2", "SingleItem", "Ny", byID = True )
+    database.modifySingleEntry("3", "SingleItem", "Eta", byID = True )
+    database.modifySingleEntry("4", "SingleItem", "Bea", byID = True )
+    database.modifySingleEntry("5", "SingleItem", "Alpha", byID = True )
+    Entry0 = database.getEntryByItemName("ID", "0")[0]
+    Entry1 = database.getEntryByItemName("ID", "1")[0]
+    Entry2 = database.getEntryByItemName("ID", "2")[0]
+    Entry3 = database.getEntryByItemName("ID", "3")[0]
+    Entry4 = database.getEntryByItemName("ID", "4")[0]
+    Entry5 = database.getEntryByItemName("ID", "5")[0]
+    # Expected Order: ["0", "2", "3", "5", "1", "4"]
+    Entry0.changeItemValue("Added", "30.01.19|00:00:00")
+    Entry1.changeItemValue("Added", "20.01.19|00:00:00")
+    Entry2.changeItemValue("Added", "29.01.19|00:00:00")
+    Entry3.changeItemValue("Added", "29.01.19|00:00:00")# Same time: Fall back to ID
+    Entry4.changeItemValue("Added", "15.01.19|00:00:00")
+    Entry5.changeItemValue("Added", "26.01.19|00:00:00")
+    # Expected Order: ["0", "3", "4", "5", "1", "2"]
+    Entry0.replaceItemValue("Changed", "24.02.19|00:00:00", Entry0.getItem("Changed").value[0])
+    Entry1.replaceItemValue("Changed", "10.02.19|00:00:00", Entry1.getItem("Changed").value[0])
+    Entry2.replaceItemValue("Changed", "23.02.19|00:00:00", Entry2.getItem("Changed").value[0])
+    Entry3.replaceItemValue("Changed", "22.02.19|00:00:00", Entry3.getItem("Changed").value[0])
+    Entry4.replaceItemValue("Changed", "21.02.19|00:00:00", Entry4.getItem("Changed").value[0])
+    Entry5.replaceItemValue("Changed", "20.02.19|00:00:00", Entry5.getItem("Changed").value[0])
+    Entry0.addItemValue("Changed", "25.03.19|00:00:00")
+    Entry1.addItemValue("Changed", "19.03.19|00:00:00")
+    Entry2.addItemValue("Changed", "23.01.19|00:00:00")
+    Entry3.addItemValue("Changed", "22.03.19|00:00:00")
+    Entry4.addItemValue("Changed", "21.03.19|00:00:00")
+    Entry5.addItemValue("Changed", "20.03.19|00:00:00")
+    database.saveMain()
+    #shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2") #For testing
+    shutil.rmtree(dbRootPath+"/.mimir")
+    return database
 
 
 def test_01_Model_init():
@@ -90,8 +155,15 @@ def test_04_DB_save():
     if os.path.exists(dbRootPath+"/.mimir"):
         shutil.rmtree(dbRootPath+"/.mimir")
     database = DataBase(dbRootPath, "new", config)
+    #Check database is save
     assert database.saveMain()
+    assert database.saveMain()
+    #shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2")
     #assert validateDatabaseJSON(database, config, database.savepath)
+    #check if backup was created
+    day, month, year = datetime.date.today().day, datetime.date.today().month, datetime.date.today().year
+    fulldate = "{0:02}-{1:02}-{2:02}".format(day, month, year-2000)
+    assert os.path.exists(dbRootPath+"/.mimir/mainDB.{0}.backup".format(fulldate)) == True
     del database
 
 def test_05_DB_equal():
@@ -286,11 +358,18 @@ def test_14_DB_modifyEntry():
     if os.path.exists(dbRootPath+"/.mimir"):
         shutil.rmtree(dbRootPath+"/.mimir")
     database = DataBase(dbRootPath, "new", config)
+    thisDate, thisTime = getDataTime()
     #--------------------- SingleItem -------------------------
     #Replace single Item value
     database.modifySingleEntry("1", "SingleItem", "changedItemValue", byID = True )
     changedEntry = database.getEntryByItemName("ID", "1")[0]
-    assert  "changedItemValue" in changedEntry.getAllValuesbyName("SingleItem")
+    assert "changedItemValue" in changedEntry.getAllValuesbyName("SingleItem")
+    change_datetime = changedEntry.getAllValuesbyName("Changed")
+    change_datetime = list(change_datetime)[0]
+    assert change_datetime != "emptyChanged"
+    date, time = change_datetime.split("|")
+    assert date == thisDate
+    assert time[0:1] == thisTime[0:1]
     #Check if Item is present in database
     with pytest.raises(KeyError):
         database.modifySingleEntry("1", "BLubbb", "changedItemValue", byID = True )
@@ -309,6 +388,12 @@ def test_14_DB_modifyEntry():
             and database.model.getDefaultValue("ListItem") not in changedEntry.getAllValuesbyName("ListItem")
             and len(changedEntry.getAllValuesbyName("ListItem")) == 1)
     #Append
+    change_datetime = changedEntry.getAllValuesbyName("Changed")
+    change_datetime = list(change_datetime)[0]
+    assert change_datetime != "emptyChanged"
+    date, time = change_datetime.split("|")
+    assert date == thisDate
+    assert time[0:1] == thisTime[0:1]
     print("-------- Append ----------")
     origEntry = database.getEntryByItemName("ID", "1")[0]
     databaseAppend = copy.deepcopy(database)
@@ -335,7 +420,15 @@ def test_14_DB_modifyEntry():
     databaseReplace.modifyListEntry("1", "ListItem", None, "Remove", "replacedItemValue", byID = True)
     changedEntry = databaseReplace.getEntryByItemName("ID", "1")[0]
     assert (set(databaseReplace.model.listitems["ListItem"]["default"])  == changedEntry.getAllValuesbyName("ListItem"))
-
+    print("-------- Change date for ListItem ----------")
+    database.modifyListEntry("2", "ListItem", "initialValue", "Append", byID = True)
+    changedEntry = database.getEntryByItemName("ID", "2")[0]
+    change_datetime = changedEntry.getAllValuesbyName("Changed")
+    change_datetime = list(change_datetime)[0]
+    assert change_datetime != "emptyChanged"
+    date, time = change_datetime.split("|")
+    assert date == thisDate
+    assert time[0:1] == thisTime[0:1]
 
 def test_15_DB_status():
     config = mimir_dir+"/conf/modeltest.json"
@@ -354,7 +447,85 @@ def test_15_DB_status():
     os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
     assert not database.getStatus()
     database.saveMain()
+    assert database.getStatus()
     #DB changed - changed Entry
+
+def test_16_DB_random():
+    config = mimir_dir+"/conf/modeltest.json"
+    dbRootPath = dir2tests+"/testStructure"
+    if os.path.exists(dbRootPath+"/.mimir"):
+        shutil.rmtree(dbRootPath+"/.mimir")
+    database = DataBase(dbRootPath, "new", config)
+    allIDs = database.getAllValuebyItemName("ID")
+    randID = database.getRandomEntry(chooseFrom = allIDs)
+    assert randID in allIDs
+
+def test_17_DB_random_all():
+    config = mimir_dir+"/conf/modeltest.json"
+    dbRootPath = dir2tests+"/testStructure"
+    if os.path.exists(dbRootPath+"/.mimir"):
+        shutil.rmtree(dbRootPath+"/.mimir")
+    database = DataBase(dbRootPath, "new", config)
+    allIDs = database.getAllValuebyItemName("ID")
+    randID = database.getRandomEntryAll()
+    assert randID in allIDs
+
+def test_18_DB_random_weighted():
+    config = mimir_dir+"/conf/modeltest.json"
+    dbRootPath = dir2tests+"/testStructure"
+    if os.path.exists(dbRootPath+"/.mimir"):
+        shutil.rmtree(dbRootPath+"/.mimir")
+    database = DataBase(dbRootPath, "new", config)
+    allIDs = database.getAllValuebyItemName("ID")
+
+    with pytest.raises(NotImplementedError):
+        randID = database.getRandomEntry(chooseFrom = allIDs, weighted = True)
+    #assert randID in allIDs
+
+def test_19_DB_getSortedIDs(preCreatedDB):
+    with pytest.raises(KeyError):
+        sorted_addedIDs = preCreatedDB.getSortedIDs("BLUBB")
+    with pytest.raises(NotImplementedError):
+        sorted_addedIDs = preCreatedDB.getSortedIDs("ListItem")
+    #Get sorted by Added (SingleItem with datetime)
+    expected_added = ["0", "2", "3", "5", "1", "4"]
+    sorted_addedIDs = preCreatedDB.getSortedIDs("Added", reverseOrder = True)
+    for iId, expected_id in enumerate(expected_added):
+        assert expected_id == sorted_addedIDs[iId]
+    #Same but with reverse order --> Test if ID sorting is independent of reverse
+    expected_added = ["4", "1", "5", "2", "3", "0"]
+    sorted_addedIDs = preCreatedDB.getSortedIDs("Added", reverseOrder = False)
+    for iId, expected_id in enumerate(expected_added):
+        assert expected_id == sorted_addedIDs[iId]
+    #Get sorted by Changed (Listentry with datetime)
+    expected_changed = ["0", "3", "4", "5", "1", "2"]
+    sorted_changedIDs = preCreatedDB.getSortedIDs("Changed")
+    for iId, expected_id in enumerate(expected_changed):
+        assert expected_id == sorted_changedIDs[iId]
+    #Get sorted by Singleitem (alphabetically)
+    expected_singleItem = ["5", "4", "3", "2", "1", "0"]
+    sorted_singleIDs = preCreatedDB.getSortedIDs("SingleItem", reverseOrder = False)
+    for iId, expected_id in enumerate(expected_singleItem):
+        assert expected_id == sorted_singleIDs[iId]
+    #Get sorted by Rating (numerically)
+    expected_rating = ["3", "2", "4", "1", "5", "0"]
+    sorted_ratingIDs = preCreatedDB.getSortedIDs("Rating")
+    for iId, expected_id in enumerate(expected_rating):
+        assert expected_id == sorted_ratingIDs[iId]
+
+def test_20_DB_Secondary(preCreatedDB):
+    assert preCreatedDB.saveSecondary()
+    #check content of file
+    assert preCreatedDB.readSecondary()
+
+def test_21_DB_updatedOpened(preCreatedDB):
+    preCreatedDB.updateOpened("1")
+    thisDate, thisTime = getDataTime()
+    changedEntry = preCreatedDB.getEntryByItemName("ID", "1")[0]
+    change_datetime = list(changedEntry.getAllValuesbyName("Opened"))[0]
+    date, time = change_datetime.split("|")
+    assert date == thisDate
+    assert time[0:1] == thisTime[0:1]
 
 
 

@@ -30,8 +30,8 @@ then
     echo $2
     if [ "$2" == "cov" ]
     then
-	echo "Running: python -m pytest -v --cov-report=html --cov=backend $RUNON"
-	python -m pytest -v --cov-report=html --cov=backend $RUNON
+	echo "Running: python -m pytest -v --cov-report=html --cov=mimir.backend $RUNON"
+	python -m pytest -v --cov-report=html --cov=mimir.backend $RUNON
     else
 	echo "Running: python -m pytest -v $RUNON"
 	python -m pytest -v $RUNON

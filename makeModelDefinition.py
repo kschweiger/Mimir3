@@ -1,9 +1,9 @@
 import json
-
-def main(outputName, DBtype, items, listitems, secondaryDBs, dryrun=False):
+import sys
+def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=False, setItemType=None, setDefault=None):
     """
     Function for generating a DataBase model configuration.
-    
+
     Args:
         outputname (str) : Will be used as default name of the model and as filename\n
         DBtype (str)  : Used to set up the file types for the database. Currently supported: Video, Audio and Text\n
@@ -30,6 +30,13 @@ def main(outputName, DBtype, items, listitems, secondaryDBs, dryrun=False):
         model[item]["default"] = "empty"+item
         model[item]["hide"] = ""
         model[item]["plugin"] = ""
+        if item == "ID":
+            model[item]["itemType"] = "int"
+        elif item == "Added":
+            model[item]["itemType"] = "datetime"
+        else:
+            model[item]["itemType"] = "str"
+
     listitems = ["Opened", "Changed"]+listitems
     for item in listitems:
         model[item] = {}
@@ -37,13 +44,28 @@ def main(outputName, DBtype, items, listitems, secondaryDBs, dryrun=False):
         model[item]["default"] = ["empty"+item]
         model[item]["hide"] = ""
         model[item]["plugin"] = ""
+        if item == "Opened" or item == "Changed":
+            model[item]["itemType"] = "datetime"
+        else:
+            model[item]["itemType"] = "str"
+
+    if setItemType is not None:
+        for item in items+listitems:
+            if item in setItemType.keys():
+                model[item]["itemType"] = setItemType[item]
+
+    if setDefault is not None:
+        for item in items+listitems:
+            if item in setItemType.keys():
+                model[item]["default"] = setDefault[item]
 
     for item in secondaryDBs:
         if not (item in items or item in listitems):
             print("Item {0} in secondaryDBs is no valid item of model. Fix arguments and rerun. Exiting....".format(item))
             exit()
     model["General"]["SecondaryDBs"] = secondaryDBs
-        
+
+    model["General"]["CreationCommend"] = " ".join(inputLine)
     if dryrun:
         print(json.dumps(model, sort_keys=True, indent=4, separators=(',', ': ')))
     else:
@@ -88,6 +110,24 @@ if __name__ == "__main__":
         default=["ListItem"]
     )
     argumentparser.add_argument(
+        "--setItemType",
+        action="store",
+        help="Sets the itemType of a added item (default is str). \n Pass itemName,type (comma separated w/o space!)",
+        nargs='+',
+        type=str,
+        default=None
+    )
+
+    argumentparser.add_argument(
+        "--setDefault",
+        action="store",
+        help="Sets the the default value of a added item (default is empty[Name]). \n Pass itemName,default (comma separated w/o space!)",
+        nargs='+',
+        type=str,
+        default=None
+    )
+
+    argumentparser.add_argument(
         "--dryrun",
         action="store_true",
         help="Only print model json instead of saving it",
@@ -100,6 +140,22 @@ if __name__ == "__main__":
         type=str,
         default=["SingleItem", "ListItem"]
     )
-    
+
     args = argumentparser.parse_args()
-    main(args.output, args.type, args.items, args.listitems, args.secondaryDBs, args.dryrun)
+    if args.setItemType is not None:
+        setItemType = {}
+        for arg in args.setItemType:
+            name, newType = arg.split(",")
+            setItemType[name] = newType
+    else:
+        setItemType = None
+
+    if args.setDefault is not None:
+        setDefault = {}
+        for arg in args.setDefault:
+            name, newDefault = arg.split(",")
+            setDefault[name] = newDefault
+    else:
+        setDefault = None
+
+    main(sys.argv, args.output, args.type, args.items, args.listitems, args.secondaryDBs, args.dryrun, setItemType, setDefault)

@@ -7,7 +7,7 @@ Submodules
 backend.database module
 -----------------------
 
-.. automodule:: backend.database
+.. automodule:: mimir.backend.database
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,18 +15,18 @@ backend.database module
 backend.entry module
 --------------------
 
-.. automodule:: backend.entry
+.. automodule:: mimir.backend.entry
     :members:
     :undoc-members:
     :show-inheritance:
     :inherited-members:
     :private-members:
-       
+
 
 Module contents
 ---------------
 
-.. automodule:: backend
+.. automodule:: mimir.backend
     :members:
     :undoc-members:
     :show-inheritance:
