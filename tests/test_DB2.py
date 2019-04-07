@@ -46,7 +46,6 @@ def getDataTime():
     fulltime = "{0:02}:{1:02}:{2:02}".format(hour, minutes, sec)
     return fulldate, fulltime
 
-
 @pytest.fixture(scope="module")
 def preCreatedDB():
     config = mimir_dir+"/conf/modeltest.json"
@@ -68,6 +67,9 @@ def preCreatedDB():
     database.modifySingleEntry("3", "SingleItem", "Eta", byID = True )
     database.modifySingleEntry("4", "SingleItem", "Bea", byID = True )
     database.modifySingleEntry("5", "SingleItem", "Alpha", byID = True )
+    database.modifyListEntry("0", "ListItem", "Blue", byID = True)
+    database.modifyListEntry("0", "ListItem", "Double Orange", byID = True)
+    database.modifyListEntry("0", "ListItem", "Triple Orange", byID = True)
     Entry0 = database.getEntryByItemName("ID", "0")[0]
     Entry1 = database.getEntryByItemName("ID", "1")[0]
     Entry2 = database.getEntryByItemName("ID", "2")[0]
@@ -513,12 +515,7 @@ def test_19_DB_getSortedIDs(preCreatedDB):
     for iId, expected_id in enumerate(expected_rating):
         assert expected_id == sorted_ratingIDs[iId]
 
-def test_20_DB_Secondary(preCreatedDB):
-    assert preCreatedDB.saveSecondary()
-    #check content of file
-    assert preCreatedDB.readSecondary()
-
-def test_21_DB_updatedOpened(preCreatedDB):
+def test_20_DB_updatedOpened(preCreatedDB):
     preCreatedDB.updateOpened("1")
     thisDate, thisTime = getDataTime()
     changedEntry = preCreatedDB.getEntryByItemName("ID", "1")[0]
@@ -527,7 +524,56 @@ def test_21_DB_updatedOpened(preCreatedDB):
     assert date == thisDate
     assert time[0:1] == thisTime[0:1]
 
+def test_21_DB_guessSecondaryDBItembyPath(preCreatedDB):
+    #1: Test if "elements" are part of the secondaryDB
+    newFile = "testStructure/Blue/Xi.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile)
+    assert "Xi" in options["SingleItem"]
+    assert "Blue" in options["ListItem"]
+    assert options["SingleItem"] == set(["Xi"]) and options["ListItem"] == set(["Blue"])
+    #2: Test if it works when subparts of a "element" are part of secondaryDB
+    newFile = "testStructure/Pink/BlueXi.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile, fast=True)
+    assert "Xi" not in options["SingleItem"]
+    assert "Blue" not in options["ListItem"]
+    assert options["SingleItem"] == set([]) and options["ListItem"] == set([])
+    options = preCreatedDB.getItemsPyPath(newFile)
+    assert "Xi" in options["SingleItem"]
+    assert "Blue" in options["ListItem"]
+    assert options["SingleItem"] == set(["Xi"]) and options["ListItem"] == set(["Blue"])
+    #3: Test for items with whitespace - Find exact match
+    newFile = "testStructure/Pink/Double_Orange.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile, whitespaceMatch = True)
+    assert options["ListItem"] == set(["Double Orange"])
+    #4: Test for items with whitespace - find partial match
+    newFile = "testStructure/Pink/Orange_Hand.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile)
+    assert "Double Orange" in options["ListItem"]
+    assert "Triple Orange" in options["ListItem"]
+    assert options["ListItem"] == set(["Triple Orange", "Double Orange"])
+    #5: Test for items with whitespace - find partial match, exact mathc deactivated
+    newFile = "testStructure/Pink/Double_Orange.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile, whitespaceMatch = False)
+    assert options["ListItem"] == set(["Triple Orange", "Double Orange"])
+    #Check if it works with ne values that are added before save/load
+    newFile = "testStructure/folder/Red.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile)
+    assert "Red" not in options["ListItem"]
+    preCreatedDB.modifyListEntry("0", "ListItem", "Red", byID = True)
+    options = preCreatedDB.getItemsPyPath(newFile)
+    assert "Red" in options["ListItem"]
 
+def test_22_DB_splitBySep(preCreatedDB):
+    split1 = preCreatedDB.splitBySep(".", ["a.b","c.d-e"])
+    assert ["a","b","c","d-e"] == split1
+    split2 = preCreatedDB.splitBySep("-", split1)
+    assert ["a","b","c","d","e"] == split2
+
+
+def test_23_DB_recursiveSplit(preCreatedDB):
+    strings2Split = "A-b_c+d.e"
+    strings2Expect = set(["A","b","c","d","e"])
+    assert strings2Expect == preCreatedDB.splitStr(strings2Split)
 
 
 if __name__ == "__main__":

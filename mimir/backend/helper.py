@@ -48,6 +48,9 @@ def sortDateTime(list2Sort):
     return retList
 
 def convertToDateTime(internalString):
+    """
+    Helper function to convert an internal datestring back to a datetime object
+    """
     if len(internalString.split("|")) != 2:
         raise RuntimeError("Element is expected to be of form DD.MM.YY|HH:MM:SS.")
     date, time = internalString.split("|")

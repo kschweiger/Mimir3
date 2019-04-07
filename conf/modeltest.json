@@ -23,6 +23,12 @@
             "SingleItem",
             "ListItem"
         ],
+        "Separators": [
+            ".",
+            "-",
+            "_",
+            "+"
+        ],
         "Types": [
             "mp4",
             "wmv",

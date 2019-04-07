@@ -23,6 +23,7 @@ def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=F
         model["General"]["Types"] = ["mp3", "wav"]
     else:
         model["General"]["Types"] = ["txt"]
+    model["General"]["Separators"] = [".","-","_","+"]
     items = ["ID", "Path", "Added", "Name"]+items
     for item in items:
         model[item] = {}

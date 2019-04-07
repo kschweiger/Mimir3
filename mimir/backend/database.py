@@ -5,6 +5,7 @@ import logging
 import random
 import json
 import os
+import copy
 from shutil import copy2
 from glob import glob
 
@@ -154,7 +155,7 @@ class DataBase(object):
         if os.path.exists(self.savepath):
             logging.debug("Making backup")
             backupDate = mimir.backend.helper.getTimeFormatted("Date", "-")
-            copy2(self.savepath, self.savepath.replace(".json",".{0}.backup".format(backupDate)))
+            copy2(self.savepath, self.savepath.replace(".json", ".{0}.backup".format(backupDate)))
         # Convert database to dict so json save can be used
         output = {}
         for entry in self.entries:
@@ -228,10 +229,14 @@ class DataBase(object):
             raise KeyError("Arg {0} not in model items".format(itemName))
         retlist = []
         for entry in self.entries:
-            retlist.append(getattr(entry, itemName))
+            toAdd = getattr(entry, itemName)
+            if isinstance(toAdd, list):
+                retlist += toAdd
+            else:
+                retlist.append(toAdd)
         return set(retlist)
 
-    def getSortedIDs(self, sortBy, reverseOrder = True):
+    def getSortedIDs(self, sortBy, reverseOrder=True):
         """
         Returns a list of database IDs sorted by itemName sortBy.
 
@@ -247,7 +252,6 @@ class DataBase(object):
         if sortBy not in self.model.allItems:
             raise KeyError("Arg {0} not in model items".format(sortBy))
         allIDs = self.getAllValuebyItemName("ID")
-        sortedEntries = []
         map_id_sortby = {}
         for ID in allIDs:
             map_id_sortby[ID] = self.getEntrybyID(ID).getItem(sortBy).value
@@ -266,21 +270,25 @@ class DataBase(object):
             pairs.append((ID, map_id_sortby[ID]))
 
         if itemType == "datetime":
-            sortedPairs = sorted(pairs, key = lambda x : (mimir.backend.helper.convertToDateTime(x[1]),
-                                                          -int(x[0]) if reverseOrder else int(x[0])),
-                                                          reverse = reverseOrder)
+            sortedPairs = sorted(pairs,
+                                 key=lambda x: (mimir.backend.helper.convertToDateTime(x[1]),
+                                                -int(x[0]) if reverseOrder else int(x[0])),
+                                 reverse=reverseOrder)
         elif itemType == "int":
-            sortedPairs = sorted(pairs, key = lambda x : (int(x[1]),
-                                                         -int(x[0]) if reverseOrder else int(x[0])),
-                                                         reverse = reverseOrder)
+            sortedPairs = sorted(pairs,
+                                 key=lambda x: (int(x[1]),
+                                                -int(x[0]) if reverseOrder else int(x[0])),
+                                 reverse=reverseOrder)
         elif itemType == "float":
-            sortedPairs = sorted(pairs, key = lambda x : (float(x[1]),
-                                                          -int(x[0]) if reverseOrder else int(x[0])),
-                                                          reverse = reverseOrder)
+            sortedPairs = sorted(pairs,
+                                 key=lambda x: (float(x[1]),
+                                                -int(x[0]) if reverseOrder else int(x[0])),
+                                 reverse=reverseOrder)
         else:
-            sortedPairs = sorted(pairs, key = lambda x : (x[1],
-                                                          -int(x[0]) if reverseOrder else int(x[0])),
-                                                          reverse = reverseOrder)
+            sortedPairs = sorted(pairs,
+                                 key=lambda x: (x[1],
+                                                -int(x[0]) if reverseOrder else int(x[0])),
+                                 reverse=reverseOrder)
 
 
         return [x[0] for x in sortedPairs]
@@ -397,7 +405,7 @@ class DataBase(object):
         else:
             raise NotImplementedError
         #Update the Changed date of the entry
-        if itemName != "Changed" and itemName != "Opened":
+        if itemName not in ("Changed", "Opened"):
             # Exclude changed item since this would lead to inf. loop
             # Exclude opened since it is not considered a "change" to the entry
             self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
@@ -418,7 +426,7 @@ class DataBase(object):
         if not byID and not byName and not byPath:
             byID = True
         self.modifyListEntry(identifier, "Opened", mimir.backend.helper.getTimeFormatted("Full"),
-                     byID=byID, byName=byName, byPath=byPath)
+                             byID=byID, byName=byName, byPath=byPath)
 
 
     def query(self, itemNames, itemValues, returnIDs=False):
@@ -514,7 +522,8 @@ class DataBase(object):
             if value not in self.getAllValuebyItemName(query):
                 raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
 
-    def getRandomEntry(self, chooseFrom, weighted=False):
+    @staticmethod
+    def getRandomEntry(chooseFrom, weighted=False):
         """
         Get a random entry from the database out of the ID passed in the chooseFrom variable
 
@@ -543,6 +552,115 @@ class DataBase(object):
         """
         return self.getRandomEntry(list(self.getAllValuebyItemName("ID")), weighted)
 
+    def getItemsPyPath(self, fullFileName, fast=False, whitespaceMatch=True):
+        """
+        Function will parse the filename for values pesent in the Items defined in SecondaryDBs.
+        The passed file name will be split by separators define in model. Implemented as a two stage process.
+        1. Split at / and try to identify full know values
+        2.
+
+        Args:
+            fullFileName (str) : Expects full file name starting from the mimir base dictRepr
+
+        Returns:
+            foundOptions (dict) : List of values that could be matched to the path by Item
+        """
+        foundOptions = {}
+        items2Check = self._model.secondaryDBs
+        values = {}
+        for item in items2Check:
+            values[item] = self.getAllValuebyItemName(item)
+            foundOptions[item] = []
+        whiteSpaceMatches = {}
+        if whitespaceMatch:
+            #Add all values that have a whitespace with all possible sparators to list
+            #so exact matches can be found
+            for item in items2Check:
+                origVals = list(values[item])
+                for value in origVals:
+                    if " " in value:
+                        for sep in self._model.separators:
+                            values[item].add(value.replace(" ", sep)) # Add since set
+                            whiteSpaceMatches[value.replace(" ", sep)] = value
+        #Remove file endings from model
+        for fileType in self._model.extentions:
+            if fullFileName.endswith(fileType):
+                fullFileName = fullFileName.replace("."+fileType, "")
+                break
+        pathElements = fullFileName.split("/")
+        remUnsplitElements = copy.copy(pathElements)
+        for elem in pathElements:
+            for item in items2Check:
+                if elem in values[item]:
+                    if whitespaceMatch:
+                        if elem in whiteSpaceMatches.keys():
+                            foundOptions[item].append(whiteSpaceMatches[elem])
+                        else:
+                            foundOptions[item].append(elem)
+                    else:
+                        foundOptions[item].append(elem)
+                    remUnsplitElements.remove(elem)
+        if whitespaceMatch:
+            #For partial matched this is not needed.
+            for item in items2Check:
+                values[item] = self.getAllValuebyItemName(item)
+        #Now we need to split elements with whitespace into two element to match partial matches
+        partialWhiteSpaces = {}
+        for item in items2Check:
+            newValueList = []
+            for value in values[item]:
+                if " " in value:
+                    splitValues = value.split(" ")
+                    newValueList += splitValues
+                    for val in splitValues:
+                        if not val in partialWhiteSpaces.keys():
+                            partialWhiteSpaces[val] = [value]
+                        else:
+                            partialWhiteSpaces[val].append(value)
+                else:
+                    newValueList.append(value)
+            values[item] = set(newValueList)
+        remSplitElements = []
+        for elem in remUnsplitElements:
+            remSplitElements = list(self.splitStr(elem))
+        if not fast:
+            for element in remSplitElements:
+                for item in items2Check:
+                    for value in values[item]:
+                        if value in element:
+                            if value in partialWhiteSpaces.keys():
+                                foundOptions[item] += partialWhiteSpaces[value]
+                            else:
+                                foundOptions[item].append(value)
+        for item in items2Check:
+            foundOptions[item] = set(foundOptions[item])
+        return foundOptions
+
+    def splitStr(self, inputStr):
+        """
+        Splits a passed sting by all separators defined in the model
+
+        Args:
+            inputStr (str) : Some string
+
+        Returns:
+            foundElements (set) : Set of all elements possible by splitting
+        """
+        separateBy = self._model.separators
+        foundElements = [inputStr]
+        for separator in separateBy:
+            foundElements = self.splitBySep(separator, foundElements)
+
+        return set(foundElements)
+
+    @staticmethod
+    def splitBySep(separator, elementList):
+        """ Helper function to make splitStr nicer """
+        retList = []
+        for elem in elementList:
+            retList += elem.split(separator)
+
+        return retList
 
 class Model(object):
     """
@@ -566,6 +684,7 @@ class Model(object):
         self.modelName = modelDict["General"]["Name"]
         self.modelDesc = modelDict["General"]["Description"]
         self.extentions = modelDict["General"]["Types"]
+        self.separators = modelDict["General"]["Separators"]
         self.secondaryDBs = modelDict["General"]["SecondaryDBs"]
         self._items = {}
         self._listitems = {}
@@ -586,7 +705,11 @@ class Model(object):
         #TODO Check if required items are in model
 
     def updateModel(self):
-        """ Function for updating the model (not sure if needed) """
+        """
+        Function for updating the model
+
+        TODO: Will beused if one wants to change the model of the database. If called a new model .json will be loaded and the changes will be propagated **savely** to the databse model
+        """
         pass
 
     def getDefaultValue(self, itemName):
