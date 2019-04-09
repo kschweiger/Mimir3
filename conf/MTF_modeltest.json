@@ -1,0 +1,153 @@
+{
+    "Added": {
+        "DisplayName": "Added",
+        "Type": "Item",
+        "maxLen": 99
+    },
+    "Changed": {
+        "DisplayName": "Changed",
+        "Hide": [],
+        "Priority": [],
+        "Type": "ListItem",
+        "nDisplay": 99
+    },
+    "General": {
+        "DisplayItems": [
+            "Added",
+            "ID",
+            "Name",
+            "Path",
+            "Rating",
+            "SingleItem",
+            "Changed",
+            "ListItem",
+            "Opened"
+        ],
+        "Height": 50,
+        "Width": 80,
+        "Windows": [
+            "Main",
+            "List",
+            "DB"
+        ]
+    },
+    "ID": {
+        "DisplayName": "ID",
+        "Type": "Item",
+        "maxLen": 99
+    },
+    "ListItem": {
+        "DisplayName": "ListItem",
+        "Hide": [],
+        "Priority": [],
+        "Type": "ListItem",
+        "nDisplay": 99
+    },
+    "Name": {
+        "DisplayName": "Name",
+        "Type": "Item",
+        "maxLen": 32
+    },
+    "Opened": {
+        "DisplayName": "Opened",
+        "Hide": [],
+        "Priority": [],
+        "Type": "ListItem",
+        "nDisplay": 99
+    },
+    "Path": {
+        "DisplayName": "Path",
+        "Type": "Item",
+        "maxLen": 99
+    },
+    "Rating": {
+        "DisplayName": "Rating",
+        "Type": "Item",
+        "maxLen": 99
+    },
+    "SingleItem": {
+        "DisplayName": "SingleItem",
+        "Type": "Item",
+        "maxLen": 99
+    },
+    "Window": {
+        "DB": {
+            "Options": [
+                [
+                    "Main",
+                    "Back to main menu"
+                ],
+                [
+                    "Save",
+                    "Saves the current state of the database"
+                ],
+                [
+                    "Read FS",
+                    "Invokes a search for new files from the mimir root dir"
+                ]
+            ],
+            "Text": [
+                "This collections options on the database"
+            ],
+            "Title": "Database optins",
+            "Type": "Window"
+        },
+        "List": {
+            "Options": [
+                [
+                    "Main",
+                    "Back to main menu"
+                ],
+                [
+                    "All",
+                    "Prints all entries"
+                ],
+                [
+                    "Query",
+                    "Print entries returned by a query"
+                ],
+                [
+                    "Newest",
+                    "Print latest entries"
+                ]
+            ],
+            "Text": null,
+            "Title": "MTF Lists",
+            "Type": "ListWindow"
+        },
+        "Main": {
+            "Options": [
+                [
+                    "Exit",
+                    "Exit MTF"
+                ],
+                [
+                    "Execute",
+                    "Execute a database entry"
+                ],
+                [
+                    "Modify",
+                    "Enter modification mode"
+                ],
+                [
+                    "List",
+                    "Enter list mode"
+                ],
+                [
+                    "Random",
+                    "Execute a random entry"
+                ],
+                [
+                    "DB Option",
+                    "Database options (save, etc.)"
+                ]
+            ],
+            "Text": [
+                "This is a config generated from conf/modeltest.json",
+                "The Following options are available for interaction"
+            ],
+            "Title": "Main Window of MTF",
+            "Type": "Window"
+        }
+    }
+}

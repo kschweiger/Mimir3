@@ -10,7 +10,7 @@ class Window:
         width (int) ; Window Width
         headerElements (dict) ; Head elements. See setHeader description
     """
-    def __init__(self, height, width, headerElements):
+    def __init__(self, height, width, headerElements, setHeader = False):
         tests = [(height, "height", int),
                  (width, "width", int),
                  (headerElements, "headerElements", dict)]
@@ -43,6 +43,9 @@ class Window:
         self.headerText = None
         self.headerOptions = None
         self.validOptions = None
+        if setHeader:
+            self.setHeader()
+
     def setHeader(self):
         """
         Method for setting more explicit members for the header from the passed headerElements:
