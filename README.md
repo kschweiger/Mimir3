@@ -1,7 +1,7 @@
 ![Mimir3](mimir_logo_small.png)
 
 ![PythonVersion](https://img.shields.io/badge/python-3.7-blue.svg?longCache=true&style=flat-square)
-![Coverage](https://img.shields.io/badge/pytest--cov-92%25-green.svg?longCache=true&style=flat-square)
+![Coverage](https://img.shields.io/badge/pytest--cov-93%25-green.svg?longCache=true&style=flat-square)
 
 Custom Database
 
@@ -40,6 +40,12 @@ cd docs/
 make html
 ```
 *Note: The Makefile was modified (from the standard configuration) to make it independent of system `python/`sphinx-build`.*
+
+The `.rst` were created with
+```
+sphinx-apidoc mimir/ -o docs -n --implicit-namespaces
+```
+You maybe have to explicitly point to the `sphinx-apidoc` bin directory of you python installation.
 
 # What has a database to do?
 [ ] Add entries to database  

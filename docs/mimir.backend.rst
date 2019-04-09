@@ -1,26 +1,32 @@
-backend package
-===============
+mimir.backend package
+=====================
 
 Submodules
 ----------
 
-backend.database module
------------------------
+mimir.backend.database module
+-----------------------------
 
 .. automodule:: mimir.backend.database
     :members:
     :undoc-members:
     :show-inheritance:
 
-backend.entry module
---------------------
+mimir.backend.entry module
+--------------------------
 
 .. automodule:: mimir.backend.entry
     :members:
     :undoc-members:
     :show-inheritance:
-    :inherited-members:
-    :private-members:
+
+mimir.backend.helper module
+---------------------------
+
+.. automodule:: mimir.backend.helper
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 
 Module contents
@@ -30,5 +36,3 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
-    :inherited-members:
-    :private-members:
