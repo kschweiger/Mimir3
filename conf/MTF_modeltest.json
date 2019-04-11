@@ -1,10 +1,12 @@
 {
     "Added": {
+        "DisplayDefault": null,
         "DisplayName": "Added",
         "Type": "Item",
         "maxLen": 99
     },
     "Changed": {
+        "DisplayDefault": null,
         "DisplayName": "Changed",
         "Hide": [],
         "Priority": [],
@@ -12,31 +14,25 @@
         "nDisplay": 99
     },
     "General": {
-        "DisplayItems": [
-            "Added",
-            "ID",
-            "Name",
-            "Path",
-            "Rating",
-            "SingleItem",
-            "Changed",
-            "ListItem",
-            "Opened"
-        ],
+        "DisplayItems": ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"],
         "Height": 50,
-        "Width": 80,
+        "Width": 100,
         "Windows": [
             "Main",
             "List",
-            "DB"
+            "DB",
+            "Modify",
+            "MultiModify"
         ]
     },
     "ID": {
+        "DisplayDefault": null,
         "DisplayName": "ID",
         "Type": "Item",
         "maxLen": 99
     },
     "ListItem": {
+        "DisplayDefault": null,
         "DisplayName": "ListItem",
         "Hide": [],
         "Priority": [],
@@ -44,11 +40,13 @@
         "nDisplay": 99
     },
     "Name": {
+        "DisplayDefault": null,
         "DisplayName": "Name",
         "Type": "Item",
         "maxLen": 32
     },
     "Opened": {
+        "DisplayDefault": null,
         "DisplayName": "Opened",
         "Hide": [],
         "Priority": [],
@@ -56,16 +54,19 @@
         "nDisplay": 99
     },
     "Path": {
+        "DisplayDefault": null,
         "DisplayName": "Path",
         "Type": "Item",
         "maxLen": 99
     },
     "Rating": {
+        "DisplayDefault": null,
         "DisplayName": "Rating",
         "Type": "Item",
         "maxLen": 99
     },
     "SingleItem": {
+        "DisplayDefault": null,
         "DisplayName": "SingleItem",
         "Type": "Item",
         "maxLen": 99
@@ -101,6 +102,10 @@
                 [
                     "All",
                     "Prints all entries"
+                ],
+                [
+                    "Modify",
+                    "Enter modification mode"
                 ],
                 [
                     "Query",
@@ -147,6 +152,60 @@
                 "The Following options are available for interaction"
             ],
             "Title": "Main Window of MTF",
+            "Type": "Window"
+        },
+        "Modify": {
+            "Options": [
+                [
+                    "Main",
+                    "Back to main menu"
+                ],
+                [
+                    "Single Entry",
+                    "Will spawn a window where one entry can be modified mulitple times"
+                ],
+                [
+                    "Entry Range",
+                    "Modify a range of entries multiple times"
+                ],
+                [
+                    "List Range",
+                    "Modify a list of entries multiple times"
+                ]
+            ],
+            "Text": [
+                "Modifications"
+            ],
+            "Title": "Database modification",
+            "Type": "Window"
+        },
+        "MultiModify": {
+            "Options": [
+                [
+                    "Main",
+                    "Back to main menu"
+                ],
+                [
+                    "Name",
+                    "Some description"
+                ],
+                [
+                    "Rating",
+                    "Some description"
+                ],
+                [
+                    "SingleItem",
+                    "Some description"
+                ],
+                [
+                    "ListItem",
+                    "Some description"
+                ]
+            ],
+            "Text": [
+                "Multimodification"
+            ],
+            "Title": "Multiple modifications of one entry",
             "Type": "Window"
         }
     }

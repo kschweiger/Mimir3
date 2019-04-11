@@ -2,6 +2,7 @@ import os
 import logging
 import json
 from mimir.backend.database import DataBase
+from mimir.backend.entry import Item, ListItem
 from mimir.frontend.terminal.display import Window, ListWindow
 
 class App:
@@ -15,24 +16,205 @@ class App:
         self.config = MTFConfig(self.database.mimirdir+"/MTF_model.json")
         self.windowHeight = self.config.height
         self.windowWidth = self.config.width
+        self.tableColumns = len(self.config.items)
+        self.tableColumnItems = self.config.items
+        self.tableColumnNames = []
+        for item in self.config.items:
+            self.tableColumnNames.append(self.config.itemInfo[item]["DisplayName"])
+        self.tableColumnNames = tuple(self.tableColumnNames)
 
-        self.currentWindow = None
+        ################### Main Window ###################
         mainHeader = {"Title" : self.config.windows["Main"]["Title"],
-                      "Text" : self.config.windows["Main"]["Text"],
+                      "Text" : ["Mimir base dir: {0}".format(self.database.databaseRoot)] +
+                               self.config.windows["Main"]["Text"],
                       "Options" : self.config.windows["Main"]["Options"],}
         self.mainWindow = Window(self.windowHeight,
                                  self.windowWidth,
                                  mainHeader)
         self.mainWindow.setHeader()
-        self.currentWindow = self.mainWindow
+        ################### List Window ###################
+        listHeader = {"Title" : self.config.windows["List"]["Title"],
+                      "Options" : self.config.windows["List"]["Options"],}
+        self.listWindow = ListWindow(self.windowHeight,
+                                     self.windowWidth,
+                                     listHeader,
+                                     self.tableColumns,
+                                     self.tableColumnNames)
+        self.listWindow.setHeader()
+        self.listWindowDrawn = False
+        ################### DB Window ###################
+        dbHeader = {"Title" : self.config.windows["DB"]["Title"],
+                      "Text" : self.config.windows["DB"]["Text"],
+                      "Options" : self.config.windows["DB"]["Options"],}
+        self.dbWindow = Window(self.windowHeight,
+                                 self.windowWidth,
+                                 dbHeader)
+        self.dbWindow.setHeader()
+        for key in self.config.windows:
+            print(self.config.windows[key])
+        ################### Modification Window ###################
+        modHeader = {"Title" : self.config.windows["Modify"]["Title"],
+                     "Text" : self.config.windows["Modify"]["Text"],
+                     "Options" : self.config.windows["Modify"]["Options"],}
+        self.modWindow = Window(self.windowHeight,
+                               self.windowWidth,
+                               modHeader)
+        self.modWindow.setHeader()
+        ################### Mulit Modification Window ###################
+        multiModHeader = {"Title" : self.config.windows["MultiModify"]["Title"],
+                     "Text" : self.config.windows["MultiModify"]["Text"],
+                     "Options" : self.config.windows["MultiModify"]["Options"],}
+        self.multiModWindow = Window(self.windowHeight,
+                               self.windowWidth,
+                               multiModHeader)
+        self.multiModWindow.setHeader()
 
     def start(self):
         logging.info("Starting App")
-        retVal = None
+        self.runMainWindow(None)
+        logging.info("Terminating App")
+
+    def runMainWindow(self, startVal):
+        logging.info("Switching to main window")
+        retVal = startVal
         while retVal != "0":
-            retVal = self.currentWindow.draw("Enter Value: ")
-            if retVal not in self.currentWindow.validOptions:
-                self.currentWindow.update("Please enter value present in %s"%self.currentWindow.validOptions)
+            retVal = self.mainWindow.draw("Enter Value: ")
+            if retVal == "1":
+                pass
+            elif retVal == "2":
+                self.runModWindow(None, fromMain=True, fromList=False)
+            elif retVal == "3":
+                self.runListWindow(None)
+            elif retVal == "4":
+                pass
+            elif retVal == "5":
+                self.runDBWindow(None)
+            elif retVal == "0":
+                self.terminate()
+            else:
+                self.mainWindow.update("Please enter value present in %s"%self.mainWindow.validOptions)
+
+    def runListWindow(self, startVal):
+        logging.info("Switching to ListWindow")
+        retVal = startVal
+        self.listWindow.draw(skipHeader = self.listWindowDrawn, skipTable = True, fillWindow = True)
+        self.listWindowDrawn = True
+        #retVal = self.listWindow.interact("Enter Value:", None)
+        while retVal != "0":
+            retVal = self.listWindow.interact("Enter Value:", None)
+            if retVal == "1": #Print All
+                tableElements = self.generateList("All")
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
+                #print("=========================================")
+                #self.listWindow.draw(skipHeader = True, skipTable = False, fillWindow = False)
+                #print("+++++++++++++++++++++++++++++++++++++++++")
+                retVal = self.listWindow.interact("Enter Value:", None, onlyInteraction = False)
+            elif retVal == "2": #Print Quary
+                self.runModWindow(None, fromMain=False, fromList=True)
+            elif retVal == "3": #Print Newest
+                pass
+            else:
+                self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
+        self.runMainWindow(None)
+
+    def runDBWindow(self, startVal):
+        logging.info("Switching to main window")
+        retVal = startVal
+        while retVal != "0":
+            retVal = self.dbWindow.draw("Enter Value: ")
+            if retVal == "1":
+                pass
+            elif retVal == "2":
+                pass
+            else:
+                self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
+        self.runMainWindow(None)
+
+    def runModWindow(self, startVal, fromMain, fromList):
+        logging.info("Switching to modification window")
+        retVal = startVal
+        while retVal != "0":
+            retVal = self.modWindow.draw("Enter Value: ")
+            if retVal == "1":
+                self.runMultiModWindow(None)
+            elif retVal == "2":
+                pass
+            else:
+                self.modWindow.update("Please enter value present in %s"%self.modWindow.validOptions)
+        if fromMain:
+            self.runMainWindow(None)
+        if fromList:
+            self.runListWindow(None)
+
+    def runMultiModWindow(self, startVal):
+        logging.info("Switching to multi modification window")
+        retVal = startVal
+        while retVal != "0":
+            retVal = self.multiModWindow.draw("Enter Value: ")
+            if retVal == "1":
+                pass
+            elif retVal == "2":
+                pass
+            else:
+                self.multiModWindow.update("Please enter value present in %s"%self.multiModWindow.validOptions)
+        self.runModWindow(None)
+
+    def terminate(self):
+        logging.info("Checking if database was saved")
+        #TODO: CHeck if database is modified but nit saved
+        logging.info("Terminating app")
+        exit()
+
+    def modify(self):
+        pass
+
+    def generateList(self, get="All"):
+        #TODO Check get input
+        tableElements = []
+        ids2Print = None
+        if get == "All":
+            ids2Print = self.database.getAllValuebyItemName("ID")
+            ids2Print = sorted(list(ids2Print), key=lambda x: int(x))
+        elif isinstance(get, list):
+            ids2Print = get
+        logging.info(ids2Print)
+        for id in ids2Print:
+            entryElements = []
+            thisEntry = self.database.getEntryByItemName("ID", id)[0]
+            for item in self.tableColumnItems:
+                thisItem = thisEntry.getItem(item)
+                if isinstance(thisItem, ListItem):
+                    thisValue = []
+                    for priority in self.config.itemInfo[item]["Priority"]:
+                        if priority in thisItem.value:
+                            thisValue.append(priority)
+                    for val in thisItem.value:
+                        if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
+                            print(val, self.database.model.getDefaultValue(item))
+                            if (val == self.database.model.getDefaultValue(item) and
+                                self.config.itemInfo[item]["DisplayDefault"] is not None):
+                                thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
+                            else:
+                                thisValue.append(val)
+                        if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
+                            thisValue.append("..")
+                            break
+                    #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
+                    value = ", ".join(thisValue)
+                else:
+                    if (thisItem.value == self.database.model.getDefaultValue(item) and
+                        self.config.itemInfo[item]["DisplayDefault"] is not None):
+                        itemValue = self.config.itemInfo[item]["DisplayDefault"]
+                    else:
+                        itemValue = thisItem.value
+                    if len(itemValue) > self.config.itemInfo[item]["maxLen"]:
+                        value = itemValue[:self.config.itemInfo[item]["maxLen"]]+".."
+                    else:
+                        value = itemValue
+                entryElements.append(value)
+            tableElements.append(tuple(entryElements))
+        return tableElements
 
     def saveDB(self):
         pass
@@ -64,6 +246,7 @@ class MTFConfig:
         for iItem, item in enumerate(self.items):
             self.itemInfo[item] = {}
             self.itemInfo[item]["DisplayName"] = configDict[item]["DisplayName"]
+            self.itemInfo[item]["DisplayDefault"] = configDict[item]["DisplayDefault"]
             self.itemInfo[item]["Type"] = configDict[item]["Type"]
             if self.itemInfo[item]["Type"] == "ListItem":
                 self.itemInfo[item]["Hide"] = configDict[item]["Hide"]
@@ -74,7 +257,9 @@ class MTFConfig:
 
         self.definedWindows = configDict["General"]["Windows"]
         self.windows = {}
+        print(configDict["General"]["Windows"])
         for window in configDict["General"]["Windows"]:
+            print(window)
             self.windows[window] = {}
             self.windows[window]["Type"] = configDict["Window"][window]["Type"]
             self.windows[window]["Title"] = configDict["Window"][window]["Title"]

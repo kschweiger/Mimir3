@@ -1,7 +1,8 @@
 ![Mimir3](mimir_logo_small.png)
 
 ![PythonVersion](https://img.shields.io/badge/python-3.7-blue.svg?longCache=true&style=flat-square)
-![Coverage](https://img.shields.io/badge/pytest--cov-93%25-green.svg?longCache=true&style=flat-square)
+![Coverage](https://img.shields.io/badge/pytest--cov-86%25-yellow.svg?longCache=true&style=flat-square)
+![Tests](https://img.shields.io/badge/Test%20passing-false-red.svg?longCache=true&style=flat-square)
 
 Custom Database
 

@@ -1,6 +1,9 @@
 """
 Classes for displaying information in ther terminal.
 """
+from mimir.frontend.terminal.helper import FixedList
+import logging
+
 class Window:
     """
     Object defining the window to be displayed
@@ -159,12 +162,18 @@ class Window:
         for line in self.header:
             print(line)
         lines2print = self.lines
-        maxLines = self.height-self.boxHeight-2
+        maxLines = self.height-self.boxHeight
         if len(self.lines) > (maxLines):
             lines2print = self.lines[-maxLines:]
+        #Prepend empty lines so the window looks constant
+        if len(lines2print) < maxLines:
+            for emptyline in range(maxLines-len(lines2print)):
+                print("")
         for line in lines2print:
             print(line)
-        return input(inputString+": ")
+        answer = input(inputString+": ")
+        self.lines.append(inputString+": "+answer)
+        return answer
 
     @staticmethod
     def expandAndCenterText(text, width, symbol=" "):
@@ -173,6 +182,9 @@ class Window:
         """
         text = str(text)
         total_exp = width - len(text)
+        if total_exp < 0:
+            logging.warning("Text is longer than width")
+            return text
         if total_exp%2 == 0:
             expandLeft, expandRight = total_exp//2, total_exp//2
         else:
@@ -240,6 +252,15 @@ class ListWindow(Window):
         if alignment not in ["left", "center"]:
             raise KeyError("%s not supported"%alignment)
         self.alignment = alignment
+        self.printedLines = FixedList(self.height)
+        self.nLinesPrinted = 0
+        self.tableAdded = False
+
+    def print(self, printStatement):
+        logging.debug("Added: %s",printStatement[0:20])
+        self.printedLines.append(printStatement)
+        self.nLinesPrinted += 1
+        print(printStatement,self.nLinesPrinted)
 
     def update(self, newContent, resetHeader=None):
         """
@@ -253,6 +274,7 @@ class ListWindow(Window):
             TypeError : Raised if newContent is not tuple or list of tuples
             ValueError : Raised if len(tuple) != nColumns
         """
+        logging.debug("Running update in %s", self)
         if not isinstance(newContent, tuple) and not isinstance(newContent, list):
             raise TypeError("%s is required to be tuple or list"%newContent)
         if isinstance(newContent, list):
@@ -269,25 +291,63 @@ class ListWindow(Window):
         for icontent, content in enumerate(newContent):
             if len(content) > self.tableMaxLen[icontent]:
                 self.tableMaxLen[icontent] = len(content)
-
+        self.tableAdded = True
         return True
-    def draw(self):
+
+    def draw(self, skipHeader=False, skipTable=False, fillWindow=False):
         """
         Draw the current state of the window
         """
+        #print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+        logging.debug("Running draw in %s", self)
+        self.nLinesPrinted = 0
         self.makeheader()
-        for line in self.header:
-            print(line)
+
+        if not skipHeader:
+            for line in self.header:
+                self.print(line)
         tableLines = self.makeTable(self.tableHeaderElements, self.lines, self.tableMaxLen)
-        for line in tableLines:
-            lineLen = len(line)
-            if self.alignment == "left":
-                print(" "+line+" "+(lineLen-2)*" ")
-            if self.alignment == "center":
-                print(self.expandAndCenterText(line, self.width))
+        #print(tableLines)
+        if not skipTable:
+            for line in tableLines:
+                lineLen = len(line)
+                if self.alignment == "left":
+                    if len(line) > self.width:
+                        logging.error("Table line is wider than defined width. Consider extenting the width to %s", len(line)+2 )
+                        self.print(" "+line+" ")
+                    else:
+                        self.print(" "+line+" "+(self.boxWidth-lineLen)*" ")
+                if self.alignment == "center":
+                    self.print(self.expandAndCenterText(line, self.width))
+        # if len(self.printedLines) < self.height:
+        #     for line in self.printedLines:
+        #         print(line)
+        #         self.nLinesPrinted += 1
+        # if fillWindow:
+        #     if self.nLinesPrinted < self.height:
+        #         for i in range(self.height-self.nLinesPrinted):
+        #             print(i)
+        #print("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+        if fillWindow and len(self.printedLines) < self.height:
+            self.drawBeforeOverflow()
+        #print("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")
         return True
 
-    def interact(self, interaction, printOptions = None):
+    def drawBeforeOverflow(self):
+        iDivide = 0
+        emptyLinesPrinted = False
+        for iline, line in enumerate(self.printedLines):
+            if line.startswith("+---") and line.endswith("---+"):
+                iDivide += 1
+            print(line, iline)
+            #self.nLinesPrinted += 1
+            if iDivide == 2 and not emptyLinesPrinted:
+                for i in range(self.height-len(self.printedLines)):
+                    print("")
+                emptyLinesPrinted = True
+
+
+    def interact(self, interaction, printOptions = None, rePrintInitial = False, onlyInteraction=False):
         """
         Interaction with window, but the new lines will just be append (unlike the main windows draw method)
 
@@ -305,9 +365,18 @@ class ListWindow(Window):
 
             #Print requestion option version
             for line in options:
-                print(line)
+                    self.print(line)
+        #print(self.nLinesPrinted, self.height)
+        if not onlyInteraction and self.nLinesPrinted < self.height:
+            #print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            self.draw(skipHeader = True, skipTable = (not self.tableAdded), fillWindow = True)
+            #print("ooooooooooooooooooooooooooooooooo")
 
-        return input(interaction+": ")
+        answer = input(interaction+": ")
+        self.printedLines.append("+++++"+interaction+": "+answer)
+        self.nLinesPrinted += 1
+
+        return answer
 
     def makeSmallOptionTable(self):
         retList = []

@@ -4,6 +4,7 @@ import os
 #sys.path.insert(0, os.path.abspath('.'))
 #print(sys.path)
 import mimir.backend.helper
+import mimir.frontend.terminal.helper
 import unittest
 import pytest
 import coverage
@@ -80,3 +81,43 @@ def test_03_sortDateTime():
     assert len(sortedList) == len(expectedList)
     for iElem, elem in enumerate(sortedList):
         assert elem == expectedList[iElem]
+
+def test_04_fixedList():
+    fixedList = mimir.frontend.terminal.helper.FixedList(5)
+    assert fixedList.elements == []
+
+def test_05_fixedList_len():
+    fixedList = mimir.frontend.terminal.helper.FixedList(5)
+    assert len(fixedList) == 0
+    fixedList.append(1)
+    assert len(fixedList) == 1
+    assert fixedList.elements[0] == 1
+    fixedList.append(2)
+    fixedList.append(3)
+    fixedList.append(4)
+    fixedList.append(5)
+    assert len(fixedList) == 5 and fixedList.elements == [1,2,3,4,5]
+    fixedList.append(6)
+    assert len(fixedList) == 5
+    assert fixedList.elements == [2,3,4,5,6]
+    fixedList.append(7)
+    assert len(fixedList) == 5
+    assert fixedList.elements == [3,4,5,6,7]
+
+def test_06_fixedList_getItem():
+    fixedList = mimir.frontend.terminal.helper.FixedList(5)
+    fixedList.elements = [1,2,3,4,5]
+    assert fixedList[0] == 1
+    assert fixedList[4] == 5
+    with pytest.raises(IndexError):
+        fixedList[5]
+
+def test_07_fixedList_loop():
+    fixedList = mimir.frontend.terminal.helper.FixedList(5)
+    fixedList.elements = [1,2,3,4,5]
+    iElem = 0
+    for elem in fixedList:
+        print(elem)
+        assert elem == fixedList.elements[iElem]
+        iElem += 1
+    assert iElem == 5

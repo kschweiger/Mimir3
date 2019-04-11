@@ -234,6 +234,7 @@ class DataBase(object):
                 retlist += toAdd
             else:
                 retlist.append(toAdd)
+        logging.info(retlist)
         return set(retlist)
 
     def getSortedIDs(self, sortBy, reverseOrder=True):

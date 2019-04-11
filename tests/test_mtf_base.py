@@ -48,6 +48,10 @@ def preCreatedDB():
     database.modifyListEntry("0", "ListItem", "Blue", byID = True)
     database.modifyListEntry("0", "ListItem", "Double Orange", byID = True)
     database.modifyListEntry("0", "ListItem", "Triple Orange", byID = True)
+    database.modifyListEntry("1", "ListItem", "Blue", byID = True)
+    database.modifyListEntry("1", "ListItem", "Red", byID = True)
+    database.modifyListEntry("1", "ListItem", "Orange", byID = True)
+    database.modifyListEntry("1", "ListItem", "Magenta", byID = True)
     Entry0 = database.getEntryByItemName("ID", "0")[0]
     Entry1 = database.getEntryByItemName("ID", "1")[0]
     Entry2 = database.getEntryByItemName("ID", "2")[0]
@@ -108,18 +112,29 @@ def test_03_MTF_initApp(preCreatedDB):
     assert isinstance(app.database, DataBase)
     assert isinstance(app.config, MTF.MTFConfig)
 
-
-# def test_01_MTF_loadMTFConfig(preCreatedDB):
-#     assert not os.path.exists(preCreatedDB.mimirdir+"/MTF.json")
-#     assert MTF.initFrontend()
-#     assert os.path.exists(preCreatedDB.mimirdir+"/MTF.json")
-#
-# def test_02_MTF_load_database():
-#     database = createNewDB()
-#     with self.assertRaises(RuntimeError):
-#         MTF.loadDB(dir2tests+"/someFolderWoMimirFolder")
-#
-#     assert MTF.loadDB(dir2tests+"/testStructure")
-#
-# def test_03_MTF_save_database(preCreatedDB):
-#     assert False
+def test_04_MTF_generateList(preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    app.config.items = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"]
+    checkThis = app.generateList(["0"])
+    print(checkThis)
+    entry = preCreatedDB.getEntryByItemName("ID", "0")[0]
+    entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
+    #make sure that displayitems is: "ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"
+    app.tableColumnItems = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"]
+    expectation = [(entry.getItem("ID").value, entry.getItem("Name").value,
+                    entry.getItem("SingleItem").value, ", ".join(entry.getItem("ListItem").value),
+                    entry.getItem("Rating").value,  ", ".join(entry.getItem("Opened").value))]
+    assert expectation == checkThis
+    app.config.itemInfo["ListItem"]["Priority"] = ["Orange","Magenta"]
+    app.config.itemInfo["Name"]["maxLen"] = 8
+    checkThis = app.generateList(["1"])
+    print(checkThis)
+    expectation_ListItem = "Orange, Magenta, Blue, Red"
+    expectation_name = entry1.getItem("Name").value[:8]+".."
+    assert checkThis[0][3] == expectation_ListItem
+    assert checkThis[0][1] == expectation_name
+    checkThis = app.generateList(["2"])
+    app.config.itemInfo["ListItem"]["nDisplay"] = 2
+    checkThis = app.generateList(["0"])
+    expectation_LitItem_nDisplay = ", ".join(entry.getItem("ListItem").value[:2]+[".."])
+    assert checkThis[0][3] == expectation_LitItem_nDisplay

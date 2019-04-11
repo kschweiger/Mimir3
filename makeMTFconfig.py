@@ -35,6 +35,7 @@ def main(model, dryrun):
         config["General"]["DisplayItems"].append(item)
         config[item] = {}
         config[item]["DisplayName"] = item
+        config[item]["DisplayDefault"] = None
         if item in modelListItems:
             config[item]["nDisplay"] = 99
             config[item]["Priority"] = []
@@ -45,7 +46,7 @@ def main(model, dryrun):
             config[item]["Type"] = "Item"
     config["Name"]["maxLen"] = 32
     outputName = model.split("/")[-1].replace(".json", "")
-    config["General"]["Windows"] = ["Main", "List", "DB"]
+    config["General"]["Windows"] = ["Main", "List", "DB","Modify","MultiModify"]
 
     config["Window"] = {}
     config["Window"]["Main"] = {}
@@ -65,6 +66,7 @@ def main(model, dryrun):
     config["Window"]["List"]["Text"] = None
     config["Window"]["List"]["Options"] = [("Main", "Back to main menu"),
                                            ("All","Prints all entries"),
+                                           ("Modify","Enter modification mode"),
                                            ("Query","Print entries returned by a query"),
                                            ("Newest","Print latest entries")]
     config["Window"]["DB"] = {}
@@ -74,6 +76,25 @@ def main(model, dryrun):
     config["Window"]["DB"]["Options"] = [("Main", "Back to main menu"),
                                          ("Save","Saves the current state of the database"),
                                          ("Read FS","Invokes a search for new files from the mimir root dir")]
+
+    config["Window"]["Modify"] = {}
+    config["Window"]["Modify"]["Type"] = "Window"
+    config["Window"]["Modify"]["Title"] = "Database modification"
+    config["Window"]["Modify"]["Text"] = ["Modifications"]
+    config["Window"]["Modify"]["Options"] = [("Main", "Back to main menu"),
+                                             ("Single Entry","Will spawn a window where one entry can be modified mulitple times"),
+                                             ("Entry Range","Modify a range of entries multiple times"),
+                                             ("List Range","Modify a list of entries multiple times")]
+
+    config["Window"]["MultiModify"] = {}
+    config["Window"]["MultiModify"]["Type"] = "Window"
+    config["Window"]["MultiModify"]["Title"] = "Multiple modifications of one entry"
+    config["Window"]["MultiModify"]["Text"] = ["Multimodification"]
+    config["Window"]["MultiModify"]["Options"] = [("Main", "Back to main menu")]
+    for item in modelItems:
+        if item in ["ID", "Path", "Opened", "Changed", "Added"]:
+            continue
+        config["Window"]["MultiModify"]["Options"].append((item, "Some description"))
 
 
     if dryrun:
