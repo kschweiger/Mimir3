@@ -28,9 +28,10 @@ def main(model, dryrun):
 
     config = {}
     config["General"] = {}
-    config["General"]["Width"] = 80
+    config["General"]["Width"] = 110
     config["General"]["Height"] = 50
     config["General"]["DisplayItems"] = []
+    config["General"]["ModItems"] = []
     for item in modelItems:
         config["General"]["DisplayItems"].append(item)
         config[item] = {}
@@ -83,19 +84,19 @@ def main(model, dryrun):
     config["Window"]["Modify"]["Text"] = ["Modifications"]
     config["Window"]["Modify"]["Options"] = [("Main", "Back to main menu"),
                                              ("Single Entry","Will spawn a window where one entry can be modified mulitple times"),
-                                             ("Entry Range","Modify a range of entries multiple times"),
-                                             ("List Range","Modify a list of entries multiple times")]
+                                             ("Entry Range","Modify a range of entries multiple times. Input ** XXX - YYY ***"),
+                                             ("List Range","Modify a list of entries multiple times. Input comma separted list")]
 
     config["Window"]["MultiModify"] = {}
     config["Window"]["MultiModify"]["Type"] = "Window"
     config["Window"]["MultiModify"]["Title"] = "Multiple modifications of one entry"
-    config["Window"]["MultiModify"]["Text"] = ["Multimodification"]
+    config["Window"]["MultiModify"]["Text"] = ["Multi modification for: "]
     config["Window"]["MultiModify"]["Options"] = [("Main", "Back to main menu")]
     for item in modelItems:
         if item in ["ID", "Path", "Opened", "Changed", "Added"]:
             continue
         config["Window"]["MultiModify"]["Options"].append((item, "Some description"))
-
+        config["General"]["ModItems"].append(item)
 
     if dryrun:
         print(json.dumps(config, sort_keys=True, indent=4, separators=(',', ': ')))

@@ -26,7 +26,7 @@ def initLogging(thisLevel, funcLen = "12"):
         #datefmt="%H:%M:%S"
     )
 
-def run(baseDir, config=None):
+def run(baseDir, config=None, autofind=True):
     database, status = initDatabase(baseDir, config)
     logging.info("Got database at %s with status %s", database, status)
     logging.info("Starting application")
@@ -61,6 +61,13 @@ if __name__ == "__main__":
         type = str,
         default = None
     )
+    argumentparser.add_argument(
+        "--disableAutoFind",
+        action = "store_true",
+        help = "Will disable to automatically executed file earch in root dir",
+    )
     args = argumentparser.parse_args()
     initLogging(args.logging)
-    run(baseDir = args.folder, config = args.config)
+    run(baseDir = args.folder,
+        config = args.config,
+        autofind = (not args.disableAutoFind))

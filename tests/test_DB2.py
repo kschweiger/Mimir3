@@ -308,7 +308,7 @@ def test_12_DB_findNewFiles_append():
     database = DataBase(dbRootPath, "new", config)
     lastIDbeforeAppend = database.maxID
     os.system("touch "+dir2tests+"/testStructure/newfile.mp4")
-    newFiles = database.findNewFiles()
+    newFiles, pairs = database.findNewFiles()
     os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
     assert dir2tests+"/testStructure/newfile.mp4" in newFiles
     assert len(newFiles) == 1

@@ -138,3 +138,23 @@ def test_04_MTF_generateList(preCreatedDB):
     checkThis = app.generateList(["0"])
     expectation_LitItem_nDisplay = ", ".join(entry.getItem("ListItem").value[:2]+[".."])
     assert checkThis[0][3] == expectation_LitItem_nDisplay
+
+def test_05_MTF_modify(preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    ### Append
+    assert app.makeListModifications("1", "ListItem", "Append", None, "Magenta")
+    Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
+    assert "Magenta" in Entry1.getItem("ListItem").value
+    ##Remove
+    assert app.makeListModifications("1", "ListItem", "Remove", "Magenta", None)
+    Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
+    assert "Magenta" not in Entry1.getItem("ListItem").value
+    assert not app.makeListModifications("1", "ListItem", "Remove", "SomeColor", None)
+    ##Replace
+    assert app.makeListModifications("1", "ListItem", "Append", None, "Cyan")
+    Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
+    assert "Cyan" in Entry1.getItem("ListItem").value
+    assert app.makeListModifications("1", "ListItem", "Replace", "Cyan", "Yellow")
+    Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
+    assert "Cyan" not in Entry1.getItem("ListItem").value
+    assert "Yellow" in Entry1.getItem("ListItem").value

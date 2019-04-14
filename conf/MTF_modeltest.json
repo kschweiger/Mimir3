@@ -16,7 +16,13 @@
     "General": {
         "DisplayItems": ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"],
         "Height": 50,
-        "Width": 100,
+        "ModItems": [
+            "Name",
+            "Rating",
+            "SingleItem",
+            "ListItem"
+        ],
+        "Width": 110,
         "Windows": [
             "Main",
             "List",
@@ -166,11 +172,11 @@
                 ],
                 [
                     "Entry Range",
-                    "Modify a range of entries multiple times"
+                    "Modify a range of entries multiple times. Input ** XXX - YYY ***"
                 ],
                 [
                     "List Range",
-                    "Modify a list of entries multiple times"
+                    "Modify a list of entries multiple times. Input comma separted list"
                 ]
             ],
             "Text": [
@@ -203,7 +209,7 @@
                 ]
             ],
             "Text": [
-                "Multimodification"
+                "Multi modification for: "
             ],
             "Title": "Multiple modifications of one entry",
             "Type": "Window"

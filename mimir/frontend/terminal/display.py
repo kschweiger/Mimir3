@@ -260,7 +260,7 @@ class ListWindow(Window):
         logging.debug("Added: %s",printStatement[0:20])
         self.printedLines.append(printStatement)
         self.nLinesPrinted += 1
-        print(printStatement,self.nLinesPrinted)
+        print(printStatement)#,self.nLinesPrinted)
 
     def update(self, newContent, resetHeader=None):
         """

@@ -211,7 +211,9 @@ class DataBase(object):
             if file_ not in existingFiles:
                 newFiles.append(file_)
 
+
         toret = newFiles
+        pairs = []
         #Insert/Append new files
         for newFile in newFiles:
             if len(missingIDs) > 0:
@@ -221,7 +223,8 @@ class DataBase(object):
                 self.maxID += 1
                 cID = self.maxID
             self.createNewEntry(newFile, cID)
-        return toret
+            pairs.append((newFile, cID))
+        return toret, pairs
 
     def getAllValuebyItemName(self, itemName):
         """ Return a set of all values of name itemName """

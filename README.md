@@ -1,7 +1,7 @@
 ![Mimir3](mimir_logo_small.png)
 
 ![PythonVersion](https://img.shields.io/badge/python-3.7-blue.svg?longCache=true&style=flat-square)
-![Coverage](https://img.shields.io/badge/pytest--cov-86%25-yellow.svg?longCache=true&style=flat-square)
+![Coverage](https://img.shields.io/badge/pytest--cov-79%25-yellow.svg?longCache=true&style=flat-square)
 ![Tests](https://img.shields.io/badge/Test%20passing-false-red.svg?longCache=true&style=flat-square)
 
 Custom Database
@@ -13,6 +13,16 @@ A database consists of `Entries` that are indexed by the path+name of the file (
 * `Single` : `Items` that can only have one `value`
 * `List` : `Items` can have multiple `values`
 
+## Terminal Frontend (MTF)
+Run with
+```bash
+python runMTF.py --folder path/to/initialized/folder
+```
+
+On the test folder structure it can be run after running `test_mtf_base.py` with
+```bash
+python runMTF.py --folder tests/testStructure/
+```
 
 # Testing, code quality, documentation
 ## Testing framework
