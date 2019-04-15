@@ -28,6 +28,13 @@ mimir.backend.helper module
     :undoc-members:
     :show-inheritance:
 
+mimir.backend.plugin module
+---------------------------
+
+.. automodule:: mimir.backend.plugin
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------

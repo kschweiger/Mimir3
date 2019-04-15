@@ -166,7 +166,7 @@ def test_05_display_Window_makeTable():
 def test_06_display_Window_draw(preCreatedWindowAndElements, capsys, monkeypatch):
     headerElements, preCreatedWindow = preCreatedWindowAndElements
     def mock_input(s):
-        print(s+" (mocked)", end='')
+        return s+" (mocked)"
     display.input = mock_input
     preCreatedWindow.draw("This is requesting some input")
     captured = capsys.readouterr()
@@ -269,7 +269,7 @@ def test_12_display_ListWindow_smallOptionTable_MultiLine(preCreatedListWindow):
 
 def test_13_display_ListWindow_interact(preCreatedListWindow, capsys):
     def mock_input(s):
-        print(s+" (mocked)", end='')
+        return s+" (mocked)"
     display.input = mock_input
     preCreatedListWindow.interact("Requesting input", "Small")
     captured = capsys.readouterr()

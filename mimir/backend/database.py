@@ -692,6 +692,7 @@ class Model(object):
         self.secondaryDBs = modelDict["General"]["SecondaryDBs"]
         self._items = {}
         self._listitems = {}
+
         for key in modelDict:
             if key != "General":
                 logging.debug("Found item %s in model", key)
@@ -706,6 +707,15 @@ class Model(object):
                 else:
                     raise TypeError("Invalid item type in model definition")
         self.allItems = set(self._items.keys()).union(set(self._listitems.keys()))
+
+        self.pluginDefinitions = []
+        for item in self._listitems:
+            self.pluginDefinitions.append(self._listitems[item]["plugin"])
+        for item in self._items:
+            self.pluginDefinitions.append(self._items[item]["plugin"])
+        self.pluginDefinitions = set(self.pluginDefinitions)
+        self.pluginDefinitions.remove("")
+
         #TODO Check if required items are in model
 
     def updateModel(self):

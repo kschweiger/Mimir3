@@ -109,3 +109,9 @@ venv.bak/
 
 #emcas
 *.*~
+
+#test stuff
+tests/testStructure/*
+
+#mac stuff
+.DS_Store

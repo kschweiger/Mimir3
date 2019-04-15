@@ -12,14 +12,21 @@ mimir.frontend.terminal.display module
     :undoc-members:
     :show-inheritance:
 
-mimir.frontend.terminal.runFrontend module
+mimir.frontend.terminal.application module
 ------------------------------------------
 
-.. automodule:: mimir.frontend.terminal.runFrontend
+.. automodule:: mimir.frontend.terminal.application
     :members:
     :undoc-members:
     :show-inheritance:
 
+mimir.frontend.terminal.helper module
+------------------------------------------
+
+.. automodule:: mimir.frontend.terminal.helper
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------
