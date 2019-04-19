@@ -31,7 +31,7 @@ def get_VideoMetaData(fileName):
         except ValueError:
             voi_duration = "00:00:00"
 
-    return {"width" : voi_width, "height" : voi_height, "duration" : voi_duration}
+    return {"width" : str(voi_width), "height" : str(voi_height), "duration" : voi_duration}
 
 def get_osData(filename, SF = 1e9):
     """
@@ -44,7 +44,7 @@ def get_osData(filename, SF = 1e9):
     Returns:
         dict : Dict keys are: size
     """
-    filesize = os.stat(filename).st_size
+    filesize = os.path.getsize(filename)
     filesize = filesize/SF
     return {"size" : "{0:.2f}".format(filesize)}
 
@@ -67,7 +67,6 @@ def getPluginValues(fileName, pluginDefs, modules=["VideoMetaData", "osData"]):
         if check is None:
             raise ValueError("%s is no valid plugin. Should be 'module:value'"%definition)
         else:
-            print(check.span(), len(definition))
             if check.span() != (0, len(definition)):
                 raise ValueError("%s is no valid pluging. Check Definition"%definition)
         module, value = definition.split(":")

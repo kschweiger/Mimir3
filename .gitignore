@@ -111,7 +111,7 @@ venv.bak/
 *.*~
 
 #test stuff
-tests/testStructure/*
+#tests/testStructure/*
 
 #mac stuff
 .DS_Store

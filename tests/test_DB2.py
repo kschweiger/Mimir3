@@ -205,6 +205,7 @@ def test_07_DB_load():
     database.saveMain()
     loadedDB = DataBase(dbRootPath, "load")
     assert database == loadedDB
+    assert loadedDB.maxID == len(loadedDB.entries)
     del database
 
 def test_08_DB_getAllValues():
@@ -320,6 +321,7 @@ def test_12_DB_findNewFiles_append():
             break
     assert asEntry
     assert int(newEntry.ID) == lastIDbeforeAppend+1
+    assert database.maxID == lastIDbeforeAppend+1
     del database
 
 def test_13_DB_query():

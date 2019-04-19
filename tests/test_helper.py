@@ -17,7 +17,7 @@ def test_01_datetime():
     dateFallback = mimir.backend.helper.getTimeFormatted("UNDEFINEDARG")
     dateTime = mimir.backend.helper.getTimeFormatted("Time")
     dateDate = mimir.backend.helper.getTimeFormatted("Date")
-
+    dateDateInvert = mimir.backend.helper.getTimeFormatted("Date", inverted=True)
 
     #Get current time
     currently = datetime.datetime.now()
@@ -27,6 +27,8 @@ def test_01_datetime():
     hour = currently.hour
     minutes = currently.minute
     sec = currently.second #not going to test seconds....
+
+    invertedDate = "{0:02}{3}{1:02}{3}{2:02}".format(year-2000, month, day, ".")
 
     splitoutput = dateFull.split("|")
     date = splitoutput[0]
@@ -45,6 +47,8 @@ def test_01_datetime():
 
     assert dateTime == time
     assert dateDate == date
+    print(dateFull, dateDate, dateDateInvert, invertedDate)
+    assert dateDateInvert == invertedDate
 
 def test_02_convertInternalString():
     with pytest.raises(RuntimeError):

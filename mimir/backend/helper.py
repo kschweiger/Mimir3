@@ -3,7 +3,7 @@ import datetime
 import logging
 
 
-def getTimeFormatted(retFormat, delimDate="."):
+def getTimeFormatted(retFormat, delimDate=".", inverted = False):
     """
     Helper function to get the the current time/date
 
@@ -19,7 +19,10 @@ def getTimeFormatted(retFormat, delimDate="."):
     hour = currently.hour
     minutes = currently.minute
     sec = currently.second
-    fulldate = "{0:02}{3}{1:02}{3}{2:02}".format(day, month, year-2000, delimDate)
+    if inverted:
+        fulldate = "{2:02}{3}{1:02}{3}{0:02}".format(day, month, year-2000, delimDate)
+    else:
+        fulldate = "{0:02}{3}{1:02}{3}{2:02}".format(day, month, year-2000, delimDate)
     fulltime = "{0:02}:{1:02}:{2:02}".format(hour, minutes, sec)
     if retFormat == "Full":
         return fulldate+"|"+fulltime

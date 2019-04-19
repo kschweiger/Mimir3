@@ -11,6 +11,7 @@ from glob import glob
 
 from mimir.backend.entry import DataBaseEntry, Item, ListItem
 import mimir.backend.helper
+import mimir.backend.plugin
 
 class DataBase(object):
     """
@@ -118,22 +119,33 @@ class DataBase(object):
             new DataBaseEntry object
         """
         filename = path.split("/")[-1].split(".")[0]
-        entryinit = []
+        entryinit = {}
         for item in self.model.items:
             if item == "Path":
-                entryinit.append(("Path", "Single", path))
+                entryinit["Path"] = ("Single", path)
             elif item == "ID":
-                entryinit.append(("ID", "Single", str(cID)))
+                entryinit["ID"] = ("Single", str(cID))
             elif item == "Name":
-                entryinit.append(("Name", "Single", filename))
+                entryinit["Name"] = ("Single", filename)
             elif item == "Added":
-                entryinit.append(("Added", "Single", mimir.backend.helper.getTimeFormatted("Full")))
+                entryinit["Added"] = ("Single", mimir.backend.helper.getTimeFormatted("Full"))
             else:
-                entryinit.append((item, "Single", self.model.items[item]["default"]))
+                entryinit[item] = ("Single", self.model.items[item]["default"])
         for listitem in self.model.listitems:
-            entryinit.append((listitem, "List", self.model.listitems[listitem]["default"]))
+            entryinit[listitem] = ("List", self.model.listitems[listitem]["default"])
 
-        e = DataBaseEntry(entryinit)
+        #If items with for plugins are degined run the pluging functions
+        if self.model.pluginDefinitions:
+            pluginValues = mimir.backend.plugin.getPluginValues(path, self.model.pluginDefinitions)
+            for plugin in pluginValues:
+                eType, eValue = entryinit[self.model.pluginMap[plugin]]
+                entryinit[self.model.pluginMap[plugin]] = (eType, pluginValues[plugin])
+
+        _entryinit = []
+        for entry in entryinit:
+            _entryinit.append((entry, entryinit[entry][0], entryinit[entry][1]))
+
+        e = DataBaseEntry(_entryinit)
 
         self.entries.append(e)
         self.entrydict[str(cID)] = e
@@ -154,7 +166,7 @@ class DataBase(object):
         # Copy current DBfile and save it as backup
         if os.path.exists(self.savepath):
             logging.debug("Making backup")
-            backupDate = mimir.backend.helper.getTimeFormatted("Date", "-")
+            backupDate = mimir.backend.helper.getTimeFormatted("Date", "-", inverted = True)
             copy2(self.savepath, self.savepath.replace(".json", ".{0}.backup".format(backupDate)))
         # Convert database to dict so json save can be used
         output = {}
@@ -181,6 +193,7 @@ class DataBase(object):
                 entryinit.append((item, savedEntry[item]["type"], savedEntry[item]["value"]))
             e = DataBaseEntry(entryinit)
             self.entries.append(e)
+            self.maxID += 1
             self.entrydict[savedEntry["ID"]["value"]] = e
 
     def findNewFiles(self, startdir=""):
@@ -709,12 +722,28 @@ class Model(object):
         self.allItems = set(self._items.keys()).union(set(self._listitems.keys()))
 
         self.pluginDefinitions = []
+        self.pluginMap = {}
         for item in self._listitems:
-            self.pluginDefinitions.append(self._listitems[item]["plugin"])
+            thisPlugIn = self._listitems[item]["plugin"]
+            if thisPlugIn != "":
+                self.pluginDefinitions.append(thisPlugIn)
+                if not thisPlugIn in self.pluginMap.keys():
+                    self.pluginMap[thisPlugIn] = item
+                else:
+                    raise RuntimeError("There should only be on Item with any given plugin")
         for item in self._items:
-            self.pluginDefinitions.append(self._items[item]["plugin"])
+            thisPlugIn = self._items[item]["plugin"]
+            if  thisPlugIn != "":
+                self.pluginDefinitions.append(thisPlugIn)
+                if not thisPlugIn in self.pluginMap.keys():
+                    self.pluginMap[thisPlugIn] = item
+                else:
+                    raise RuntimeError("There should only be on Item with any given plugin")
         self.pluginDefinitions = set(self.pluginDefinitions)
-        self.pluginDefinitions.remove("")
+
+
+
+
 
         #TODO Check if required items are in model
 
