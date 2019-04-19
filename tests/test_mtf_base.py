@@ -158,3 +158,7 @@ def test_05_MTF_modify(preCreatedDB):
     Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
     assert "Cyan" not in Entry1.getItem("ListItem").value
     assert "Yellow" in Entry1.getItem("ListItem").value
+
+def test_06_MTF_findnewFiles(preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    

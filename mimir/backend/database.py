@@ -95,7 +95,6 @@ class DataBase(object):
         if not startdir.endswith("/") and startdir != "":
             startdir = startdir+"/"
         allfiles = glob(self.databaseRoot+"/"+startdir+"**/*.*", recursive=True)
-
         matchingfiles = []
         for f in allfiles:
             try:
@@ -104,8 +103,7 @@ class DataBase(object):
                 logging.warning("Found file not matching expected structure: %s", f)
                 continue
             if ext in self.model.extentions:
-                matchingfiles.append(f)
-
+                matchingfiles.append(f.replace(self.databaseRoot+"/",""))
         return matchingfiles
 
     def createNewEntry(self, path, cID):
@@ -212,7 +210,6 @@ class DataBase(object):
             existingFiles.append(entry.Path)
             IDs.append(int(entry.ID))
 
-        print(IDs)
         #Find all IDs missing so new files can be inserted
         IDs = set(IDs)
         for i in range(len(self.entries)):
@@ -237,6 +234,7 @@ class DataBase(object):
                 cID = self.maxID
             self.createNewEntry(newFile, cID)
             pairs.append((newFile, cID))
+
         return toret, pairs
 
     def getAllValuebyItemName(self, itemName):
@@ -585,8 +583,10 @@ class DataBase(object):
         foundOptions = {}
         items2Check = self._model.secondaryDBs
         values = {}
+        values_orig = {}
         for item in items2Check:
-            values[item] = self.getAllValuebyItemName(item)
+            values_orig[item] = list(self.getAllValuebyItemName(item))
+            values[item] = set([x.lower() for x in self.getAllValuebyItemName(item)])
             foundOptions[item] = []
         whiteSpaceMatches = {}
         if whitespaceMatch:
@@ -604,6 +604,7 @@ class DataBase(object):
             if fullFileName.endswith(fileType):
                 fullFileName = fullFileName.replace("."+fileType, "")
                 break
+        fullFileName = fullFileName.lower()
         pathElements = fullFileName.split("/")
         remUnsplitElements = copy.copy(pathElements)
         for elem in pathElements:
@@ -620,7 +621,7 @@ class DataBase(object):
         if whitespaceMatch:
             #For partial matched this is not needed.
             for item in items2Check:
-                values[item] = self.getAllValuebyItemName(item)
+                values[item] = set([x.lower() for x in self.getAllValuebyItemName(item)])
         #Now we need to split elements with whitespace into two element to match partial matches
         partialWhiteSpaces = {}
         for item in items2Check:
@@ -649,6 +650,12 @@ class DataBase(object):
                                 foundOptions[item] += partialWhiteSpaces[value]
                             else:
                                 foundOptions[item].append(value)
+        #Replace the lowercase versions of the options with the original case sensitive ones
+        for item in items2Check:
+            for ioption, option in enumerate(foundOptions[item]):
+                for iorigOption, origOption in enumerate(values_orig[item]):
+                    if option == origOption.lower():
+                        foundOptions[item][ioption] = values_orig[item][iorigOption]
         for item in items2Check:
             foundOptions[item] = set(foundOptions[item])
         return foundOptions

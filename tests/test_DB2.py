@@ -135,6 +135,7 @@ def test_02_DB_init_new():
     database = DataBase(dbRootPath, "new", config)
     print(database.model.listitems)
     filesindbRoot = glob(dbRootPath+"/**/*.mp4", recursive = True)
+    filesindbRoot = [x.replace(dbRootPath+"/", "") for x in filesindbRoot]
     allEntriesSaved = True
     for entry in database.entries:
         if entry.Path not in filesindbRoot:
@@ -218,6 +219,7 @@ def test_08_DB_getAllValues():
         database.getAllValuebyItemName("Blubb")
     values = database.getAllValuebyItemName("Path")
     filesindbRoot = glob(dbRootPath+"/**/*.mp4", recursive = True)
+    filesindbRoot = [x.replace(dbRootPath+"/", "") for x in filesindbRoot]
     assert values == set(filesindbRoot)
     del database
 
@@ -295,9 +297,10 @@ def test_11_DB_removeEntry():
     assert not entry2Remove in databaseName.entries
     #Remove by Path
     databasePath = copy.deepcopy(database)
-    path2remove = "/Users/korbinianschweiger/Code/Mimir3/tests/testStructure/folder2/folder2file1.mp4"
-    entry2Remove = databasePath.getEntryByItemName("Path",path2remove)[0]
-    databasePath.remove(path2remove, byPath = True)
+    file2remove =  "folder2/folder2file1.mp4"
+    path2remove = dbRootPath+"/"+file2remove
+    entry2Remove = databasePath.getEntryByItemName("Path",file2remove)[0]
+    databasePath.remove(file2remove, byPath = True)
     assert not entry2Remove in databasePath.entries
     del database
 
@@ -311,11 +314,11 @@ def test_12_DB_findNewFiles_append():
     os.system("touch "+dir2tests+"/testStructure/newfile.mp4")
     newFiles, pairs = database.findNewFiles()
     os.system("rm "+dir2tests+"/testStructure/newfile.mp4")
-    assert dir2tests+"/testStructure/newfile.mp4" in newFiles
+    assert "newfile.mp4" in newFiles
     assert len(newFiles) == 1
     asEntry = False
     for entry in database.entries:
-        if entry.Path == dir2tests+"/testStructure/newfile.mp4":
+        if entry.Path == "newfile.mp4":
             asEntry = True
             newEntry = entry
             break
@@ -494,6 +497,7 @@ def test_19_DB_getSortedIDs(preCreatedDB):
     #Get sorted by Added (SingleItem with datetime)
     expected_added = ["0", "2", "3", "5", "1", "4"]
     sorted_addedIDs = preCreatedDB.getSortedIDs("Added", reverseOrder = True)
+    print(sorted_addedIDs)
     for iId, expected_id in enumerate(expected_added):
         assert expected_id == sorted_addedIDs[iId]
     #Same but with reverse order --> Test if ID sorting is independent of reverse
@@ -534,17 +538,29 @@ def test_21_DB_guessSecondaryDBItembyPath(preCreatedDB):
     assert "Blue" in options["ListItem"]
     assert options["SingleItem"] == set(["Xi"]) and options["ListItem"] == set(["Blue"])
     #2: Test if it works when subparts of a "element" are part of secondaryDB
+    #2.1: Fast version which will not try to split strings
     newFile = "testStructure/Pink/BlueXi.mp4"
     options = preCreatedDB.getItemsPyPath(newFile, fast=True)
     assert "Xi" not in options["SingleItem"]
     assert "Blue" not in options["ListItem"]
     assert options["SingleItem"] == set([]) and options["ListItem"] == set([])
+    #2.2; Test with enables splitting
+    options = preCreatedDB.getItemsPyPath(newFile)
+    assert "Xi" in options["SingleItem"]
+    assert "Blue" in options["ListItem"]
+    assert options["SingleItem"] == set(["Xi"]) and options["ListItem"] == set(["Blue"])
+    #2.3: Test lowercase match
+    newFile = "testStructure/Pink/bluexi.mp4"
     options = preCreatedDB.getItemsPyPath(newFile)
     assert "Xi" in options["SingleItem"]
     assert "Blue" in options["ListItem"]
     assert options["SingleItem"] == set(["Xi"]) and options["ListItem"] == set(["Blue"])
     #3: Test for items with whitespace - Find exact match
     newFile = "testStructure/Pink/Double_Orange.mp4"
+    options = preCreatedDB.getItemsPyPath(newFile, whitespaceMatch = True)
+    assert options["ListItem"] == set(["Double Orange"])
+    #3.1 Test whitespace lowercase:
+    newFile = "testStructure/Pink/double_orange.mp4"
     options = preCreatedDB.getItemsPyPath(newFile, whitespaceMatch = True)
     assert options["ListItem"] == set(["Double Orange"])
     #4: Test for items with whitespace - find partial match
@@ -563,6 +579,7 @@ def test_21_DB_guessSecondaryDBItembyPath(preCreatedDB):
     assert "Red" not in options["ListItem"]
     preCreatedDB.modifyListEntry("0", "ListItem", "Red", byID = True)
     options = preCreatedDB.getItemsPyPath(newFile)
+    print("-------------------",options)
     assert "Red" in options["ListItem"]
 
 def test_22_DB_splitBySep(preCreatedDB):

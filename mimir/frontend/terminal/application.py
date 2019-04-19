@@ -143,7 +143,27 @@ class App:
                 self.dbWindow.update("Saving database")
                 self.database.saveMain()
             elif retVal == "2":
-                pass
+                newFiles, file_id_pair = self.database.findNewFiles()
+                for newFile, ID in file_id_pair:
+                    self.dbWindow.update("Found file: %s"%newFile)
+                    suggestedOptions = self.database.getItemsPyPath(newFile)
+                    foundOne = False
+                    for item in suggestedOptions:
+                        if suggestedOptions[item] != set():
+                            foundOne = True
+                    if not foundOne:
+                        continue
+                    for item in suggestedOptions:
+                        for option in suggestedOptions[item]:
+                            answer = self.dbWindow.draw("Do you want to add %s to %s [Yes/No]"%(option , item))
+                            if answer.lower() == "yes":
+                                if item in self.database.model.items:
+                                    self.database.modifySingleEntry(ID, item, option, byID = True)
+                                elif item in self.database.model.listitems:
+                                    self.database.modifyListEntry(ID, item, option, "Append", byID = True)
+                                else:
+                                    raise RuntimeError("This should not happen!")
+
             else:
                 self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
         self.runMainWindow(None)

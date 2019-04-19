@@ -68,6 +68,8 @@ if __name__ == "__main__":
     )
     args = argumentparser.parse_args()
     initLogging(args.logging)
+    if args.folder.endswith("/"):
+        args.folder = args.folder[:-1]
     run(baseDir = args.folder,
         config = args.config,
         autofind = (not args.disableAutoFind))
