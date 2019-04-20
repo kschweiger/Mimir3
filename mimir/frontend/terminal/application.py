@@ -21,6 +21,7 @@ class App:
         if not os.path.exists(self.database.mimirdir+"/MTF_model.json"):
             raise RuntimeError("No MTF configuration found in .mimir directory. Use make MTFconfig.py to create on from the database config")
         self.config = MTFConfig(self.database.mimirdir+"/MTF_model.json")
+        self.lastIDList = self.database.getAllValuebyItemName("ID")
         self.windowHeight = self.config.height
         self.windowWidth = self.config.width
         self.tableColumns = len(self.config.items)
@@ -96,13 +97,14 @@ class App:
         while retVal != "0":
             retVal = self.mainWindow.draw("Enter Value: ")
             if retVal == "1":
-                pass
+                executeID = self.mainWindow.draw("Enter ID to execute")
+                self.execute(executeID, self.mainWindow)
             elif retVal == "2":
                 self.runModWindow(None, fromMain=True, fromList=False)
             elif retVal == "3":
                 self.runListWindow(None)
             elif retVal == "4":
-                pass
+                self.executeRandom(self.mainWindow)
             elif retVal == "5":
                 self.runDBWindow(None)
             elif retVal == "0":
@@ -115,9 +117,10 @@ class App:
         retVal = startVal
         self.listWindow.draw(skipHeader = self.listWindowDrawn, skipTable = True, fillWindow = True)
         self.listWindowDrawn = True
+
         #retVal = self.listWindow.interact("Enter Value:", None)
         while retVal != "0":
-            retVal = self.listWindow.interact("Enter Value:", None)
+            retVal = self.listWindow.interact("Enter Value", None)
             if retVal == "1": #Print All
                 tableElements = self.generateList("All")
                 self.listWindow.lines = []
@@ -125,13 +128,30 @@ class App:
                 #print("=========================================")
                 #self.listWindow.draw(skipHeader = True, skipTable = False, fillWindow = False)
                 #print("+++++++++++++++++++++++++++++++++++++++++")
-                retVal = self.listWindow.interact("Enter Value:", None, onlyInteraction = False)
-            elif retVal == "2": #Print Quary
+                retVal = self.listWindow.interact("Enter Value", None, onlyInteraction = False)
+            elif retVal == "2":
                 self.runModWindow(None, fromMain=False, fromList=True)
-            elif retVal == "3": #Print Newest
-                queryString = self.listWindow.interact("Enter Query:", None, onlyInteraction = False)
+            elif retVal == "3":
+                executeID = self.listWindow.interact("Enter ID to execute")
+                self.execute(executeID, self.listWindow)
+            elif retVal == "4":
+                self.executeRandom(self.listWindow, fromList = True)
+            elif retVal == "5":
+                queryString = self.listWindow.interact("Enter Query", None, onlyInteraction = False)
+                thisQuery = queryString.split(" ")
+                tableElements = self.generateList(
+                    self.database.query(self.config.queryItems, thisQuery, returnIDs = True)
+                )
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
+            elif retVal == "6":
+                sortedIDs = self.database.getSortedIDs("Added", reverseOrder = True)[0:3]
+                tableElements = self.generateList(sortedIDs)
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
+                tableElements = self.generateList("All")
         self.runMainWindow(None)
 
     def runDBWindow(self, startVal):
@@ -331,6 +351,25 @@ class App:
         else:
             pass
 
+    def execute(self, ID, window):
+        if ID not in self.database.getAllValuebyItemName("ID"):
+            window.update("ID %s not in database"%ID)
+        else:
+            entry2Exec = self.database.getEntryByItemName("ID", ID)[0]
+            path2Exec = entry2Exec.Path
+            os.system("{0} {1}".format(self.config.executable, path2Exec))
+
+    def executeRandom(self, window, fromList=False):
+        randID = self.database.getRandomEntry(chooseFrom = self.lastIDList)
+        _listIDList = self.lastIDList
+        if fromList:
+            tableElements = self.generateList([randID])
+            self.lastIDList = _listIDList
+            window.lines = []
+            window.update(tableElements)
+        else:
+            window.update("Executing entry with ID {0}".format(randID))
+        self.execute(randID, window)
 
     def terminate(self):
         logging.info("Checking if database was saved")
@@ -347,6 +386,7 @@ class App:
             ids2Print = sorted(list(ids2Print), key=lambda x: int(x))
         elif isinstance(get, list):
             ids2Print = get
+        self.lastIDList = ids2Print
         logging.info(ids2Print)
         for id in ids2Print:
             entryElements = []
@@ -392,9 +432,6 @@ class App:
             tableElements.append(tuple(entryElements))
         return tableElements
 
-    def saveDB(self):
-        pass
-
     def about(self):
         """
         Method that returns the information for the about screen. Like python-version, number entryies, number if values per ListItem, most used Value
@@ -419,7 +456,7 @@ class MTFConfig:
         self.items = configDict["General"]["DisplayItems"]
         self.queryItems = configDict["General"]["QueryItems"]
         self.modItems = configDict["General"]["ModItems"]
-
+        self.executable = configDict["General"]["Executable"]
         self.itemInfo = {}
         for iItem, item in enumerate(self.items):
             self.itemInfo[item] = {}

@@ -1,7 +1,7 @@
 import json
 import sys
 
-def main(model, dryrun):
+def main(model, dryrun, queryItems):
     """
     Function for creating a MTF config based on a passed model.json
 
@@ -30,7 +30,8 @@ def main(model, dryrun):
     config["General"] = {}
     config["General"]["Width"] = 110
     config["General"]["Height"] = 50
-    config["General"]["QueryItems"] = ["SingleItem", "ListItems"]
+    config["General"]["Executable"] = "mimir/frontend/terminal/executable/macOS/runVLC.sh"
+    config["General"]["QueryItems"] = queryItems
     config["General"]["DisplayItems"] = []
     config["General"]["ModItems"] = []
     for item in modelItems:
@@ -78,7 +79,9 @@ def main(model, dryrun):
     config["Window"]["List"]["Options"] = [("Main", "Back to main menu"),
                                            ("All","Prints all entries"),
                                            ("Modify","Enter modification mode"),
-                                           ("Query","Print entries returned by a query"),
+                                           ("Execute","Execute a database entry"),
+                                           ("Random","Execute a random entry from the last printed list"),
+                                           ("Query","Print entries returned by a query. Will query items: {0}".format(", ".join(config["General"]["QueryItems"]))),
                                            ("Newest","Print latest entries")]
     config["Window"]["DB"] = {}
     config["Window"]["DB"]["Type"] = "Window"
@@ -131,6 +134,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Only print model json instead of saving it",
     )
+    argumentparser.add_argument(
+        "--queryItems",
+        action="store",
+        help="Pass items that are considered for database queries",
+        nargs = "+",
+        default = ["SingleItem", "ListItem"]
+    )
+
     args = argumentparser.parse_args()
 
-    main(args.inputModel, args.dryrun)
+    main(args.inputModel, args.dryrun, args.queryItems)

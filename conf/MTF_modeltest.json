@@ -16,6 +16,7 @@
     },
     "General": {
         "DisplayItems": ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"],
+        "Executable": "mimir/frontend/terminal/executable/macOS/runVLC.sh",
         "Height": 50,
         "ModItems": [
             "Name",
@@ -25,7 +26,7 @@
         ],
         "QueryItems": [
             "SingleItem",
-            "ListItems"
+            "ListItem"
         ],
         "Width": 110,
         "Windows": [
@@ -121,8 +122,16 @@
                     "Enter modification mode"
                 ],
                 [
+                    "Execute",
+                    "Execute a database entry"
+                ],
+                [
+                    "Random",
+                    "Execute a random entry from the last printed list"
+                ],
+                [
                     "Query",
-                    "Print entries returned by a query"
+                    "Print entries returned by a query. Will query items: SingleItem, ListItem"
                 ],
                 [
                     "Newest",
