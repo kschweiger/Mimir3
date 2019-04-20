@@ -426,6 +426,42 @@ class DataBase(object):
             self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
                                  byID=byID, byName=byName, byPath=byPath)
 
+    def getCount(self, identifier, itemName, byID=False, byName=False, byPath=False):
+        """
+        Method for counting the number of values in a ListItem. This need to be a database operation, because the Entry is not aware of it's default value which is not counted
+
+        Args:
+            indentifier (int, string) : Indentifier by which the entry will selected. It can be of type string for all vectors and also int for ID vector
+            itemName (str) : ListItem that will be counted
+            byID (bool) : Switch for using the ID vector
+            byName (bool) : Switch for using the Name vector
+            byPath (bool) : Switch for using the Path vector
+
+        Raises:
+            TypeError : If not ListItem is passed for itemName
+
+        Returns:
+            count (int) : Number of values for ListItem. Excluding the defaultvalue
+        """
+        self.checkModVector(identifier, byID, byName, byPath)
+        if byID:
+            Idtype = "ID"
+        if byName:
+            Idtype = "Name"
+        if byPath:
+            Idtype = "Path"
+        modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
+        if not isinstance(modEntry.items[itemName], ListItem):
+            raise TypeError("Called modifyListEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
+        if ((len(modEntry.getItem(itemName).value) == 1 and
+                 modEntry.getItem(itemName).value[0] == self.model.getDefaultValue(itemName))):
+            return 0
+        else:
+            return len(modEntry.getItem(itemName).value)
+
+
+
+
     def updateOpened(self, identifier, byID=False, byName=False, byPath=False):
         """
         Wrapper for modifyListEntry that is supposed to be called after a file has been openend.
@@ -447,7 +483,7 @@ class DataBase(object):
     def query(self, itemNames, itemValues, returnIDs=False):
         """
         Query database: Will get all values for items with names itemNames and searches\n
-        for all values given in the itemValues parameter
+        for all values given in the itemValues parameter. Leading ! on a value will be used as a veto.
 
         Args:
             itemNames (str, list) : itemNames used for the query
@@ -465,14 +501,49 @@ class DataBase(object):
             if name not in self.model.allItems:
                 raise KeyError("Arg {0} not in model items".format(name))
         result = []
+        hitValues = []
+        vetoValues = []
+        for value in itemValues:
+            if value.startswith("!"):
+                vetoValues.append(value.replace("!",""))
+            else:
+                hitValues.append(value)
+        logging.debug("Processing Query with:")
+        logging.debug("  hitValues: %s", hitValues)
+        logging.debug("  vetoValues: %s", vetoValues)
         for entry in self.entries:
             entryValues = entry.getAllValuesbyName(itemNames)
             hit = False
-            for value in itemValues:
+            veto = False
+            for value in hitValues:
                 if value in entryValues:
                     hit = True
                     break
-            if hit:
+            for value in vetoValues:
+                if value in entryValues:
+                    veto = True
+            addEntry = False
+            # Decide if entry will be returned. Options:
+            # No vetoValue and hit: Return Entry
+            # No vetoValue and no hit: Not Retrun Entry
+            if len(vetoValues) == 0:
+                if hit:
+                    addEntry = True
+            # Set vetoValue and No hitValue and veto: Not return Entry
+            # Set vetoValue and No hitValue and not veto: Return Entry
+            elif len(vetoValues) >= 1 and len(hitValues) == 0:
+                if not veto:
+                    addEntry = True
+            # Set vetoValue and Set hitValue and veto: Not return Entry
+            # Set vetoValue and Set hitValue and not veto and not hit: Not return Entry
+            # Set vetoValue and Set hitValue and not veto and hit: Return Entry
+            else:
+                if not veto and hit:
+                    addEntry = True
+
+
+
+            if addEntry:
                 if returnIDs:
                     result.append(entry.ID)
                 else:

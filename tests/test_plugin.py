@@ -63,8 +63,7 @@ def test_04_plugin_osData(fileSize,fileSizeGB,mocker):
     assert fileSizeGB == {"size" : "{0:.2f}".format(fileSize/1e9)}
 
 @pytest.mark.parametrize("fileSize,fileSizeGB,height,width,duration,durationExp", [(126730706, 126730706/1e9, "100", "200", "01:02:03.4444", "01:02:03")])
-@unittest.mock.patch("os.stat")
-def test_05_plugin_getPluginValues(os_stat, fileSize,fileSizeGB,height,width,
+def test_05_plugin_getPluginValues(fileSize,fileSizeGB,height,width,
                                    duration,durationExp, mocker):
     def returnMeta(SomeInput):
         return {"width" : width,
@@ -72,7 +71,7 @@ def test_05_plugin_getPluginValues(os_stat, fileSize,fileSizeGB,height,width,
                 "duration" : duration}
     mocker.patch("hachoir.metadata.extractMetadata", new=returnMeta)
     mocker.patch("hachoir.parser.createParser", new=returnMeta)
-    os_stat.return_value.st_size = fileSize
+    mocker.patch.object(os.path, "getsize", return_value = fileSize)
     with pytest.raises(ValueError):
         metadata = mimir.backend.plugin.getPluginValues("SomeFileName", ["blubb"])
     with pytest.raises(ValueError):

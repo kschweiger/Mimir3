@@ -30,6 +30,7 @@ def main(model, dryrun):
     config["General"] = {}
     config["General"]["Width"] = 110
     config["General"]["Height"] = 50
+    config["General"]["QueryItems"] = ["SingleItem", "ListItems"]
     config["General"]["DisplayItems"] = []
     config["General"]["ModItems"] = []
     for item in modelItems:
@@ -42,10 +43,19 @@ def main(model, dryrun):
             config[item]["Priority"] = []
             config[item]["Hide"] = []
             config[item]["Type"] = "ListItem"
+            config[item]["ShowOnly"] = "All"
         else:
             config[item]["maxLen"] = 99
             config[item]["Type"] = "Item"
     config["Name"]["maxLen"] = 32
+
+    config["General"]["DisplayItems"].append("timesOpened")
+    config["timesOpened"] = {}
+    config["timesOpened"]["DisplayName"] = "nOpened"
+    config["timesOpened"]["DisplayDefault"] = None
+    config["timesOpened"]["Type"] = "Counter"
+    config["timesOpened"]["Base"] = "Opened"
+
     outputName = model.split("/")[-1].replace(".json", "")
     config["General"]["Windows"] = ["Main", "List", "DB","Modify","MultiModify"]
 

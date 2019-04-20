@@ -70,6 +70,10 @@ def preCreatedDB():
     database.modifyListEntry("0", "ListItem", "Blue", byID = True)
     database.modifyListEntry("0", "ListItem", "Double Orange", byID = True)
     database.modifyListEntry("0", "ListItem", "Triple Orange", byID = True)
+    database.modifyListEntry("3", "ListItem", "Lavender", byID = True)
+    database.modifyListEntry("4", "ListItem", "Lavender", byID = True)
+    database.modifyListEntry("4", "ListItem", "Pinkish", byID = True)
+    database.modifyListEntry("4", "ListItem", "Spring", byID = True)
     Entry0 = database.getEntryByItemName("ID", "0")[0]
     Entry1 = database.getEntryByItemName("ID", "1")[0]
     Entry2 = database.getEntryByItemName("ID", "2")[0]
@@ -165,7 +169,7 @@ def test_04_DB_save():
     #assert validateDatabaseJSON(database, config, database.savepath)
     #check if backup was created
     day, month, year = datetime.date.today().day, datetime.date.today().month, datetime.date.today().year
-    fulldate = "{0:02}-{1:02}-{2:02}".format(day, month, year-2000)
+    fulldate = "{2:02}-{1:02}-{0:02}".format(day, month, year-2000)
     assert os.path.exists(dbRootPath+"/.mimir/mainDB.{0}.backup".format(fulldate)) == True
     del database
 
@@ -327,7 +331,7 @@ def test_12_DB_findNewFiles_append():
     assert database.maxID == lastIDbeforeAppend+1
     del database
 
-def test_13_DB_query():
+def test_13_p1_DB_query():
     config = mimir_dir+"/conf/modeltest.json"
     dbRootPath = dir2tests+"/testStructure"
     if os.path.exists(dbRootPath+"/.mimir"):
@@ -358,6 +362,13 @@ def test_13_DB_query():
     foundID = found1 and found2
     assert foundID and foundEntry and len(resultEntry) == 2
     del database
+
+@pytest.mark.parametrize("Query, IDsExp", [("!Lavender", ["0","1","2","5"]), ("!Xi", ["1","2","3","4","5"]), ("!Eta Lavender", ["4"])])
+def test_13_p2_DB_query(Query, IDsExp, preCreatedDB):
+    qList = Query.split(" ")
+    resultID = preCreatedDB.query(["SingleItem","ListItem"], qList, returnIDs = True)
+    assert resultID == IDsExp
+
 
 def test_14_DB_modifyEntry():
     config = mimir_dir+"/conf/modeltest.json"
@@ -594,6 +605,9 @@ def test_23_DB_recursiveSplit(preCreatedDB):
     strings2Expect = set(["A","b","c","d","e"])
     assert strings2Expect == preCreatedDB.splitStr(strings2Split)
 
+@pytest.mark.parametrize("ID, nExpected", [("4", 3), ("1", 0), ("3", 1)])
+def test_24_DB_countListItem(ID, nExpected, preCreatedDB):
+    assert preCreatedDB.getCount(ID, "ListItem", byID = True) == nExpected
 
 if __name__ == "__main__":
     unittest.main()

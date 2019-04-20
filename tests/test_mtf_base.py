@@ -114,16 +114,19 @@ def test_03_MTF_initApp(preCreatedDB):
 
 def test_04_MTF_generateList(preCreatedDB):
     app = MTF.App(preCreatedDB)
-    app.config.items = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"]
+    app.config.items = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"]
     checkThis = app.generateList(["0"])
     print(checkThis)
     entry = preCreatedDB.getEntryByItemName("ID", "0")[0]
     entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
-    #make sure that displayitems is: "ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"
-    app.tableColumnItems = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"]
+    #make sure that displayitems is: "ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"
+    app.tableColumnItems = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"]
     expectation = [(entry.getItem("ID").value, entry.getItem("Name").value,
-                    entry.getItem("SingleItem").value, ", ".join(entry.getItem("ListItem").value),
-                    entry.getItem("Rating").value,  ", ".join(entry.getItem("Opened").value))]
+                    entry.getItem("SingleItem").value,
+                    ", ".join(entry.getItem("ListItem").value),
+                    entry.getItem("Rating").value,
+                    ", ".join(entry.getItem("Opened").value),
+                    str(preCreatedDB.getCount("0", "Opened", byID = True))) ]
     assert expectation == checkThis
     app.config.itemInfo["ListItem"]["Priority"] = ["Orange","Magenta"]
     app.config.itemInfo["Name"]["maxLen"] = 8
@@ -161,4 +164,3 @@ def test_05_MTF_modify(preCreatedDB):
 
 def test_06_MTF_findnewFiles(preCreatedDB):
     app = MTF.App(preCreatedDB)
-    

@@ -10,17 +10,22 @@
         "DisplayName": "Changed",
         "Hide": [],
         "Priority": [],
+        "ShowOnly": "All",
         "Type": "ListItem",
         "nDisplay": 99
     },
     "General": {
-        "DisplayItems": ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened"],
+        "DisplayItems": ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"],
         "Height": 50,
         "ModItems": [
             "Name",
             "Rating",
             "SingleItem",
             "ListItem"
+        ],
+        "QueryItems": [
+            "SingleItem",
+            "ListItems"
         ],
         "Width": 110,
         "Windows": [
@@ -42,6 +47,7 @@
         "DisplayName": "ListItem",
         "Hide": [],
         "Priority": [],
+        "ShowOnly": "All",
         "Type": "ListItem",
         "nDisplay": 99
     },
@@ -56,6 +62,7 @@
         "DisplayName": "Opened",
         "Hide": [],
         "Priority": [],
+        "ShowOnly": "All",
         "Type": "ListItem",
         "nDisplay": 99
     },
@@ -214,5 +221,11 @@
             "Title": "Multiple modifications of one entry",
             "Type": "Window"
         }
+    },
+    "timesOpened": {
+        "Base": "Opened",
+        "DisplayDefault": null,
+        "DisplayName": "nOpened",
+        "Type": "Counter"
     }
 }

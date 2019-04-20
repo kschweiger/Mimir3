@@ -129,7 +129,7 @@ class App:
             elif retVal == "2": #Print Quary
                 self.runModWindow(None, fromMain=False, fromList=True)
             elif retVal == "3": #Print Newest
-                pass
+                queryString = self.listWindow.interact("Enter Query:", None, onlyInteraction = False)
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
         self.runMainWindow(None)
@@ -352,7 +352,12 @@ class App:
             entryElements = []
             thisEntry = self.database.getEntryByItemName("ID", id)[0]
             for item in self.tableColumnItems:
-                thisItem = thisEntry.getItem(item)
+                isCounter = False
+                if self.config.itemInfo[item]["Type"] == "Counter":
+                    thisItem = None
+                    isCounter = True
+                else:
+                    thisItem = thisEntry.getItem(item)
                 if isinstance(thisItem, ListItem):
                     thisValue = []
                     for priority in self.config.itemInfo[item]["Priority"]:
@@ -371,6 +376,8 @@ class App:
                             break
                     #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
                     value = ", ".join(thisValue)
+                elif isCounter:
+                    value = str(self.database.getCount(id, self.config.itemInfo[item]["Base"], byID=True))
                 else:
                     if (thisItem.value == self.database.model.getDefaultValue(item) and
                         self.config.itemInfo[item]["DisplayDefault"] is not None):
@@ -410,7 +417,7 @@ class MTFConfig:
         self.height = configDict["General"]["Height"]
         self.width = configDict["General"]["Width"]
         self.items = configDict["General"]["DisplayItems"]
-
+        self.queryItems = configDict["General"]["QueryItems"]
         self.modItems = configDict["General"]["ModItems"]
 
         self.itemInfo = {}
@@ -423,8 +430,12 @@ class MTFConfig:
                 self.itemInfo[item]["Hide"] = configDict[item]["Hide"]
                 self.itemInfo[item]["Priority"] = configDict[item]["Priority"]
                 self.itemInfo[item]["nDisplay"] = configDict[item]["nDisplay"]
-            else:
+            elif self.itemInfo[item]["Type"] == "Item":
                 self.itemInfo[item]["maxLen"] = configDict[item]["maxLen"]
+            elif self.itemInfo[item]["Type"] == "Counter":
+                self.itemInfo[item]["Base"] = configDict[item]["Base"]
+            else:
+                raise KeyError("Item %s has unsupported type %s"%(item, self.itemInfo[item]["Type"]))
 
         self.definedWindows = configDict["General"]["Windows"]
         self.windows = {}
