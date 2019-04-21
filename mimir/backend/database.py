@@ -8,6 +8,7 @@ import os
 import copy
 from shutil import copy2
 from glob import glob
+from collections import OrderedDict
 
 from mimir.backend.entry import DataBaseEntry, Item, ListItem
 import mimir.backend.helper
@@ -95,15 +96,14 @@ class DataBase(object):
         if not startdir.endswith("/") and startdir != "":
             startdir = startdir+"/"
         allfiles = glob(self.databaseRoot+"/"+startdir+"**/*.*", recursive=True)
+        logging.debug("All files from glob: %s", len(allfiles))
         matchingfiles = []
         for f in allfiles:
-            try:
-                ext = f.split("/")[-1].split(".")[1]
-            except IndexError:
-                logging.warning("Found file not matching expected structure: %s", f)
-                continue
-            if ext in self.model.extentions:
-                matchingfiles.append(f.replace(self.databaseRoot+"/",""))
+            for ext in self.model.extentions:
+                if f.endswith(ext):
+                    matchingfiles.append(f.replace(self.databaseRoot+"/",""))
+                    continue
+        logging.debug("Matching files: %s", len(matchingfiles))
         return matchingfiles
 
     def createNewEntry(self, path, cID):
@@ -134,7 +134,7 @@ class DataBase(object):
 
         #If items with for plugins are degined run the pluging functions
         if self.model.pluginDefinitions:
-            pluginValues = mimir.backend.plugin.getPluginValues(path, self.model.pluginDefinitions)
+            pluginValues = mimir.backend.plugin.getPluginValues(self.databaseRoot+"/"+path, self.model.pluginDefinitions)
             for plugin in pluginValues:
                 eType, eValue = entryinit[self.model.pluginMap[plugin]]
                 entryinit[self.model.pluginMap[plugin]] = (eType, pluginValues[plugin])
@@ -167,9 +167,9 @@ class DataBase(object):
             backupDate = mimir.backend.helper.getTimeFormatted("Date", "-", inverted = True)
             copy2(self.savepath, self.savepath.replace(".json", ".{0}.backup".format(backupDate)))
         # Convert database to dict so json save can be used
-        output = {}
+        output = OrderedDict()
         for entry in self.entries:
-            output[entry.Path] = entry.getDictRepr()
+            output.update({entry.Path : entry.getDictRepr()})
         logging.debug("Saving database at %s", self.savepath)
         with open(self.savepath, "w") as outfile:
             json.dump(output, outfile, indent=4)
@@ -210,6 +210,7 @@ class DataBase(object):
             existingFiles.append(entry.Path)
             IDs.append(int(entry.ID))
 
+        logging.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
         #Find all IDs missing so new files can be inserted
         IDs = set(IDs)
         for i in range(len(self.entries)):
@@ -716,11 +717,20 @@ class DataBase(object):
             for element in remSplitElements:
                 for item in items2Check:
                     for value in values[item]:
+                        #If a single character is in whitespace name it will be skipped.
+                        if len(value) == 1:
+                            continue
                         if value in element:
                             if value in partialWhiteSpaces.keys():
                                 foundOptions[item] += partialWhiteSpaces[value]
+                                logging.debug("Adding %s for %s because %s in %s",
+                                              partialWhiteSpaces[value],
+                                              item, value, element)
                             else:
                                 foundOptions[item].append(value)
+                                logging.debug("Adding %s for %s because %s in %s",
+                                              value, item, value, element)
+
         #Replace the lowercase versions of the options with the original case sensitive ones
         for item in items2Check:
             for ioption, option in enumerate(foundOptions[item]):
@@ -836,11 +846,17 @@ class Model(object):
     def getDefaultValue(self, itemName):
         """ Returns the default item name of the modlue """
         if itemName in self._items.keys():
-            return self._items[itemName]["default"][0]
+            defVal = self._items[itemName]["default"][0]
         elif itemName in self._listitems.keys():
-            return self._listitems[itemName]["default"][0]
+            defVal = self._listitems[itemName]["default"]
         else:
             raise KeyError
+        if isinstance(defVal, list):
+            return defVal[0]
+        elif isinstance(defVal, str):
+            return defVal
+        else:
+            raise TypeError
 
     def getItemType(self, itemName):
         """ Returns the default item name of the modlue """

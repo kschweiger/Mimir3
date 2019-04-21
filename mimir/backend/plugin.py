@@ -2,6 +2,7 @@ import hachoir.metadata
 import hachoir.parser
 import os
 import re
+import logging
 
 def get_VideoMetaData(fileName):
     """
@@ -26,7 +27,8 @@ def get_VideoMetaData(fileName):
         except ValueError:
             voi_height = -1
         try:
-            voi_duration = thisMetaData.get("duration")
+            voi_duration = str(thisMetaData.get("duration"))
+            logging.debug("voi_duration: %s", voi_duration)
             voi_duration = voi_duration.split(".")[0]
         except ValueError:
             voi_duration = "00:00:00"

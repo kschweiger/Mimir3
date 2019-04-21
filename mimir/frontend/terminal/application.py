@@ -7,6 +7,7 @@ from copy import deepcopy
 from mimir.backend.database import DataBase
 from mimir.backend.entry import Item, ListItem
 from mimir.frontend.terminal.display import Window, ListWindow
+import mimir.backend.helper
 
 class App:
     """
@@ -139,8 +140,10 @@ class App:
             elif retVal == "5":
                 queryString = self.listWindow.interact("Enter Query", None, onlyInteraction = False)
                 thisQuery = queryString.split(" ")
+                queryIDs = self.database.query(self.config.queryItems, thisQuery, returnIDs = True)
+                queryIDs = sorted(queryIDs, key=lambda x: int(x))
                 tableElements = self.generateList(
-                    self.database.query(self.config.queryItems, thisQuery, returnIDs = True)
+                    queryIDs
                 )
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
@@ -359,6 +362,9 @@ class App:
             path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
             window.update("Path: %s"%path2Exec)
             os.system("{0} {1}".format(self.config.executable, path2Exec))
+            self.database.modifyListEntry(ID, "Opened",
+                                          mimir.backend.helper.getTimeFormatted("Full"),
+                                          byID = True)
 
     def executeRandom(self, window, fromList=False):
         randID = self.database.getRandomEntry(chooseFrom = self.lastIDList)

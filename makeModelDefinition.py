@@ -57,7 +57,7 @@ def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=F
 
     if setDefault is not None:
         for item in items+listitems:
-            if item in setItemType.keys():
+            if item in setDefault.keys():
                 model[item]["default"] = setDefault[item]
 
     for item in secondaryDBs:
