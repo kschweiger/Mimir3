@@ -356,7 +356,8 @@ class App:
             window.update("ID %s not in database"%ID)
         else:
             entry2Exec = self.database.getEntryByItemName("ID", ID)[0]
-            path2Exec = entry2Exec.Path
+            path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
+            window.update("Path: %s"%path2Exec)
             os.system("{0} {1}".format(self.config.executable, path2Exec))
 
     def executeRandom(self, window, fromList=False):
