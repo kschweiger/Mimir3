@@ -1,7 +1,7 @@
 import json
 import sys
 
-def main(model, dryrun, queryItems):
+def main(model, system, dryrun, queryItems):
     """
     Function for creating a MTF config based on a passed model.json
 
@@ -14,6 +14,7 @@ def main(model, dryrun, queryItems):
 
     modelSingleItems = []
     modelListItems = []
+    modelDatetimeItems = []
 
     for section in modelDict:
         if "Type" in modelDict[section].keys():
@@ -23,6 +24,9 @@ def main(model, dryrun, queryItems):
                 modelSingleItems.append(section)
             else:
                 raise RuntimeError("Section %s has no valid type. Found %s"%(section, modelDict[section]["Type"]))
+        if "itemType" in modelDict[section].keys():
+            if modelDict[section]["itemType"] == "datetime":
+                modelDatetimeItems.append(section)
 
     modelItems = modelSingleItems+modelListItems
 
@@ -30,12 +34,21 @@ def main(model, dryrun, queryItems):
     config["General"] = {}
     config["General"]["Width"] = 110
     config["General"]["Height"] = 50
-    config["General"]["Executable"] = "mimir/frontend/terminal/executable/macOS/runVLC.sh"
+
+    if system == "Linux":
+        config["General"]["Executable"] = "mimir/frontend/terminal/executable/linux/runVLC.sh"
+    elif system == "macOS":
+        config["General"]["Executable"] = "mimir/frontend/terminal/executable/macOS/runVLC.sh"
+    else:
+        raise NotImplementedError
+
     config["General"]["QueryItems"] = queryItems
     config["General"]["DisplayItems"] = []
+    config["General"]["AllItems"] = []
     config["General"]["ModItems"] = []
     for item in modelItems:
         config["General"]["DisplayItems"].append(item)
+        config["General"]["AllItems"].append(item)
         config[item] = {}
         config[item]["DisplayName"] = item
         config[item]["DisplayDefault"] = None
@@ -48,9 +61,12 @@ def main(model, dryrun, queryItems):
         else:
             config[item]["maxLen"] = 99
             config[item]["Type"] = "Item"
+        if item in modelDatetimeItems:
+            config[item]["modDisplay"] = "Full" #Full, Date, Time
     config["Name"]["maxLen"] = 32
 
     config["General"]["DisplayItems"].append("timesOpened")
+    config["General"]["AllItems"].append("timesOpened")
     config["timesOpened"] = {}
     config["timesOpened"]["DisplayName"] = "nOpened"
     config["timesOpened"]["DisplayDefault"] = None
@@ -130,6 +146,14 @@ if __name__ == "__main__":
         required=True
     )
     argumentparser.add_argument(
+        "--system",
+        action="store",
+        help="System that will run MTF. Required for executable",
+        type=str,
+        required=True,
+        choices=["Linux", "macOS"]
+    )
+    argumentparser.add_argument(
         "--dryrun",
         action="store_true",
         help="Only print model json instead of saving it",
@@ -142,6 +166,7 @@ if __name__ == "__main__":
         default = ["SingleItem", "ListItem"]
     )
 
+
     args = argumentparser.parse_args()
 
-    main(args.inputModel, args.dryrun, args.queryItems)
+    main(args.inputModel, args.system, args.dryrun, args.queryItems)

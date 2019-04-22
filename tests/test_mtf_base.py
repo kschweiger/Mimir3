@@ -31,6 +31,12 @@ def preCreatedDB():
         shutil.rmtree(dbRootPath+"/.mimir")
     database = DataBase(dbRootPath, "new", config)
     shutil.copy2(mimir_dir+"/conf/MTF_modeltest.json", dbRootPath+"/.mimir/MTF_model.json")
+    jsonConf = None
+    with open(dbRootPath+"/.mimir/MTF_model.json", "r") as f:
+        jsonConf = json.load(f)
+    jsonConf["General"]["DisplayItems"] = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"]
+    with open(dbRootPath+"/.mimir/MTF_model.json", 'w') as o:
+        json.dump(jsonConf, o, sort_keys=True, indent=4, separators=(',', ': '))
     ## Set Ratings for furure tests
     # Expected Order: ["3", "2", "4", "1", "5", "0"]
     database.modifySingleEntry("1", "Rating", "2", byID = True )
@@ -72,12 +78,14 @@ def preCreatedDB():
     Entry3.replaceItemValue("Changed", "22.02.19|00:00:00", Entry3.getItem("Changed").value[0])
     Entry4.replaceItemValue("Changed", "21.02.19|00:00:00", Entry4.getItem("Changed").value[0])
     Entry5.replaceItemValue("Changed", "20.02.19|00:00:00", Entry5.getItem("Changed").value[0])
-    Entry0.addItemValue("Changed", "25.03.19|00:00:00")
-    Entry1.addItemValue("Changed", "19.03.19|00:00:00")
-    Entry2.addItemValue("Changed", "23.01.19|00:00:00")
-    Entry3.addItemValue("Changed", "22.03.19|00:00:00")
-    Entry4.addItemValue("Changed", "21.03.19|00:00:00")
-    Entry5.addItemValue("Changed", "20.03.19|00:00:00")
+    Entry0.addItemValue("Changed", "25.03.19|01:00:00")
+    Entry1.addItemValue("Changed", "19.03.19|01:00:00")
+    Entry2.addItemValue("Changed", "23.01.19|01:00:00")
+    Entry3.addItemValue("Changed", "22.03.19|01:00:00")
+    Entry4.addItemValue("Changed", "21.03.19|01:00:00")
+    Entry5.addItemValue("Changed", "20.03.19|01:00:00")
+    ####
+    Entry0.replaceItemValue("Opened", "27.02.19|00:00:00", Entry0.getItem("Opened").value[0])
     database.saveMain()
     #shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2") #For testing
     yield database
@@ -114,13 +122,14 @@ def test_03_MTF_initApp(preCreatedDB):
 
 def test_04_MTF_generateList(preCreatedDB):
     app = MTF.App(preCreatedDB)
+    #make sure that displayitems is: "ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"
     app.config.items = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"]
+    app.tableColumnItems = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"]
     checkThis = app.generateList(["0"])
     print(checkThis)
     entry = preCreatedDB.getEntryByItemName("ID", "0")[0]
     entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
-    #make sure that displayitems is: "ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"
-    app.tableColumnItems = ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"]
+
     expectation = [(entry.getItem("ID").value, entry.getItem("Name").value,
                     entry.getItem("SingleItem").value,
                     ", ".join(entry.getItem("ListItem").value),
@@ -142,7 +151,24 @@ def test_04_MTF_generateList(preCreatedDB):
     expectation_LitItem_nDisplay = ", ".join(entry.getItem("ListItem").value[:2]+[".."])
     assert checkThis[0][3] == expectation_LitItem_nDisplay
 
-def test_05_MTF_modify(preCreatedDB):
+def test_05_MTF_generateList_dateFormatting(preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    app.config.items = ["Opened","Changed","Added"]
+    app.tableColumnItems = ["Opened","Changed","Added"]
+    app.config.itemInfo["Opened"]["modDisplay"] = "Date"
+    app.config.itemInfo["Changed"]["modDisplay"] = "Time"
+    checkThis = app.generateList(["0"])
+    entry = preCreatedDB.getEntryByItemName("ID", "0")[0]
+    print(checkThis)
+    formattedOpened = [x.split("|")[0] for x in entry.getItem("Opened").value]
+    formattedChanged = [x.split("|")[1] for x in entry.getItem("Changed").value]
+    expectation = [((", ".join(formattedOpened)),
+                   (", ".join(formattedChanged)),
+                   (entry.getItem("Added").value))]
+    print(expectation)
+    assert expectation == checkThis
+
+def test_06_MTF_modify(preCreatedDB):
     app = MTF.App(preCreatedDB)
     ### Append
     assert app.makeListModifications("1", "ListItem", "Append", None, "Magenta")
@@ -162,5 +188,5 @@ def test_05_MTF_modify(preCreatedDB):
     assert "Cyan" not in Entry1.getItem("ListItem").value
     assert "Yellow" in Entry1.getItem("ListItem").value
 
-def test_06_MTF_findnewFiles(preCreatedDB):
+def test_07_MTF_findnewFiles(preCreatedDB):
     app = MTF.App(preCreatedDB)

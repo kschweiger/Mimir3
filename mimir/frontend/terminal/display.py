@@ -21,6 +21,7 @@ class Window:
             var, name, expectedType = testArg
             if not isinstance(var, expectedType):
                 raise TypeError("%s is required to be of type %s"%(name, expectedType))
+        self.debug = False
         self.height = height
         self.width = width
         self.boxWidth = width-2
@@ -254,12 +255,15 @@ class ListWindow(Window):
         self.alignment = alignment
         self.printedLines = FixedList(self.height)
         self.nLinesPrinted = 0
+        self.nLinesPrintedGlobal = 0
         self.tableAdded = False
+
 
     def print(self, printStatement):
         logging.debug("Added: %s",printStatement[0:20])
         self.printedLines.append(printStatement)
         self.nLinesPrinted += 1
+        self.nLinesPrintedGlobal += 1
         print(printStatement)#,self.nLinesPrinted)
 
     def update(self, newContent, resetHeader=None):
@@ -298,15 +302,24 @@ class ListWindow(Window):
         """
         Draw the current state of the window
         """
+        logging.debug("skipHeader=%s skipTable=%s fillWindow=%s", skipHeader, skipTable, fillWindow)
         #print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
         logging.debug("Running draw in %s", self)
         self.nLinesPrinted = 0
         self.makeheader()
+        if self.nLinesPrintedGlobal > self.height:
+            skipHeader = True
+            fillWindow = False
 
         if not skipHeader:
             for line in self.header:
                 self.print(line)
         tableLines = self.makeTable(self.tableHeaderElements, self.lines, self.tableMaxLen)
+        if fillWindow and self.nLinesPrinted < self.height:
+            logging.info("Drawing overflow lines - self.nLinesPrinted=%s",len(self.printedLines))
+            self.drawBeforeOverflow(newTableLines = len(tableLines), skipTable  = skipTable)
+        else:
+            logging.info("Skipping overflow - %s and %s < %s", fillWindow, len(self.printedLines), self.height)
         #print(tableLines)
         if not skipTable:
             for line in tableLines:
@@ -319,32 +332,29 @@ class ListWindow(Window):
                         self.print(" "+line+" "+(self.boxWidth-lineLen)*" ")
                 if self.alignment == "center":
                     self.print(self.expandAndCenterText(line, self.width))
-        # if len(self.printedLines) < self.height:
-        #     for line in self.printedLines:
-        #         print(line)
-        #         self.nLinesPrinted += 1
-        # if fillWindow:
-        #     if self.nLinesPrinted < self.height:
-        #         for i in range(self.height-self.nLinesPrinted):
-        #             print(i)
-        #print("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
-        if fillWindow and len(self.printedLines) < self.height:
-            self.drawBeforeOverflow()
-        #print("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")
         return True
 
-    def drawBeforeOverflow(self):
-        iDivide = 0
-        emptyLinesPrinted = False
+    def drawBeforeOverflow(self, newTableLines, skipTable):
+        logging.info("Entering function")
+        if skipTable:
+            newTableLines = 0
+
+        postFillLines = []
         for iline, line in enumerate(self.printedLines):
-            if line.startswith("+---") and line.endswith("---+"):
-                iDivide += 1
-            print(line, iline)
-            #self.nLinesPrinted += 1
-            if iDivide == 2 and not emptyLinesPrinted:
-                for i in range(self.height-len(self.printedLines)):
-                    print("")
-                emptyLinesPrinted = True
+            if line not in self.header:
+                postFillLines.append(line)
+
+        logging.info("print Empty: %s - print printed %s - newTable %s", self.height-len(postFillLines)-newTableLines-len(self.header),len(postFillLines),newTableLines)
+        for i in range(self.height-len(postFillLines)-newTableLines-len(self.header)):
+            if i==0 and self.debug:
+                print("print Empty:",self.height-len(postFillLines)-newTableLines-len(self.header)," - print printed:",len(postFillLines),"- newTable:",newTableLines)
+            else:
+                print(self.width * " ")
+
+        for iline, line in enumerate(postFillLines):
+            print(line)
+
+
 
 
     def interact(self, interaction, printOptions = None, rePrintInitial = False, onlyInteraction=False):
@@ -367,15 +377,18 @@ class ListWindow(Window):
             for line in options:
                     self.print(line)
         #print(self.nLinesPrinted, self.height)
-        if not onlyInteraction and self.nLinesPrinted < self.height:
+        if not onlyInteraction:
+            logging.info("self.nLinesPrinted=%s/%s", self.nLinesPrinted, self.height)
             #print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-            self.draw(skipHeader = True, skipTable = (not self.tableAdded), fillWindow = True)
+            self.draw(skipHeader = (self.nLinesPrinted > self.height), skipTable = (not self.tableAdded), fillWindow = (self.nLinesPrinted < self.height))
             #print("ooooooooooooooooooooooooooooooooo")
 
         answer = input(interaction+": ")
-        self.printedLines.append("+++++"+interaction+": "+answer)
+        logging.info("Input: %s - Answer: %s", interaction, answer)
+        toPrint = ""+interaction+": "+answer
+        self.printedLines.append(toPrint+" "*(self.width-len(toPrint)))
         self.nLinesPrinted += 1
-
+        self.nLinesPrintedGlobal += 1
         return answer
 
     def makeSmallOptionTable(self):

@@ -3,7 +3,8 @@
         "DisplayDefault": null,
         "DisplayName": "Added",
         "Type": "Item",
-        "maxLen": 99
+        "maxLen": 99,
+        "modDisplay": "Full"
     },
     "Changed": {
         "DisplayDefault": null,
@@ -12,10 +13,34 @@
         "Priority": [],
         "ShowOnly": "All",
         "Type": "ListItem",
+        "modDisplay": "Full",
         "nDisplay": 99
     },
     "General": {
-        "DisplayItems": ["ID", "Name", "SingleItem", "ListItem", "Rating", "Opened", "timesOpened"],
+        "AllItems": [
+            "Added",
+            "ID",
+            "Name",
+            "Path",
+            "Rating",
+            "SingleItem",
+            "Changed",
+            "ListItem",
+            "Opened",
+            "timesOpened"
+        ],
+        "DisplayItems": [
+            "Added",
+            "ID",
+            "Name",
+            "Path",
+            "Rating",
+            "SingleItem",
+            "Changed",
+            "ListItem",
+            "Opened",
+            "timesOpened"
+        ],
         "Executable": "mimir/frontend/terminal/executable/macOS/runVLC.sh",
         "Height": 50,
         "ModItems": [
@@ -65,6 +90,7 @@
         "Priority": [],
         "ShowOnly": "All",
         "Type": "ListItem",
+        "modDisplay": "Full",
         "nDisplay": 99
     },
     "Path": {

@@ -51,6 +51,8 @@ class App:
                                      self.tableColumnNames)
         self.listWindow.setHeader()
         self.listWindowDrawn = False
+        self.firstInteraction = True
+        self.inOverflow = False
         ################### DB Window ###################
         dbHeader = {"Title" : self.config.windows["DB"]["Title"],
                       "Text" : self.config.windows["DB"]["Text"],
@@ -96,7 +98,7 @@ class App:
         logging.info("Switching to main window")
         retVal = startVal
         while retVal != "0":
-            retVal = self.mainWindow.draw("Enter Value: ")
+            retVal = self.mainWindow.draw("Enter Value")
             if retVal == "1":
                 executeID = self.mainWindow.draw("Enter ID to execute")
                 self.execute(executeID, self.mainWindow)
@@ -116,20 +118,27 @@ class App:
     def runListWindow(self, startVal):
         logging.info("Switching to ListWindow")
         retVal = startVal
-        self.listWindow.draw(skipHeader = self.listWindowDrawn, skipTable = True, fillWindow = True)
+        if self.listWindow.nLinesPrinted > self.windowHeight:
+            logging.info("Listwindow in overflow -> nPrinted %s",self.listWindow.nLinesPrinted)
+            self.inOverflow = True
+        logging.debug("self.inOverflow=%s  self.listWindowDrawn=%s",self.inOverflow, self.listWindowDrawn)
+        self.listWindow.draw(skipHeader = self.inOverflow, skipTable = (not self.listWindowDrawn), fillWindow = (not self.inOverflow))
         self.listWindowDrawn = True
-
         #retVal = self.listWindow.interact("Enter Value:", None)
         while retVal != "0":
-            retVal = self.listWindow.interact("Enter Value", None)
+            retVal = self.listWindow.interact("Enter Value", None, onlyInteraction = self.firstInteraction)
+            if self.firstInteraction:
+                self.firstInteraction = False
             if retVal == "1": #Print All
-                tableElements = self.generateList("All")
+                allIDs = sorted(list(self.database.getAllValuebyItemName("ID")), key=lambda x: int(x))
+                tableElements = self.generateList(allIDs*6)
+                #tableElements = self.generateList("All")
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
                 #print("=========================================")
                 #self.listWindow.draw(skipHeader = True, skipTable = False, fillWindow = False)
                 #print("+++++++++++++++++++++++++++++++++++++++++")
-                retVal = self.listWindow.interact("Enter Value", None, onlyInteraction = False)
+                #retVal = self.listWindow.interact("Enter Value", None, onlyInteraction = False)
             elif retVal == "2":
                 self.runModWindow(None, fromMain=False, fromList=True)
             elif retVal == "3":
@@ -142,9 +151,7 @@ class App:
                 thisQuery = queryString.split(" ")
                 queryIDs = self.database.query(self.config.queryItems, thisQuery, returnIDs = True)
                 queryIDs = sorted(queryIDs, key=lambda x: int(x))
-                tableElements = self.generateList(
-                    queryIDs
-                )
+                tableElements = self.generateList(queryIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
             elif retVal == "6":
@@ -152,6 +159,8 @@ class App:
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
+                #self.listWindow.draw(fillWindow = True)
+                #input("sss")
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
                 tableElements = self.generateList("All")
@@ -417,6 +426,15 @@ class App:
                                 self.config.itemInfo[item]["DisplayDefault"] is not None):
                                 thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
                             else:
+                                if "modDisplay" in self.config.itemInfo[item].keys():
+                                    if self.config.itemInfo[item]["modDisplay"] == "Date":
+                                        val = val.split("|")[0]
+                                    elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                                        val = val.split("|")[1]
+                                    elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                                        pass
+                                    else:
+                                        raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
                                 thisValue.append(val)
                         if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
                             thisValue.append("..")
@@ -430,7 +448,17 @@ class App:
                         self.config.itemInfo[item]["DisplayDefault"] is not None):
                         itemValue = self.config.itemInfo[item]["DisplayDefault"]
                     else:
-                        itemValue = thisItem.value
+                        val = thisItem.value
+                        if "modDisplay" in self.config.itemInfo[item].keys():
+                            if self.config.itemInfo[item]["modDisplay"] == "Date":
+                                val = val.split("|")[0]
+                            elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                                val = val.split("|")[1]
+                            elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                                pass
+                            else:
+                                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
+                        itemValue = val
                     if len(itemValue) > self.config.itemInfo[item]["maxLen"]:
                         value = itemValue[:self.config.itemInfo[item]["maxLen"]]+".."
                     else:
@@ -461,11 +489,12 @@ class MTFConfig:
         self.height = configDict["General"]["Height"]
         self.width = configDict["General"]["Width"]
         self.items = configDict["General"]["DisplayItems"]
+        self.alltems = configDict["General"]["AllItems"]
         self.queryItems = configDict["General"]["QueryItems"]
         self.modItems = configDict["General"]["ModItems"]
         self.executable = configDict["General"]["Executable"]
         self.itemInfo = {}
-        for iItem, item in enumerate(self.items):
+        for iItem, item in enumerate(self.alltems):
             self.itemInfo[item] = {}
             self.itemInfo[item]["DisplayName"] = configDict[item]["DisplayName"]
             self.itemInfo[item]["DisplayDefault"] = configDict[item]["DisplayDefault"]
@@ -480,6 +509,8 @@ class MTFConfig:
                 self.itemInfo[item]["Base"] = configDict[item]["Base"]
             else:
                 raise KeyError("Item %s has unsupported type %s"%(item, self.itemInfo[item]["Type"]))
+            if "modDisplay" in configDict[item].keys():
+                self.itemInfo[item]["modDisplay"] = configDict[item]["modDisplay"]
 
         self.definedWindows = configDict["General"]["Windows"]
         self.windows = {}

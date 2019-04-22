@@ -7,6 +7,7 @@ import pytest
 import coverage
 import os
 import copy
+import string
 
 import mimir.frontend.terminal.display as display
 from mimir.frontend.terminal.display import Window, ListWindow#, InteractionWindow
@@ -275,3 +276,148 @@ def test_13_display_ListWindow_interact(preCreatedListWindow, capsys):
     captured = capsys.readouterr()
     print(captured.out)
     assert captured.out != ""
+
+@pytest.mark.parametrize("height", [(15)])
+def test_14_display_ListWindow_fillEmpty(preCreatedListWindow, capsys, height):
+    createdListWindow = ListWindow(height, 100, {"Title" : "List"}, 3, ("Column1", "Column2", "Column3"))
+    createdListWindow.setHeader()
+    createdListWindow.makeheader()
+    tableLines = createdListWindow.makeTable(createdListWindow.tableHeaderElements,
+                                             createdListWindow.lines,
+                                             createdListWindow.tableMaxLen)
+    leftAlignTableLines = []
+    for line in tableLines:
+        lineLen = len(line)
+        leftAlignTableLines.append(" "+line+" "+(createdListWindow.boxWidth-lineLen)*" ")
+    headerLines = createdListWindow.header
+    createdListWindow.draw(fillWindow = True)
+    captured = capsys.readouterr()
+    lineIdentifiers =  list(string.ascii_lowercase)+list(string.ascii_uppercase)
+    blankLines = (height-len(headerLines)-len(tableLines))*[100*" "]
+    expectedLines = []
+    for iline, line in enumerate(headerLines+blankLines+leftAlignTableLines):
+        expectedLines.append(line.replace(" ", lineIdentifiers[iline]))
+    modCapturedLines = []
+    for iline, line in enumerate(captured.out.split("\n")):
+        if line != "":
+            modCapturedLines.append(line.replace(" ", lineIdentifiers[iline]))
+    #####################################################################################
+    print("/////////////////////////////// EXPECTATION /////////////////////////////////////")
+    for line in expectedLines:
+        print(line)
+    print("///////////////////////////////// RETURN ////////////////////////////////////////")
+    for line in modCapturedLines:
+        print(line)
+    #####################################################################################
+    assert len(expectedLines) == len(modCapturedLines)
+    for iline in range(len(modCapturedLines)):
+        assert modCapturedLines[iline] == expectedLines[iline]
+
+@pytest.mark.parametrize("height", [(15)])
+def test_15_display_ListWindow_fillEmpty_skipTable(preCreatedListWindow, capsys, height):
+    createdListWindow = ListWindow(height, 100, {"Title" : "List"}, 3, ("Column1", "Column2", "Column3"))
+    createdListWindow.setHeader()
+    createdListWindow.makeheader()
+    headerLines = createdListWindow.header
+    createdListWindow.draw(fillWindow = True, skipTable = True)
+    captured = capsys.readouterr()
+    lineIdentifiers =  list(string.ascii_lowercase)+list(string.ascii_uppercase)
+    blankLines = (height-len(headerLines))*[100*" "]
+    expectedLines = []
+    for iline, line in enumerate(headerLines+blankLines):
+        expectedLines.append(line.replace(" ", lineIdentifiers[iline]))
+    modCapturedLines = []
+    for iline, line in enumerate(captured.out.split("\n")):
+        if line != "":
+            modCapturedLines.append(line.replace(" ", lineIdentifiers[iline]))
+    #####################################################################################
+    print("/////////////////////////////// EXPECTATION /////////////////////////////////////")
+    for line in expectedLines:
+        print(line)
+    print("///////////////////////////////// RETURN ////////////////////////////////////////")
+    for line in modCapturedLines:
+        print(line)
+    #####################################################################################
+    assert len(expectedLines) == len(modCapturedLines)
+    for iline in range(len(modCapturedLines)):
+        assert modCapturedLines[iline] == expectedLines[iline]
+
+@pytest.mark.parametrize("height", [(30)])
+def test_16_display_ListWindow_fillEmpty_afterTableDraw(capsys, height):
+    """
+    This test is used to varify
+    """
+    def mock_input(s):
+        return s+" (mocked)"
+    createdListWindow = ListWindow(height, 100, {"Title" : "List"}, 3, ("Column1", "Column2", "Column3"))
+    createdListWindow.setHeader()
+    createdListWindow.makeheader()
+    headerLines = createdListWindow.header
+    tableEntries = []
+    tableEntries2 = []
+    for i in range(5):
+        tableEntries.append(("Entry"+str(i)+",1","Entry"+str(i)+",2","Entry"+str(i)+",3"))
+        tableEntries2.append(("SecEntry"+str(i)+",1","SecEntry"+str(i)+",2","SecEntry"+str(i)+",3"))
+    createdListWindow.update(tableEntries)
+    tableLines = createdListWindow.makeTable(createdListWindow.tableHeaderElements,
+                                             createdListWindow.lines,
+                                             createdListWindow.tableMaxLen)
+    createdListWindow.draw(fillWindow = True)
+    captured = capsys.readouterr()
+    # -1 because there is one empty element after the split
+    assert len(captured.out.split("\n"))-1 == height
+
+    # for iline, line in enumerate(captured.out.split("\n")):
+    #     print(iline, "a ",line)
+    # captured = capsys.readouterr()
+    display.input = mock_input
+    createdListWindow.interact("Requesting input", None, onlyInteraction = True)
+    createdListWindow.lines = []
+    createdListWindow.update(tableEntries2)
+    tableLines2 = createdListWindow.makeTable(createdListWindow.tableHeaderElements,
+                                              createdListWindow.lines,
+                                              createdListWindow.tableMaxLen)
+    createdListWindow.draw(fillWindow = True)
+
+    captured = capsys.readouterr()
+    assert len(captured.out.split("\n"))-1 == height
+    # for iline, line in enumerate(captured.out.split("\n")):
+    #     print("{0:2}".format(iline), "b",line)
+
+
+    #Build expectation
+    lineIdentifiers =  3*(list(string.ascii_lowercase)+list(string.ascii_uppercase)+list(range(10)))
+    leftAlignTableLines = []
+    for line in tableLines:
+        lineLen = len(line)
+        leftAlignTableLines.append(" "+line+" "+(createdListWindow.boxWidth-lineLen)*" ")
+    leftAlignTableLines2 = []
+    for line in tableLines2:
+        lineLen = len(line)
+        leftAlignTableLines2.append(" "+line+" "+(createdListWindow.boxWidth-lineLen)*" ")
+
+    interactionStr = ""+mock_input("Requesting input: Requesting input: ")
+    interaction = [interactionStr+" "*(100-len(interactionStr))]
+
+    blankLines = (height-len(headerLines)-len(leftAlignTableLines)-len(leftAlignTableLines2)-1)*[100*" "]
+
+    expectedLines = []
+    for iline, line in enumerate(headerLines+blankLines+leftAlignTableLines+interaction+leftAlignTableLines2):
+        expectedLines.append(line.replace(" ", lineIdentifiers[iline]))
+
+    modCapturedLines = []
+    for iline, line in enumerate(captured.out.split("\n")):
+        if line != "":
+            modCapturedLines.append(line.replace(" ", str(lineIdentifiers[iline])))
+
+    ####################################################################################
+    print("/////////////////////////////// EXPECTATION /////////////////////////////////////")
+    for line in expectedLines:
+        print(line)
+    print("///////////////////////////////// RETURN ////////////////////////////////////////")
+    for line in modCapturedLines:
+        print(line)
+    ####################################################################################
+    assert len(expectedLines) == len(modCapturedLines)
+    for iline in range(len(modCapturedLines)):
+        assert modCapturedLines[iline] == expectedLines[iline]

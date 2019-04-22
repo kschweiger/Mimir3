@@ -2,7 +2,7 @@ import argparse
 import logging
 from mimir.frontend.terminal.application import App, initDatabase
 
-def initLogging(thisLevel, funcLen = "12"):
+def initLogging(thisLevel, funcLen = "24"):
     log_format = ('[%(asctime)s] %(funcName)-'+str(funcLen)+'s %(levelname)-8s %(message)s')
     if thisLevel == 20:
         thisLevel = logging.INFO
