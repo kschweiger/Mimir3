@@ -3,7 +3,7 @@ import datetime
 import logging
 
 
-def getTimeFormatted(retFormat, delimDate=".", inverted = False):
+def getTimeFormatted(retFormat, delimDate=".", inverted=False):
     """
     Helper function to get the the current time/date
 

@@ -17,7 +17,7 @@ class App:
         dababase (DataBase) : Initialized mimir DataBase
         enableStartupSeatch (bool) : If True, a search for new files will be enabled on startup
     """
-    def __init__(self, dababase, enableStartupSeatch = True):
+    def __init__(self, dababase, enableStartupSeatch=True):
         self.database = dababase
         if not os.path.exists(self.database.mimirdir+"/MTF_model.json"):
             raise RuntimeError("No MTF configuration found in .mimir directory. Use make MTFconfig.py to create on from the database config")
@@ -55,11 +55,11 @@ class App:
         self.inOverflow = False
         ################### DB Window ###################
         dbHeader = {"Title" : self.config.windows["DB"]["Title"],
-                      "Text" : self.config.windows["DB"]["Text"],
-                      "Options" : self.config.windows["DB"]["Options"],}
+                    "Text" : self.config.windows["DB"]["Text"],
+                    "Options" : self.config.windows["DB"]["Options"],}
         self.dbWindow = Window(self.windowHeight,
-                                 self.windowWidth,
-                                 dbHeader)
+                               self.windowWidth,
+                               dbHeader)
         self.dbWindow.setHeader()
         for key in self.config.windows:
             print(self.config.windows[key])
@@ -68,16 +68,16 @@ class App:
                      "Text" : self.config.windows["Modify"]["Text"],
                      "Options" : self.config.windows["Modify"]["Options"],}
         self.modWindow = Window(self.windowHeight,
-                               self.windowWidth,
-                               modHeader)
+                                self.windowWidth,
+                                modHeader)
         self.modWindow.setHeader()
         ################### Mulit Modification Window ###################
         multiModHeader = {"Title" : self.config.windows["MultiModify"]["Title"],
-                     "Text" : self.config.windows["MultiModify"]["Text"],
-                     "Options" : self.config.windows["MultiModify"]["Options"],}
+                          "Text" : self.config.windows["MultiModify"]["Text"],
+                          "Options" : self.config.windows["MultiModify"]["Options"],}
         self.multiModWindow = Window(self.windowHeight,
-                               self.windowWidth,
-                               multiModHeader)
+                                     self.windowWidth,
+                                     multiModHeader)
         self.multiModWindow.setHeader()
         self.allMultiModWindow = {}
 
@@ -90,11 +90,16 @@ class App:
                 self.modListItems.append(item)
 
     def start(self):
+        """
+        Start point for the app. Launches the mainWindow.
+        """
         logging.info("Starting App")
         self.runMainWindow(None)
-        logging.info("Terminating App")
 
     def runMainWindow(self, startVal):
+        """
+        Function defining the interactions of the main window
+        """
         logging.info("Switching to main window")
         retVal = startVal
         while retVal != "0":
@@ -116,17 +121,22 @@ class App:
                 self.mainWindow.update("Please enter value present in %s"%self.mainWindow.validOptions)
 
     def runListWindow(self, startVal):
+        """
+        Function defining the interactions of the List window
+        """
         logging.info("Switching to ListWindow")
         retVal = startVal
         if self.listWindow.nLinesPrinted > self.windowHeight:
-            logging.info("Listwindow in overflow -> nPrinted %s",self.listWindow.nLinesPrinted)
+            logging.info("Listwindow in overflow -> nPrinted %s", self.listWindow.nLinesPrinted)
             self.inOverflow = True
-        logging.debug("self.inOverflow=%s  self.listWindowDrawn=%s",self.inOverflow, self.listWindowDrawn)
-        self.listWindow.draw(skipHeader = self.inOverflow, skipTable = (not self.listWindowDrawn), fillWindow = (not self.inOverflow))
+        logging.debug("self.inOverflow=%s  self.listWindowDrawn=%s", self.inOverflow, self.listWindowDrawn)
+        self.listWindow.draw(skipHeader=self.inOverflow,
+                             skipTable=(not self.listWindowDrawn),
+                             fillWindow=(not self.inOverflow))
         self.listWindowDrawn = True
         #retVal = self.listWindow.interact("Enter Value:", None)
         while retVal != "0":
-            retVal = self.listWindow.interact("Enter Value", None, onlyInteraction = self.firstInteraction)
+            retVal = self.listWindow.interact("Enter Value", None, onlyInteraction=self.firstInteraction)
             if self.firstInteraction:
                 self.firstInteraction = False
             if retVal == "1": #Print All
@@ -145,17 +155,17 @@ class App:
                 executeID = self.listWindow.interact("Enter ID to execute")
                 self.execute(executeID, self.listWindow)
             elif retVal == "4":
-                self.executeRandom(self.listWindow, fromList = True)
+                self.executeRandom(self.listWindow, fromList=True)
             elif retVal == "5":
-                queryString = self.listWindow.interact("Enter Query", None, onlyInteraction = False)
+                queryString = self.listWindow.interact("Enter Query", None, onlyInteraction=False)
                 thisQuery = queryString.split(" ")
-                queryIDs = self.database.query(self.config.queryItems, thisQuery, returnIDs = True)
+                queryIDs = self.database.query(self.config.queryItems, thisQuery, returnIDs=True)
                 queryIDs = sorted(queryIDs, key=lambda x: int(x))
                 tableElements = self.generateList(queryIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
             elif retVal == "6":
-                sortedIDs = self.database.getSortedIDs("Added", reverseOrder = True)[0:3]
+                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:3]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
@@ -167,6 +177,9 @@ class App:
         self.runMainWindow(None)
 
     def runDBWindow(self, startVal):
+        """
+        Function defining the interactions of the DB interaction window
+        """
         logging.info("Switching to main window")
         retVal = startVal
         while retVal != "0":
@@ -187,12 +200,12 @@ class App:
                         continue
                     for item in suggestedOptions:
                         for option in suggestedOptions[item]:
-                            answer = self.dbWindow.draw("Do you want to add %s to %s [Yes/No]"%(option , item))
+                            answer = self.dbWindow.draw("Do you want to add %s to %s [Yes/No]"%(option, item))
                             if answer.lower() == "yes":
                                 if item in self.database.model.items:
-                                    self.database.modifySingleEntry(ID, item, option, byID = True)
+                                    self.database.modifySingleEntry(ID, item, option, byID=True)
                                 elif item in self.database.model.listitems:
-                                    self.database.modifyListEntry(ID, item, option, "Append", byID = True)
+                                    self.database.modifyListEntry(ID, item, option, "Append", byID=True)
                                 else:
                                     raise RuntimeError("This should not happen!")
 
@@ -201,6 +214,9 @@ class App:
         self.runMainWindow(None)
 
     def runModWindow(self, startVal, fromMain, fromList):
+        """
+        Function defining the interactions of the modification window
+        """
         logging.info("Switching to modification window")
         retVal = startVal
         while retVal != "0":
@@ -219,7 +235,7 @@ class App:
                     self.modWindow.update("ID %s not in database"%ID)
             elif retVal == "2":
                 IDs = self.modWindow.draw("Enter IDs as XXX - YYY")
-                IDs = IDs.replace(" ","")
+                IDs = IDs.replace(" ", "")
                 res = re.search("[0-9]+-[0-9]+", IDs)
                 validInput = False
                 if res is not None:
@@ -234,8 +250,8 @@ class App:
                     self.modWindow.update("%s is a invalid intput"%IDs)
             elif retVal == "3":
                 IDs = self.modWindow.draw("Enter IDs as XXX,YYY,..")
-                IDs = IDs.replace(" ","")
-                res = re.search("([0-9],)+[0-9]",IDs)
+                IDs = IDs.replace(" ", "")
+                res = re.search("([0-9],)+[0-9]", IDs)
                 validInput = False
                 if res is not None:
                     if res.span() == (0, len(IDs)):
@@ -253,6 +269,9 @@ class App:
             self.runListWindow(None)
 
     def processListOfModification(self, window, IDList):
+        """
+        Function prevalidating the IDs set in the ModWindows for bulk updating of Entries
+        """
         IDList = sorted(IDList, key=lambda x: int(x))
         _validIDs = []
         _rmIDs = []
@@ -262,12 +281,15 @@ class App:
             else:
                 _validIDs.append(ID)
         if len(_rmIDs) > 0:
-            window.update("IDs %s are larger than max (%s)"%(_rmIDs,len(self.database.entries)-1))
+            window.update("IDs %s are larger than max (%s)"%(_rmIDs, len(self.database.entries)-1))
         if len(_validIDs) > 0:
             window.update("IDList : %s"%_validIDs)
             self.modListOfItems(self.modWindow, _validIDs)
 
     def runMultiModWindow(self, startVal, ID, isNewWindow, fromMain, fromList):
+        """
+        Function defining the interactions of the multi modification window. Will spawn a new one for each ID modified in the current scope of the app
+        """
         logging.info("Switching to multi modification window for ID %s", ID)
         thisWindow = self.allMultiModWindow[ID]
         if isNewWindow:
@@ -281,7 +303,7 @@ class App:
                 for elem in thisWindow.headerOptions:
                     modID, name, comment = elem
                     if modID == retVal:
-                        thisWindow.update("%s, %s"%(modID,name)) ###TEMP
+                        thisWindow.update("%s, %s"%(modID, name)) ###TEMP
                         if name in self.database.model.items.keys():
                             thisWindow.update("%s is a Item"%name)###TEMP
                         elif name in self.database.model.listitems.keys():
@@ -293,9 +315,17 @@ class App:
                 thisWindow.update("Please enter value present in %s"%thisWindow.validOptions)
         self.runModWindow(None, fromMain, fromList)
 
-    def modListItem(self, window, IDs, name, verbose = True):
+    def modListItem(self, window, IDs, name, verbose=True):
+        """
+        Wrapper for the different modification options and how they are called in the database
+
+        Args:
+            windows (Window or ListWindows) : Current window
+            IDs (list) : List of IDs to be modified
+            name (str) : Item name to be modified
+        """
         method = window.draw("Choose Method (Append | Replace | Remove)")
-        if method in ["Append","Replace","Remove"]:
+        if method in ["Append", "Replace", "Remove"]:
             if method == "Append":
                 newValue = window.draw("New Value")
                 for ID in IDs:
@@ -325,37 +355,46 @@ class App:
             window.update("!!! - %s is Invalid Method"%method)
 
     def modListOfItems(self, window, IDs):
+        """
+        Multiple modification of a single Item
+        """
         item = window.draw("Change item ({0})".format(" | ".join(self.config.modItems)))
         if item in self.modSingleItems:
             newValue = window.draw("New Value for %s"%item)
             for ID in IDs:
-                self.database.modifySingleEntry(ID, item, newValue, byID = True)
+                self.database.modifySingleEntry(ID, item, newValue, byID=True)
         elif item in self.modListItems:
-            self.modListItem(window, IDs, item, verbose = False)
+            self.modListItem(window, IDs, item, verbose=False)
         else:
             window.update("Input is no valid item")
 
     def modSingleItem(self, window, IDs):
+        """
+        Wrapper for modifying a Single Item
+        """
         item = window.draw("Change item ({0})".format(" | ".join(self.modSingleItems)))
         if item in self.modSingleItems:
             newValue = window.draw("New Value for %s"%item)
             for ID in IDs:
-                self.database.modifySingleEntry(ID, item, newValue, byID = True)
+                self.database.modifySingleEntry(ID, item, newValue, byID=True)
 
     def makeListModifications(self, ID, name, method, oldValue, newValue):
+        """
+        Making a singel modification to a ListItem
+        """
         if method == "Append":
-            self.database.modifyListEntry(ID, name, newValue, "Append", byID = True)
+            self.database.modifyListEntry(ID, name, newValue, "Append", byID=True)
             return True
         elif method == "Remove":
             try:
-                self.database.modifyListEntry(ID, name, None, "Remove",  oldValue, byID = True)
+                self.database.modifyListEntry(ID, name, None, "Remove", oldValue, byID=True)
             except ValueError:
                 return False
             else:
                 return True
         elif method == "Replace":
             try:
-                self.database.modifyListEntry(ID, name, newValue, "Replace",  oldValue, byID = True)
+                self.database.modifyListEntry(ID, name, newValue, "Replace", oldValue, byID=True)
             except ValueError:
                 return False
             else:
@@ -364,6 +403,10 @@ class App:
             pass
 
     def execute(self, ID, window):
+        """
+        Function called when a entry should be executed. The idea is, that for a desired execution program etc. a shell script with the called (as done in the terminal) is placed in the executable folder.
+        After execution the **Opened** will be incrememented.
+        """
         if ID not in self.database.getAllValuebyItemName("ID"):
             window.update("ID %s not in database"%ID)
         else:
@@ -373,10 +416,13 @@ class App:
             os.system("{0} {1}".format(self.config.executable, path2Exec))
             self.database.modifyListEntry(ID, "Opened",
                                           mimir.backend.helper.getTimeFormatted("Full"),
-                                          byID = True)
+                                          byID=True)
 
     def executeRandom(self, window, fromList=False):
-        randID = self.database.getRandomEntry(chooseFrom = self.lastIDList)
+        """
+        Function for getting a random entry from the last printed List of entries (if none printed from all)
+        """
+        randID = self.database.getRandomEntry(chooseFrom=self.lastIDList)
         _listIDList = self.lastIDList
         if fromList:
             tableElements = self.generateList([randID])
@@ -388,12 +434,20 @@ class App:
         self.execute(randID, window)
 
     def terminate(self):
+        """
+        Function called form the main window to terminate the app
+        """
         logging.info("Checking if database was saved")
         #TODO: CHeck if database is modified but nit saved
         logging.info("Terminating app")
         exit()
 
     def generateList(self, get="All"):
+        """
+        Function generating the necessary table elements win using the ListWindow. Will used all items set in the DisplayItems configuration option
+
+        TODO: Factorize
+        """
         #TODO Check get input
         tableElements = []
         ids2Print = None
@@ -423,7 +477,7 @@ class App:
                         if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
                             #print(val, self.database.model.getDefaultValue(item))
                             if (val == self.database.model.getDefaultValue(item) and
-                                self.config.itemInfo[item]["DisplayDefault"] is not None):
+                                    self.config.itemInfo[item]["DisplayDefault"] is not None):
                                 thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
                             else:
                                 if "modDisplay" in self.config.itemInfo[item].keys():
@@ -445,7 +499,7 @@ class App:
                     value = str(self.database.getCount(id, self.config.itemInfo[item]["Base"], byID=True))
                 else:
                     if (thisItem.value == self.database.model.getDefaultValue(item) and
-                        self.config.itemInfo[item]["DisplayDefault"] is not None):
+                            self.config.itemInfo[item]["DisplayDefault"] is not None):
                         itemValue = self.config.itemInfo[item]["DisplayDefault"]
                     else:
                         val = thisItem.value
@@ -473,6 +527,8 @@ class App:
 
         Returns:
             aboutInfo (dict) : All values of interest
+
+        TODO: Implement
         """
         pass
 
@@ -525,7 +581,7 @@ class MTFConfig:
             for iopt, opt in enumerate(self.windows[window]["Options"]):
                 self.windows[window]["Options"][iopt] = tuple(opt)
 
-def initDatabase(basedir, config = None):
+def initDatabase(basedir, config=None):
     """
     Function for initializing the databse when running Mimir3 with the MTF frontend.
 
@@ -541,7 +597,7 @@ def initDatabase(basedir, config = None):
         initType (str) : Either "new" or "loaded"
     """
     if os.path.exists(basedir+"/.mimir"):
-        logging.debug("Found .mimir dir for %s",basedir)
+        logging.debug("Found .mimir dir for %s", basedir)
         database = DataBase(basedir, "load")
         initType = "loaded"
     else:

@@ -14,7 +14,7 @@ from mimir.backend.entry import DataBaseEntry, Item, ListItem
 import mimir.backend.helper
 import mimir.backend.plugin
 
-class DataBase(object):
+class DataBase:
     """
     Database class that contains entries which are organized by an unique ID. The class contains methods for operating on the Database (save, load, queries, random entries) and modifing/reading/removing Entries. When a new database is created, a root directory (which contains all files) and a model are required. The Model can be created with makeModelDefinition.py and modified for specific needs. During initialization a .mimir directory will be created in the passed root directory. There the database and all affiliated files (backup, secondary databases) will be saved. The model passed in this process will alse be saved there for future reference.
 
@@ -101,7 +101,7 @@ class DataBase(object):
         for f in allfiles:
             for ext in self.model.extentions:
                 if f.endswith(ext):
-                    matchingfiles.append(f.replace(self.databaseRoot+"/",""))
+                    matchingfiles.append(f.replace(self.databaseRoot+"/", ""))
                     continue
         logging.debug("Matching files: %s", len(matchingfiles))
         return matchingfiles
@@ -164,7 +164,7 @@ class DataBase(object):
         # Copy current DBfile and save it as backup
         if os.path.exists(self.savepath):
             logging.debug("Making backup")
-            backupDate = mimir.backend.helper.getTimeFormatted("Date", "-", inverted = True)
+            backupDate = mimir.backend.helper.getTimeFormatted("Date", "-", inverted=True)
             copy2(self.savepath, self.savepath.replace(".json", ".{0}.backup".format(backupDate)))
         # Convert database to dict so json save can be used
         output = OrderedDict()
@@ -278,7 +278,7 @@ class DataBase(object):
                 if itemType == "datetime":
                     map_id_sortby[ID] = mimir.backend.helper.sortDateTime(map_id_sortby[ID])[0]
                 else:
-                    #TODO: THink about a way to sort ListItems of type str/int
+                    #TODO: Think about a way to sort ListItems of type str/int
                     raise NotImplementedError("Sorting for none datetime listitems not implemented")
 
         pairs = []
@@ -455,7 +455,7 @@ class DataBase(object):
         if not isinstance(modEntry.items[itemName], ListItem):
             raise TypeError("Called modifyListEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
         if ((len(modEntry.getItem(itemName).value) == 1 and
-                 modEntry.getItem(itemName).value[0] == self.model.getDefaultValue(itemName))):
+             modEntry.getItem(itemName).value[0] == self.model.getDefaultValue(itemName))):
             return 0
         else:
             return len(modEntry.getItem(itemName).value)
@@ -506,7 +506,7 @@ class DataBase(object):
         vetoValues = []
         for value in itemValues:
             if value.startswith("!"):
-                vetoValues.append(value.replace("!",""))
+                vetoValues.append(value.replace("!", ""))
             else:
                 hitValues.append(value)
         logging.debug("Processing Query with:")
@@ -767,7 +767,7 @@ class DataBase(object):
 
         return retList
 
-class Model(object):
+class Model:
     """
     Database model
 
@@ -871,6 +871,7 @@ class Model(object):
     def items(self):
         """ Retruns all item demfinitons in the model """
         return self._items
+
     @property
     def listitems(self):
         """ Retruns all listitem demfinitons in the model """

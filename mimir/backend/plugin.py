@@ -1,8 +1,12 @@
-import hachoir.metadata
-import hachoir.parser
+"""
+Module for processing plugins set for certain Items in the model definition
+"""
 import os
 import re
 import logging
+
+import hachoir.metadata
+import hachoir.parser
 
 def get_VideoMetaData(fileName):
     """
@@ -35,7 +39,7 @@ def get_VideoMetaData(fileName):
 
     return {"width" : str(voi_width), "height" : str(voi_height), "duration" : voi_duration}
 
-def get_osData(filename, SF = 1e9):
+def get_osData(filename, SF=1e9):
     """
     Get information of the file from the os
 

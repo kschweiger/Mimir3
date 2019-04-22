@@ -60,7 +60,7 @@ disable=print-statement,
         old-raise-syntax,
         backtick,
         long-suffix,
-	no-else-return,
+	      no-else-return,
         old-ne-operator,
         old-octal-literal,
         import-star-module-level,
@@ -135,9 +135,11 @@ disable=print-statement,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
-	len-as-condition,
-	too-many-arguments,
-	too-many-instance-attributes
+      	len-as-condition,
+      	too-many-arguments,
+      	too-many-instance-attributes,
+        no-else-raise,
+        unnecessary-pass
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

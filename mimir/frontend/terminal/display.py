@@ -1,8 +1,10 @@
 """
 Classes for displaying information in ther terminal.
 """
-from mimir.frontend.terminal.helper import FixedList
 import logging
+
+from mimir.frontend.terminal.helper import FixedList
+
 
 class Window:
     """
@@ -13,7 +15,7 @@ class Window:
         width (int) ; Window Width
         headerElements (dict) ; Head elements. See setHeader description
     """
-    def __init__(self, height, width, headerElements, setHeader = False):
+    def __init__(self, height, width, headerElements, setHeader=False):
         tests = [(height, "height", int),
                  (width, "width", int),
                  (headerElements, "headerElements", dict)]
@@ -105,13 +107,13 @@ class Window:
                     self.optionMaxComment = len(comment)
         self.headerSet = True
 
-    def makeheader(self, skipTitle = False, skipText = False, skipOptions = False):
+    def makeheader(self, skipTitle=False, skipText=False, skipOptions=False):
         """
         Sets the header
         """
         self.header, self.boxHeight = self.createHeader(skipTitle, skipText, skipOptions)
 
-    def createHeader(self, skipTitle = False, skipText = False, skipOptions = False):
+    def createHeader(self, skipTitle=False, skipText=False, skipOptions=False):
         """
         Generates the lines of the header from set Title, Text and Options
 
@@ -260,7 +262,10 @@ class ListWindow(Window):
 
 
     def print(self, printStatement):
-        logging.debug("Added: %s",printStatement[0:20])
+        """
+        Is used to print the lines. This functions only intention is to also keep track of the printed lines in additon to actiually printing them.
+        """
+        logging.debug("Added: %s", printStatement[0:20])
         self.printedLines.append(printStatement)
         self.nLinesPrinted += 1
         self.nLinesPrintedGlobal += 1
@@ -316,8 +321,8 @@ class ListWindow(Window):
                 self.print(line)
         tableLines = self.makeTable(self.tableHeaderElements, self.lines, self.tableMaxLen)
         if fillWindow and self.nLinesPrinted < self.height:
-            logging.info("Drawing overflow lines - self.nLinesPrinted=%s",len(self.printedLines))
-            self.drawBeforeOverflow(newTableLines = len(tableLines), skipTable  = skipTable)
+            logging.info("Drawing overflow lines - self.nLinesPrinted=%s", len(self.printedLines))
+            self.drawBeforeOverflow(newTableLines=len(tableLines), skipTable=skipTable)
         else:
             logging.info("Skipping overflow - %s and %s < %s", fillWindow, len(self.printedLines), self.height)
         #print(tableLines)
@@ -326,7 +331,7 @@ class ListWindow(Window):
                 lineLen = len(line)
                 if self.alignment == "left":
                     if len(line) > self.width:
-                        logging.error("Table line is wider than defined width. Consider extenting the width to %s", len(line)+2 )
+                        logging.error("Table line is wider than defined width. Consider extenting the width to %s", len(line)+2)
                         self.print(" "+line+" ")
                     else:
                         self.print(" "+line+" "+(self.boxWidth-lineLen)*" ")
@@ -335,6 +340,14 @@ class ListWindow(Window):
         return True
 
     def drawBeforeOverflow(self, newTableLines, skipTable):
+        """
+        Function for (re)drawing the current state while the maximum height of the windows is not reached.
+        Will add empty lines unter the header so the previously draw lines are at the bottom the window.
+
+        Args:
+            newTableLines (int) : Number of lines expected form the next table to be drawn
+            skipTable (bool) : Required of the next updated should not draw a table. This is required to correclty calculate the number of empty lines required
+        """
         logging.info("Entering function")
         if skipTable:
             newTableLines = 0
@@ -344,10 +357,13 @@ class ListWindow(Window):
             if line not in self.header:
                 postFillLines.append(line)
 
-        logging.info("print Empty: %s - print printed %s - newTable %s", self.height-len(postFillLines)-newTableLines-len(self.header),len(postFillLines),newTableLines)
+        logging.info("print Empty: %s - print printed %s - newTable %s",
+                     self.height-len(postFillLines)-newTableLines-len(self.header),
+                     len(postFillLines), newTableLines)
         for i in range(self.height-len(postFillLines)-newTableLines-len(self.header)):
-            if i==0 and self.debug:
-                print("print Empty:",self.height-len(postFillLines)-newTableLines-len(self.header)," - print printed:",len(postFillLines),"- newTable:",newTableLines)
+            if i == 0 and self.debug:
+                print("print Empty:", self.height-len(postFillLines)-newTableLines-len(self.header),
+                      " - print printed:", len(postFillLines), "- newTable:", newTableLines)
             else:
                 print(self.width * " ")
 
@@ -357,9 +373,10 @@ class ListWindow(Window):
 
 
 
-    def interact(self, interaction, printOptions = None, rePrintInitial = False, onlyInteraction=False):
+    def interact(self, interaction, printOptions=None, rePrintInitial=False, onlyInteraction=False):
         """
-        Interaction with window, but the new lines will just be append (unlike the main windows draw method)
+        Interaction with window, but the new lines will just be append (unlike the main windows draw method).
+        Can also invoce the next draw method. So draw does not have to be called after each interaction.
 
         Args:
             interaction (str) : Text that will be displayedi n a sdtin statement
@@ -372,15 +389,16 @@ class ListWindow(Window):
                 options, optionHeight = self.createHeader(True, True, False)
             else:
                 options, optionsHeight = self.makeSmallOptionTable()
-
             #Print requestion option version
             for line in options:
-                    self.print(line)
+                self.print(line)
         #print(self.nLinesPrinted, self.height)
         if not onlyInteraction:
             logging.info("self.nLinesPrinted=%s/%s", self.nLinesPrinted, self.height)
             #print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-            self.draw(skipHeader = (self.nLinesPrinted > self.height), skipTable = (not self.tableAdded), fillWindow = (self.nLinesPrinted < self.height))
+            self.draw(skipHeader=(self.nLinesPrinted > self.height),
+                      skipTable=(not self.tableAdded),
+                      fillWindow=(self.nLinesPrinted < self.height))
             #print("ooooooooooooooooooooooooooooooooo")
 
         answer = input(interaction+": ")
@@ -392,6 +410,9 @@ class ListWindow(Window):
         return answer
 
     def makeSmallOptionTable(self):
+        """
+        Make a small version of the option table. Intendet to be used once the window reach maximum height and new lines will only be appended.
+        """
         retList = []
         elements = []
         for option in self.headerOptions:

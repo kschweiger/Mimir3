@@ -2,7 +2,7 @@
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
 """
 
-class DataBaseEntry(object):
+class DataBaseEntry:
     '''
     The Entry class describes all information stored in an database entry
 
@@ -188,7 +188,7 @@ class DataBaseEntry(object):
             msg = "New name {0} of type {1} has invalid value type {2}".format(passedName, passedType, type(passedValue))
             raise TypeError(msg)
 
-class Item(object):
+class Item:
     '''
     Entry that contains a list of specs
 
