@@ -116,7 +116,12 @@ class DataBase:
         Return:
             new DataBaseEntry object
         """
-        filename = path.split("/")[-1].split(".")[0]
+        logging.info("Initializing file with path: %s", path)
+        filename = path.split("/")[-1]
+        for ext in self.model.extentions:
+            if filename.endswith(ext):
+                filename = filename.replace(ext, "")
+        logging.info("Initializing file with name: %s", filename)
         entryinit = {}
         for item in self.model.items:
             if item == "Path":
