@@ -340,7 +340,8 @@ def test_13_p1_DB_query():
     updatedEntry1 = database.getEntryByItemName("ID", "0")[0]
     updatedEntry2 = database.getEntryByItemName("ID", "1")[0]
     updatedEntry1.changeItemValue("SingleItem", "ReplacedValue")
-    updatedEntry2.addItemValue("ListItem", "AddedValue")
+    updatedEntry1.addItemValue("ListItem", "AddedValue")
+    updatedEntry2.changeItemValue("SingleItem", "ReplacedValue")
     ########################################################
     #First names wrong
     with pytest.raises(KeyError):
@@ -349,22 +350,27 @@ def test_13_p1_DB_query():
     with pytest.raises(KeyError):
         database.query(["SingleItem", "Blubb"], "SomeQuery")
     ########################################################
-    resultEntry = database.query(["SingleItem","ListItem"], ["ReplacedValue", "AddedValue"])
-    resultID = database.query(["SingleItem","ListItem"], ["ReplacedValue", "AddedValue"], returnIDs = True)
+    resultEntry = database.query(["SingleItem","ListItem"], ["ReplacedValue"])
+    resultID = database.query(["SingleItem","ListItem"], ["ReplacedValue"], returnIDs = True)
     found1, found2 = False, False
     if updatedEntry1 in resultEntry:
         found1 = True
     if updatedEntry2 in resultEntry:
         found2 = True
     foundEntry = found1 and found2
-    found1 = "0" in resultID
-    found2 = "1" in resultID
-    foundID = found1 and found2
-    assert foundID and foundEntry and len(resultEntry) == 2
+    assert resultID == ["0", "1"]
+    resultID = database.query(["SingleItem","ListItem"], ["AddedValue", "ReplacedValue"], returnIDs = True)
+    assert resultID == ["0"]
     del database
 
 @pytest.mark.parametrize("Query, IDsExp", [("!Lavender", ["0","1","2","5"]), ("!Xi", ["1","2","3","4","5"]), ("!Eta Lavender", ["4"])])
 def test_13_p2_DB_query(Query, IDsExp, preCreatedDB):
+    qList = Query.split(" ")
+    resultID = preCreatedDB.query(["SingleItem","ListItem"], qList, returnIDs = True)
+    assert resultID == IDsExp
+
+@pytest.mark.parametrize("Query, IDsExp", [("Triple Orange", ["0"])])
+def test_13_p3_DB_query(Query, IDsExp, preCreatedDB):
     qList = Query.split(" ")
     resultID = preCreatedDB.query(["SingleItem","ListItem"], qList, returnIDs = True)
     assert resultID == IDsExp

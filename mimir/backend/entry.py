@@ -39,8 +39,13 @@ class DataBaseEntry:
         for item in self.names:
             setattr(self, item, self.items[item].value)
 
-    def getAllValuesbyName(self, names):
-        """ Return all values matching items with name in names """
+    def getAllValuesbyName(self, names, split=False):
+        """
+        Return all values matching items with name in names.
+        Args:
+            names (str/list) : Item names that values are returned
+            split (bool) : If true values with be split by whitespace
+        """
         if isinstance(names, str):
             names = [names]
         for name in names:
@@ -54,6 +59,15 @@ class DataBaseEntry:
                 result += value
             else:
                 result.append(value)
+
+        if split:
+            result_ = []
+            for value in result:
+                if " " in value:
+                    result_ += value.split(" ")
+                else:
+                    result_.append(value)
+            result = result_
         return set(result)
 
     def getItem(self, itemName):

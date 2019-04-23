@@ -157,7 +157,7 @@ class App:
             elif retVal == "4":
                 self.executeRandom(self.listWindow, fromList=True)
             elif retVal == "5":
-                queryString = self.listWindow.interact("Enter Query", None, onlyInteraction=False)
+                queryString = self.listWindow.interact("Enter Query", None, onlyInteraction=True)
                 thisQuery = queryString.split(" ")
                 queryIDs = self.database.query(self.config.queryItems, thisQuery, returnIDs=True)
                 queryIDs = sorted(queryIDs, key=lambda x: int(x))

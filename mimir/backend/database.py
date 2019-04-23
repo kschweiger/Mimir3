@@ -513,13 +513,12 @@ class DataBase:
         logging.debug("  hitValues: %s", hitValues)
         logging.debug("  vetoValues: %s", vetoValues)
         for entry in self.entries:
-            entryValues = entry.getAllValuesbyName(itemNames)
-            hit = False
+            entryValues = entry.getAllValuesbyName(itemNames, split=True)
+            hit = 0
             veto = False
             for value in hitValues:
                 if value in entryValues:
-                    hit = True
-                    break
+                    hit += 1
             for value in vetoValues:
                 if value in entryValues:
                     veto = True
@@ -528,7 +527,7 @@ class DataBase:
             # No vetoValue and hit: Return Entry
             # No vetoValue and no hit: Not Retrun Entry
             if len(vetoValues) == 0:
-                if hit:
+                if hit == len(itemValues):
                     addEntry = True
             # Set vetoValue and No hitValue and veto: Not return Entry
             # Set vetoValue and No hitValue and not veto: Return Entry
@@ -539,11 +538,8 @@ class DataBase:
             # Set vetoValue and Set hitValue and not veto and not hit: Not return Entry
             # Set vetoValue and Set hitValue and not veto and hit: Return Entry
             else:
-                if not veto and hit:
+                if not veto and hit == len(hitValues):
                     addEntry = True
-
-
-
             if addEntry:
                 if returnIDs:
                     result.append(entry.ID)
