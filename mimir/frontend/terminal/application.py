@@ -165,7 +165,7 @@ class App:
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
             elif retVal == "6":
-                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:3]
+                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:10]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
@@ -478,7 +478,8 @@ class App:
                             #print(val, self.database.model.getDefaultValue(item))
                             if (val == self.database.model.getDefaultValue(item) and
                                     self.config.itemInfo[item]["DisplayDefault"] is not None):
-                                thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
+                                if self.config.itemInfo[item]["DisplayDefault"] != "":
+                                    thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
                             else:
                                 if "modDisplay" in self.config.itemInfo[item].keys():
                                     if self.config.itemInfo[item]["modDisplay"] == "Date":
@@ -491,7 +492,8 @@ class App:
                                         raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
                                 thisValue.append(val)
                         if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
-                            thisValue.append("..")
+                            if item not in ["Opened", "Changed"]:
+                                thisValue.append("..")
                             break
                     #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
                     value = ", ".join(thisValue)
