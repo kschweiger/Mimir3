@@ -141,7 +141,7 @@ class App:
                 self.firstInteraction = False
             if retVal == "1": #Print All
                 allIDs = sorted(list(self.database.getAllValuebyItemName("ID")), key=lambda x: int(x))
-                tableElements = self.generateList(allIDs*6)
+                tableElements = self.generateList(allIDs)
                 #tableElements = self.generateList("All")
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)

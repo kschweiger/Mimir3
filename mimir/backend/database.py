@@ -37,6 +37,8 @@ class DataBase:
         entrydict (dict) : Dict of all entries with IDs as key
         _model (Model) : General information of the database model
         isdummy (bool) : Flag used for dummy databases --> Currently only disables saveing
+        cachedValue (dict - list) : Saved all present Values for item (key)
+        valuesChanged (dict - bool) : Flag if cachedValues are still valid
     """
     def __init__(self, root, status, modelConf=None, dummy=False):
         logging.info("Initializing DataBase")
@@ -82,6 +84,12 @@ class DataBase:
         else:
             raise RuntimeError("Unsupported status: {0}".format(status))
 
+        self.cachedValues = {}
+        self.cachedValuesChanged = {}
+        for item in self.model.allItems:
+            self.cachedValuesChanged[item] = True
+            self.cachedValues[item] = self.getAllValuebyItemName(item)
+
     @property
     def model(self):
         """ Returns the model variable """
@@ -120,7 +128,7 @@ class DataBase:
         filename = path.split("/")[-1]
         for ext in self.model.extentions:
             if filename.endswith(ext):
-                filename = filename.replace(ext, "")
+                filename = filename.replace("."+ext, "")
         logging.info("Initializing file with name: %s", filename)
         entryinit = {}
         for item in self.model.items:
@@ -247,6 +255,14 @@ class DataBase:
         """ Return a set of all values of name itemName """
         if itemName not in self.model.allItems:
             raise KeyError("Arg {0} not in model items".format(itemName))
+        if self.cachedValuesChanged[itemName]:
+            self.cacheAllValuebyItemName(itemName)
+        return self.cachedValues[itemName]
+
+    def cacheAllValuebyItemName(self, itemName):
+        """
+        Function for filling the cached Value objects of the database
+        """
         retlist = []
         for entry in self.entries:
             toAdd = getattr(entry, itemName)
@@ -255,7 +271,9 @@ class DataBase:
             else:
                 retlist.append(toAdd)
         logging.info(retlist)
-        return set(retlist)
+        self.cachedValuesChanged[itemName] = False
+        self.cachedValues[itemName] = set(retlist)
+
 
     def getSortedIDs(self, sortBy, reverseOrder=True):
         """
@@ -384,6 +402,7 @@ class DataBase:
         if not type(modEntry.items[itemName]) == Item: # pylint: disable=unidiomatic-typecheck
             raise TypeError("Called modifySingleEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
         modEntry.changeItemValue(itemName, newValue)
+        self.cachedValuesChanged[itemName] = True
         #Update the Changed date of the entry
         self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
                              byID=byID, byName=byName, byPath=byPath)
@@ -425,6 +444,7 @@ class DataBase:
                 modEntry.addItemValue(itemName, self.model.getDefaultValue(itemName))
         else:
             raise NotImplementedError
+        self.cachedValuesChanged[itemName] = True
         #Update the Changed date of the entry
         if itemName not in ("Changed", "Opened"):
             # Exclude changed item since this would lead to inf. loop

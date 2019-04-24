@@ -6,6 +6,7 @@ from glob import glob
 #sys.path.insert(0, os.path.abspath('..'))
 #sys.path.insert(0, os.path.abspath('.'))
 #print(sys.path)
+import mimir.backend.database
 from mimir.backend.database import DataBase, Model
 from mimir.backend.entry import Item, ListItem
 import unittest
@@ -101,6 +102,8 @@ def preCreatedDB():
     Entry4.addItemValue("Changed", "21.03.19|00:00:00")
     Entry5.addItemValue("Changed", "20.03.19|00:00:00")
     database.saveMain()
+    for item in database.model.allItems:
+        database.cacheAllValuebyItemName(item)
     #shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2") #For testing
     shutil.rmtree(dbRootPath+"/.mimir")
     return database
@@ -145,6 +148,8 @@ def test_02_DB_init_new():
         if entry.Path not in filesindbRoot:
             allEntriesSaved = False
     assert allEntriesSaved
+    for item in database.model.allItems:
+        assert not database.cachedValuesChanged[item]
     del database
 
 def test_03_DB_raise_RuntimeError_existing_mimirDir():
@@ -237,6 +242,7 @@ def test_09_DB_getEntrybyItemName():
         database.getEntryByItemName("Blubb", "folder2file")
     found = False
     for entry in database.entries:
+        print(entry.getItem("Name").value)
         if entry.getItem("Name").value == "folder2file2":
             found = True
             break
@@ -614,6 +620,25 @@ def test_23_DB_recursiveSplit(preCreatedDB):
 @pytest.mark.parametrize("ID, nExpected", [("4", 3), ("1", 0), ("3", 1)])
 def test_24_DB_countListItem(ID, nExpected, preCreatedDB):
     assert preCreatedDB.getCount(ID, "ListItem", byID = True) == nExpected
+
+def test_25_DB_cachedValues(mocker, preCreatedDB):
+    assert preCreatedDB.cachedValuesChanged.keys() == preCreatedDB.model.allItems
+    mocker.spy(DataBase, "cacheAllValuebyItemName")
+    ###### Test caching for ListItem entries
+    values_ListItem_preChange = preCreatedDB.getAllValuebyItemName("ListItem")
+    assert DataBase.cacheAllValuebyItemName.call_count == 0
+    preCreatedDB.modifyListEntry("4", "ListItem", "Cyan", byID = True)
+    values_ListItem_postChange = preCreatedDB.getAllValuebyItemName("ListItem")
+    assert DataBase.cacheAllValuebyItemName.call_count == 1
+    assert list(set(values_ListItem_postChange)-set(values_ListItem_preChange)) == ["Cyan"]
+    ###### Test caching for SingleItem Entries
+    Entry4 = preCreatedDB.getEntryByItemName("ID", "4")[0]
+    oldValue = Entry4.getItem("SingleItem").value
+    newValue = "Gamma"
+    preCreatedDB.modifySingleEntry("4", "SingleItem", newValue, byID = True)
+    values_ListItem_postChange = preCreatedDB.getAllValuebyItemName("SingleItem")
+    assert DataBase.cacheAllValuebyItemName.call_count == 2
+    assert oldValue not in values_ListItem_postChange and newValue in values_ListItem_postChange
 
 if __name__ == "__main__":
     unittest.main()
