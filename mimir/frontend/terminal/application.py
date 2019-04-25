@@ -153,7 +153,7 @@ class App:
                 self.runModWindow(None, fromMain=False, fromList=True)
             elif retVal == "3":
                 executeID = self.listWindow.interact("Enter ID to execute")
-                self.execute(executeID, self.listWindow)
+                self.execute(executeID, self.listWindow, fromList=True)
             elif retVal == "4":
                 self.executeRandom(self.listWindow, fromList=True)
             elif retVal == "5":
@@ -402,7 +402,7 @@ class App:
         else:
             pass
 
-    def execute(self, ID, window):
+    def execute(self, ID, window, fromList=False):
         """
         Function called when a entry should be executed. The idea is, that for a desired execution program etc. a shell script with the called (as done in the terminal) is placed in the executable folder.
         After execution the **Opened** will be incrememented.
@@ -412,7 +412,8 @@ class App:
         else:
             entry2Exec = self.database.getEntryByItemName("ID", ID)[0]
             path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
-            window.update("Path: %s"%path2Exec)
+            if not fromList:
+                window.update("Path: %s"%path2Exec)
             os.system("{0} {1}".format(self.config.executable, path2Exec))
             self.database.modifyListEntry(ID, "Opened",
                                           mimir.backend.helper.getTimeFormatted("Full"),
@@ -431,7 +432,7 @@ class App:
             window.update(tableElements)
         else:
             window.update("Executing entry with ID {0}".format(randID))
-        self.execute(randID, window)
+        self.execute(randID, window, fromList)
 
     def terminate(self):
         """
