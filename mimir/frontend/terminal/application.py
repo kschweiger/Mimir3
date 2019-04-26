@@ -190,7 +190,7 @@ class App:
             elif retVal == "2":
                 newFiles, file_id_pair = self.database.findNewFiles()
                 for newFile, ID in file_id_pair:
-                    self.dbWindow.update("Found file: %s"%newFile)
+                    self.dbWindow.update("Added file %s with ID %s"%(newFile, ID))
                     suggestedOptions = self.database.getItemsPyPath(newFile)
                     foundOne = False
                     for item in suggestedOptions:

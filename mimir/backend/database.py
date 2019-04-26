@@ -157,7 +157,7 @@ class DataBase:
             _entryinit.append((entry, entryinit[entry][0], entryinit[entry][1]))
 
         e = DataBaseEntry(_entryinit)
-
+        self.cachedValuesChanged["ID"] = True
         self.entries.append(e)
         self.entrydict[str(cID)] = e
         return e
