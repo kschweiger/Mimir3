@@ -867,7 +867,7 @@ class Model:
     def getDefaultValue(self, itemName):
         """ Returns the default item name of the modlue """
         if itemName in self._items.keys():
-            defVal = self._items[itemName]["default"][0]
+            defVal = self._items[itemName]["default"]
         elif itemName in self._listitems.keys():
             defVal = self._listitems[itemName]["default"]
         else:

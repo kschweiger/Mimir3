@@ -45,7 +45,7 @@ if __name__ == "__main__":
         help = "Define logging level: CRITICAL - 50, ERROR - 40, WARNING - 30, INFO - 20, DEBUG - 10, NOTSET - 0 \nSet to 0 to activate ROOT root messages",
         type=int,
         #choice=[10,20,30,40,50,0],
-        default=10
+        default=20
     )
     argumentparser.add_argument(
         "--folder",

@@ -292,8 +292,16 @@ class App:
         """
         logging.info("Switching to multi modification window for ID %s", ID)
         thisWindow = self.allMultiModWindow[ID]
+        entry = self.database.getEntrybyID(ID)
         if isNewWindow:
-            thisWindow.headerText.append("Currently modifying ID: %s"%ID)
+            thisWindow.headerText.append("Entry information:")
+            thisWindow.headerText.append(" ID: %s"%ID)
+            thisWindow.headerText.append(" Name: %s"%entry.getItem("Name").value)
+        for elem in thisWindow.headerOptions:
+            modID, name, comment = elem
+            if name in self.database.model.allItems:
+                thisWindow.headerText.append(" {0}: {1}".format(name,
+                                                                entry.getItem(name).value))
         retVal = startVal
         while retVal != "0":
             retVal = thisWindow.draw("Enter Value: ")
@@ -484,16 +492,7 @@ class App:
                                 if self.config.itemInfo[item]["DisplayDefault"] != "":
                                     thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
                             else:
-                                if "modDisplay" in self.config.itemInfo[item].keys():
-                                    if self.config.itemInfo[item]["modDisplay"] == "Date":
-                                        val = val.split("|")[0]
-                                    elif self.config.itemInfo[item]["modDisplay"] == "Time":
-                                        val = val.split("|")[1]
-                                    elif self.config.itemInfo[item]["modDisplay"] == "Full":
-                                        pass
-                                    else:
-                                        raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
-                                thisValue.append(val)
+                                thisValue.append(self.modifyItemDisplay(item, val))
                         if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
                             if item not in ["Opened", "Changed"]:
                                 thisValue.append("..")
@@ -503,6 +502,7 @@ class App:
                 elif isCounter:
                     value = str(self.database.getCount(id, self.config.itemInfo[item]["Base"], byID=True))
                 else:
+                    logging.info("%s == %s -> %s", thisItem.value,  self.database.model.getDefaultValue(item),  self.config.itemInfo[item]["DisplayDefault"] )
                     if (thisItem.value == self.database.model.getDefaultValue(item) and
                             self.config.itemInfo[item]["DisplayDefault"] is not None):
                         itemValue = self.config.itemInfo[item]["DisplayDefault"]
@@ -526,6 +526,60 @@ class App:
             tableElements.append(tuple(entryElements))
         return tableElements
 
+    def joinItemValues(self, thisItem, join =",", joinFull=False):
+        thisValue = []
+        for priority in self.config.itemInfo[item]["Priority"]:
+            if priority in thisItem.value:
+                thisValue.append(priority)
+            for val in thisItem.value:
+                if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
+                    if (val == self.database.model.getDefaultValue(item) and
+                        self.config.itemInfo[item]["DisplayDefault"] is not None):
+                        if self.config.itemInfo[item]["DisplayDefault"] != "":
+                            thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
+                    else:
+                        if "modDisplay" in self.config.itemInfo[item].keys():
+                            if self.config.itemInfo[item]["modDisplay"] == "Date":
+                                val = val.split("|")[0]
+                            elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                                val = val.split("|")[1]
+                            elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                                pass
+                            else:
+                                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
+                            thisValue.append(val)
+                if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
+                    if item not in ["Opened", "Changed"]:
+                        thisValue.append("..")
+                    break
+                #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
+            value = ", ".join(thisValue)
+
+            #if item in self.database.model.listitems:
+            
+    def modifyItemDisplay(self, item, value):
+        """
+        Function for processing the modDisplay option in the MTF coniguration:
+
+        Args:
+            value (str) : Item Value
+            item (str) : Item name
+
+        Returns:
+            value (str) : If modDispaly set will return modified value otherwise passed one
+        """
+        if "modDisplay" in self.config.itemInfo[item].keys():
+            if self.config.itemInfo[item]["modDisplay"] == "Date":
+                value = value.split("|")[0]
+            elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                value = value.split("|")[1]
+            elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                pass
+            else:
+                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
+
+        return value
+        
     def about(self):
         """
         Method that returns the information for the about screen. Like python-version, number entryies, number if values per ListItem, most used Value
