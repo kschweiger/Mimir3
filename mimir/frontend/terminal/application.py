@@ -190,7 +190,7 @@ class App:
             elif retVal == "2":
                 newFiles, file_id_pair = self.database.findNewFiles()
                 for newFile, ID in file_id_pair:
-                    self.dbWindow.update("Found file: %s"%newFile)
+                    self.dbWindow.update("Added file %s with ID %s"%(newFile, ID))
                     suggestedOptions = self.database.getItemsPyPath(newFile)
                     foundOne = False
                     for item in suggestedOptions:
@@ -306,6 +306,7 @@ class App:
                         thisWindow.update("%s, %s"%(modID, name)) ###TEMP
                         if name in self.database.model.items.keys():
                             thisWindow.update("%s is a Item"%name)###TEMP
+                            self.modSingleItem(thisWindow, [ID], name)
                         elif name in self.database.model.listitems.keys():
                             thisWindow.update("%s is a ListItem"%name)###TEMP
                             self.modListItem(thisWindow, [ID], name)
@@ -368,15 +369,16 @@ class App:
         else:
             window.update("Input is no valid item")
 
-    def modSingleItem(self, window, IDs):
+    def modSingleItem(self, window, IDs, name = None):
         """
         Wrapper for modifying a Single Item
         """
-        item = window.draw("Change item ({0})".format(" | ".join(self.modSingleItems)))
-        if item in self.modSingleItems:
-            newValue = window.draw("New Value for %s"%item)
+        if name is None:
+            name = window.draw("Change item ({0})".format(" | ".join(self.modSingleItems)))
+        if name in self.modSingleItems:
+            newValue = window.draw("New Value for %s"%name)
             for ID in IDs:
-                self.database.modifySingleEntry(ID, item, newValue, byID=True)
+                self.database.modifySingleEntry(ID, name, newValue, byID=True)
 
     def makeListModifications(self, ID, name, method, oldValue, newValue):
         """
