@@ -215,7 +215,7 @@ def test_07_DB_load():
     database.saveMain()
     loadedDB = DataBase(dbRootPath, "load")
     assert database == loadedDB
-    assert loadedDB.maxID == len(loadedDB.entries)
+    assert loadedDB.maxID == len(loadedDB.entries)-1 #Since 0 is a valid ID
     del database
 
 def test_08_DB_getAllValues():

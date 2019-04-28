@@ -207,7 +207,7 @@ class DataBase:
             self.entries.append(e)
             self.maxID += 1
             self.entrydict[savedEntry["ID"]["value"]] = e
-
+        self.maxID -= 1
     def findNewFiles(self, startdir=""):
         """
         Find new files in starting from the root directory.
