@@ -421,3 +421,23 @@ def test_16_display_ListWindow_fillEmpty_afterTableDraw(capsys, height):
     assert len(expectedLines) == len(modCapturedLines)
     for iline in range(len(modCapturedLines)):
         assert modCapturedLines[iline] == expectedLines[iline]
+
+def test_17_display_Window_makeHeader_SecondaryText(preCreatedWindowAndElements):
+    headerElements, preCreatedWindow = preCreatedWindowAndElements
+
+    assert preCreatedWindow.headerTextSecondary == {}
+
+    preCreatedWindow.headerTextSecondary["SomeStatement"] = "Some Information"
+    preCreatedWindow.headerTextSecondary["SomeMoreStatement"] = "Some More Information"
+    preCreatedWindow.makeheader()
+    print("///////////////////////////////// HEADER ////////////////////////////////////////")
+    for line in preCreatedWindow.header:
+        print(line)
+    print("/////////////////////////////////////////////////////////////////////////////////")
+    for key in preCreatedWindow.headerTextSecondary.keys():
+        expectedText = "{0}: {1}".format(key, preCreatedWindow.headerTextSecondary[key])
+        foundLine = False
+        for line in preCreatedWindow.header:
+            if expectedText in line:
+                foundLine = True
+        assert foundLine

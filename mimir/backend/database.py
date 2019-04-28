@@ -66,7 +66,7 @@ class DataBase:
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
                 logging.debug("Adding file %s", path2file)
-                self.createNewEntry(path2file, self.maxID)
+                self.createNewEntry(path2file, self.maxID, skipCaching=True)
                 self.maxID += 1
             self.maxID = self.maxID - 1
         elif status == "load":
@@ -114,7 +114,7 @@ class DataBase:
         logging.debug("Matching files: %s", len(matchingfiles))
         return matchingfiles
 
-    def createNewEntry(self, path, cID):
+    def createNewEntry(self, path, cID, skipCaching=False):
         """ Create an entry for a file with path and ID.
         Called for each file that is found on filesystem
         Args:
@@ -157,7 +157,8 @@ class DataBase:
             _entryinit.append((entry, entryinit[entry][0], entryinit[entry][1]))
 
         e = DataBaseEntry(_entryinit)
-        self.cachedValuesChanged["ID"] = True
+        if not skipCaching:
+            self.cachedValuesChanged["ID"] = True
         self.entries.append(e)
         self.entrydict[str(cID)] = e
         return e

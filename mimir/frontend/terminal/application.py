@@ -295,13 +295,11 @@ class App:
         entry = self.database.getEntrybyID(ID)
         if isNewWindow:
             thisWindow.headerText.append("Entry information:")
-            thisWindow.headerText.append(" ID: %s"%ID)
-            thisWindow.headerText.append(" Name: %s"%entry.getItem("Name").value)
+            thisWindow.headerText.append("ID: %s"%ID)
         for elem in thisWindow.headerOptions:
             modID, name, comment = elem
             if name in self.database.model.allItems:
-                thisWindow.headerText.append(" {0}: {1}".format(name,
-                                                                entry.getItem(name).value))
+                thisWindow.headerTextSecondary[name] = self.getPrintItemValues(ID, name, joinFull=True)
         retVal = startVal
         while retVal != "0":
             retVal = thisWindow.draw("Enter Value: ")
@@ -314,17 +312,17 @@ class App:
                         thisWindow.update("%s, %s"%(modID, name)) ###TEMP
                         if name in self.database.model.items.keys():
                             thisWindow.update("%s is a Item"%name)###TEMP
-                            self.modSingleItem(thisWindow, [ID], name)
+                            self.modSingleItem(thisWindow, [ID], name, fromMultiMod=True)
                         elif name in self.database.model.listitems.keys():
                             thisWindow.update("%s is a ListItem"%name)###TEMP
-                            self.modListItem(thisWindow, [ID], name)
+                            self.modListItem(thisWindow, [ID], name, fromMultiMod=True)
                         else:
                             thisWindow.update("%s -- %s ??"%(name, itemType))
             else:
                 thisWindow.update("Please enter value present in %s"%thisWindow.validOptions)
         self.runModWindow(None, fromMain, fromList)
 
-    def modListItem(self, window, IDs, name, verbose=True):
+    def modListItem(self, window, IDs, name, verbose=True, fromMultiMod=False):
         """
         Wrapper for the different modification options and how they are called in the database
 
@@ -362,6 +360,8 @@ class App:
                             window.update("Replaces %s with %s"%(oldValue, newValue))
         else:
             window.update("!!! - %s is Invalid Method"%method)
+        if fromMultiMod:
+            window.headerTextSecondary[name] = self.getPrintItemValues(IDs[0], name, joinFull=True)
 
     def modListOfItems(self, window, IDs):
         """
@@ -377,7 +377,7 @@ class App:
         else:
             window.update("Input is no valid item")
 
-    def modSingleItem(self, window, IDs, name = None):
+    def modSingleItem(self, window, IDs, name = None, fromMultiMod=False):
         """
         Wrapper for modifying a Single Item
         """
@@ -387,6 +387,8 @@ class App:
             newValue = window.draw("New Value for %s"%name)
             for ID in IDs:
                 self.database.modifySingleEntry(ID, name, newValue, byID=True)
+            if fromMultiMod:
+                window.headerTextSecondary[name] = self.getPrintItemValues(IDs[0], name, joinFull=True)
 
     def makeListModifications(self, ID, name, method, oldValue, newValue):
         """
@@ -456,8 +458,6 @@ class App:
     def generateList(self, get="All"):
         """
         Function generating the necessary table elements win using the ListWindow. Will used all items set in the DisplayItems configuration option
-
-        TODO: Factorize
         """
         #TODO Check get input
         tableElements = []
@@ -479,84 +479,78 @@ class App:
                     isCounter = True
                 else:
                     thisItem = thisEntry.getItem(item)
-                if isinstance(thisItem, ListItem):
-                    thisValue = []
-                    for priority in self.config.itemInfo[item]["Priority"]:
-                        if priority in thisItem.value:
-                            thisValue.append(priority)
-                    for val in thisItem.value:
-                        if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
-                            #print(val, self.database.model.getDefaultValue(item))
-                            if (val == self.database.model.getDefaultValue(item) and
-                                    self.config.itemInfo[item]["DisplayDefault"] is not None):
-                                if self.config.itemInfo[item]["DisplayDefault"] != "":
-                                    thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
-                            else:
-                                thisValue.append(self.modifyItemDisplay(item, val))
-                        if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
-                            if item not in ["Opened", "Changed"]:
-                                thisValue.append("..")
-                            break
-                    #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
-                    value = ", ".join(thisValue)
-                elif isCounter:
+                if isCounter:
                     value = str(self.database.getCount(id, self.config.itemInfo[item]["Base"], byID=True))
                 else:
-                    logging.info("%s == %s -> %s", thisItem.value,  self.database.model.getDefaultValue(item),  self.config.itemInfo[item]["DisplayDefault"] )
-                    if (thisItem.value == self.database.model.getDefaultValue(item) and
-                            self.config.itemInfo[item]["DisplayDefault"] is not None):
-                        itemValue = self.config.itemInfo[item]["DisplayDefault"]
-                    else:
-                        val = thisItem.value
-                        if "modDisplay" in self.config.itemInfo[item].keys():
-                            if self.config.itemInfo[item]["modDisplay"] == "Date":
-                                val = val.split("|")[0]
-                            elif self.config.itemInfo[item]["modDisplay"] == "Time":
-                                val = val.split("|")[1]
-                            elif self.config.itemInfo[item]["modDisplay"] == "Full":
-                                pass
-                            else:
-                                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
-                        itemValue = val
-                    if len(itemValue) > self.config.itemInfo[item]["maxLen"]:
-                        value = itemValue[:self.config.itemInfo[item]["maxLen"]]+".."
-                    else:
-                        value = itemValue
+                    value = self.getPrintItemValues(id, item)
                 entryElements.append(value)
             tableElements.append(tuple(entryElements))
         return tableElements
 
-    def joinItemValues(self, thisItem, join =",", joinFull=False):
+    def getPrintItemValues(self, ID, item, joinWith=", ", joinFull=False):
+        retValue = None
+        thisEntry = self.database.getEntryByItemName("ID", ID)[0]
+        if item in self.database.model.items:
+            value = thisEntry.getItem(item).value
+            self.modDisaply(item, value)
+            if len(value) > self.config.itemInfo[item]["maxLen"]:
+                retValue = value[:self.config.itemInfo[item]["maxLen"]]+".."
+            else:
+                retValue = value
+        elif item in self.database.model.listitems:
+            retValue = self.joinItemValues(thisEntry, item, joinWith, joinFull)
+        else:
+            raise KeyError("Item %s no listitem or singelitem")
+
+        return retValue
+
+    def joinItemValues(self, entry, item, joinWith=", ", joinFull=False):
+        """
+        Will join all values in a ListItem. Will use the config settings Priority, DisplayDefault and nDisplay to format the return value. nDisplay can be overruled by the joinFull argument.
+
+        Args:
+            entry (DataBaseEntry)
+            item (str) : ListItem to be joined (Function expects listitem no check implemented)
+            joinWith (str) : String that will be used to join values
+            joinFull (bool) : Will overrule the maximum lenghts
+
+        Returns:
+            value (str) : Joined values
+        """
         thisValue = []
         for priority in self.config.itemInfo[item]["Priority"]:
-            if priority in thisItem.value:
+            if priority in entry.getItem(item).value:
                 thisValue.append(priority)
-            for val in thisItem.value:
-                if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
-                    if (val == self.database.model.getDefaultValue(item) and
-                        self.config.itemInfo[item]["DisplayDefault"] is not None):
-                        if self.config.itemInfo[item]["DisplayDefault"] != "":
-                            thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
-                    else:
-                        if "modDisplay" in self.config.itemInfo[item].keys():
-                            if self.config.itemInfo[item]["modDisplay"] == "Date":
-                                val = val.split("|")[0]
-                            elif self.config.itemInfo[item]["modDisplay"] == "Time":
-                                val = val.split("|")[1]
-                            elif self.config.itemInfo[item]["modDisplay"] == "Full":
-                                pass
-                            else:
-                                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
-                            thisValue.append(val)
-                if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
-                    if item not in ["Opened", "Changed"]:
-                        thisValue.append("..")
-                    break
-                #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
-            value = ", ".join(thisValue)
+        for val in entry.getItem(item).value:
+            if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
+                if (val == self.database.model.getDefaultValue(item) and
+                    self.config.itemInfo[item]["DisplayDefault"] is not None):
+                    if self.config.itemInfo[item]["DisplayDefault"] != "":
+                        thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
+                else:
+                    thisValue.append(self.modDisaply(item, val))
+            if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
+                if item not in ["Opened", "Changed"]:
+                    thisValue.append("..")
+                break
+        value = joinWith.join(thisValue)
+        return value
 
-            #if item in self.database.model.listitems:
-            
+    def modDisaply(self, item, value):
+        """
+        Function processes the modDisplay setting from the config.
+        """
+        if "modDisplay" in self.config.itemInfo[item].keys():
+            if self.config.itemInfo[item]["modDisplay"] == "Date":
+                value = value.split("|")[0]
+            elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                value = value.split("|")[1]
+            elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                pass
+            else:
+                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
+        return value
+
     def modifyItemDisplay(self, item, value):
         """
         Function for processing the modDisplay option in the MTF coniguration:
@@ -579,7 +573,7 @@ class App:
                 raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
 
         return value
-        
+
     def about(self):
         """
         Method that returns the information for the about screen. Like python-version, number entryies, number if values per ListItem, most used Value
