@@ -165,12 +165,20 @@ class App:
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
             elif retVal == "6":
-                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:10]
+                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:self.config.restrictedListLen]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
-                #self.listWindow.draw(fillWindow = True)
-                #input("sss")
+            elif retVal == "7":
+                sortedIDs = self.database.getSortedIDs("Opened", reverseOrder=True)[0:self.config.restrictedListLen]
+                tableElements = self.generateList(sortedIDs)
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
+            elif retVal == "8":
+                sortedIDs = self.database.getSortedIDs("Changed", reverseOrder=True)[0:self.config.restrictedListLen]
+                tableElements = self.generateList(sortedIDs)
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
                 tableElements = self.generateList("All")
@@ -296,6 +304,7 @@ class App:
         if isNewWindow:
             thisWindow.headerText.append("Entry information:")
             thisWindow.headerText.append("ID: %s"%ID)
+            thisWindow.headerText.append("Path: %s"%entry.getItem("Path").value)
         for elem in thisWindow.headerOptions:
             modID, name, comment = elem
             if name in self.database.model.allItems:
@@ -493,7 +502,7 @@ class App:
         if item in self.database.model.items:
             value = thisEntry.getItem(item).value
             self.modDisaply(item, value)
-            if len(value) > self.config.itemInfo[item]["maxLen"]:
+            if len(value) > self.config.itemInfo[item]["maxLen"] and not joinFull:
                 retValue = value[:self.config.itemInfo[item]["maxLen"]]+".."
             else:
                 retValue = value
@@ -602,6 +611,7 @@ class MTFConfig:
         self.queryItems = configDict["General"]["QueryItems"]
         self.modItems = configDict["General"]["ModItems"]
         self.executable = configDict["General"]["Executable"]
+        self.restrictedListLen = int(configDict["General"]["nListRestricted"])
         self.itemInfo = {}
         for iItem, item in enumerate(self.alltems):
             self.itemInfo[item] = {}

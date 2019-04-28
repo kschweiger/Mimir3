@@ -41,7 +41,11 @@ def sortDateTime(list2Sort):
     """
     datetimeObj = []
     for elem in list2Sort:
-        datetimeObj.append(convertToDateTime(elem))
+        try:
+            datetimeObj.append(convertToDateTime(elem))
+        except TypeError:
+            logging.debug("Converting %s to 01.01.00|00:00:00"%elem)
+            datetimeObj.append(convertToDateTime("01.01.00|00:00:00"))
     datetimeObj = sorted(datetimeObj, reverse=True)
     retList = []
     for elem in datetimeObj:
@@ -55,7 +59,7 @@ def convertToDateTime(internalString):
     Helper function to convert an internal datestring back to a datetime object
     """
     if len(internalString.split("|")) != 2:
-        raise RuntimeError("Element is expected to be of form DD.MM.YY|HH:MM:SS.")
+        raise TypeError("Element is expected to be of form DD.MM.YY|HH:MM:SS but is %s"%internalString)
     date, time = internalString.split("|")
     if len(date.split(".")) != 3:
         raise RuntimeError("Date is expected as  DD.MM.YY with '.' as delimiter")

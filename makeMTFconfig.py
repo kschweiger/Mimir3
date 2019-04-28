@@ -34,6 +34,7 @@ def main(model, system, dryrun, queryItems):
     config["General"] = {}
     config["General"]["Width"] = 110
     config["General"]["Height"] = 50
+    config["General"]["nListRestricted"] = 10
 
     if system == "Linux":
         config["General"]["Executable"] = "mimir/frontend/terminal/executable/linux/runVLC.sh"
@@ -98,7 +99,9 @@ def main(model, system, dryrun, queryItems):
                                            ("Execute","Execute a database entry"),
                                            ("Random","Execute a random entry from the last printed list"),
                                            ("Query","Print entries returned by a query. Will query items: {0}".format(", ".join(config["General"]["QueryItems"]))),
-                                           ("Newest","Print latest entries")]
+                                           ("Newest","Print latest added entries"),
+                                           ("Opened","Print latest executed entries"),
+                                           ("Modified","Print latest modified entries")]
     config["Window"]["DB"] = {}
     config["Window"]["DB"]["Type"] = "Window"
     config["Window"]["DB"]["Title"] = "Database optins"

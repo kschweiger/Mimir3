@@ -51,7 +51,7 @@ def test_01_datetime():
     assert dateDateInvert == invertedDate
 
 def test_02_convertInternalString():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(TypeError):
         mimir.backend.helper.convertToDateTime("Blubb")
     # Check error for invalid date
     with pytest.raises(RuntimeError):
