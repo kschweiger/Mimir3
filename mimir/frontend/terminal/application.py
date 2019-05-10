@@ -216,7 +216,21 @@ class App:
                                     self.database.modifyListEntry(ID, item, option, "Append", byID=True)
                                 else:
                                     raise RuntimeError("This should not happen!")
+            elif retVal == "3":
+                updatedFiles = self.database.checkChangedPaths()
+                if updatedFiles:
+                    for id_, oldPath_, newPath_ in updatedFiles:
+                        self.dbWindow.update("Moved entry with ID %s now has path %s"%(id_, newPath_))
+                else:
+                    self.dbWindow.update("No files with changed paths")
 
+            elif retVal == "4":
+                IDchanges = self.database.checkMissingFiles()
+                if IDchanges:
+                    for oldID, newID in IDchanges:
+                        self.dbWindow.update("Moved entry from ID %s to %s"%(oldID, newID))
+                else:
+                    self.dbWindow.update("No Files removed")
             else:
                 self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
         self.runMainWindow(None)

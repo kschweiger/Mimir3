@@ -123,6 +123,14 @@
                 [
                     "Read FS",
                     "Invokes a search for new files from the mimir root dir"
+                ],
+                [
+                    "UpdatePaths",
+                    "Update paths of files"
+                ],
+                [
+                    "Missing files",
+                    "Removes missing file form the DB"
                 ]
             ],
             "Text": [

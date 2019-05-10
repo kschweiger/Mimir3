@@ -252,6 +252,84 @@ class DataBase:
 
         return toret, pairs
 
+    def checkChangedPaths(self, startdir=""):
+        """
+        Function that finds if files changed their path
+        """
+        newFiles = []
+        existingFiles = []
+        existingFilesNames = []
+        allfiles = self.getAllFilesMatchingModel(startdir)
+        nameIDs = {}
+        for entry in self.entries:
+            existingFiles.append(entry.Path)
+            existingFilesNames.append(entry.Path.split("/")[-1])
+            nameIDs[entry.Path.split("/")[-1]] = entry.ID
+
+        logging.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+
+        changedFiles = []
+        changedFilePaths = {}
+        for file_ in allfiles:
+            if file_ not in existingFiles:
+                changedFiles.append(file_)
+                changedFilePaths[file_.split("/")[-1]] = file_
+
+        updatedFiles = []
+        for file_ in changedFiles:
+            name_ = file_.split("/")[-1]
+            if name_ in existingFilesNames:
+                thisID = nameIDs[name_]
+                thisEntry = self.getEntryByItemName("ID", thisID)[0]
+                oldPath = thisEntry.Path
+                logging.info("Updated path of entry %s to %s",thisID , changedFilePaths[name_])
+                thisEntry.changeItemValue("Path", changedFilePaths[name_])
+                updatedFiles.append((thisID, oldPath, changedFilePaths[name_]))
+
+        return updatedFiles
+
+    def getMissingFiles(self, startdir=""):
+        allfiles = self.getAllFilesMatchingModel(startdir)
+        nameIDs = {}
+        existingFiles = []
+        existingFilesNames = []
+        for entry in self.entries:
+            existingFiles.append(entry.Path)
+            existingFilesNames.append(entry.Path.split("/")[-1])
+            nameIDs[entry.Path.split("/")[-1]] = entry.ID
+
+        logging.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+
+        missingFiles = []
+        if len(allfiles) != len(existingFiles):
+            for file_ in existingFiles:
+                if file_ not in allfiles:
+                    missingFiles.append(file_)
+
+        return missingFiles
+
+    def checkMissingFiles(self, startdir=""):
+        """
+        This function compares the files on the filesystem (from the db rootdir) to the
+        existing path in the database. If one is missing, the Entry is deleted and the last entry
+        (with the highest ID) will be moved in its place.
+
+        NOTE: This does not ask for permission! But the backup funcitonality on saving should help
+        with accidents....
+        """
+        missingFiles = self.getMissingFiles(startdir)
+        IDChanges = []
+        if missingFiles:
+            for missingFile in missingFiles:
+                missingID = self.getEntryByItemName("Path", missingFile)[0].getItem("ID").value
+                self.remove(missingID, byID = True)
+                self.modifySingleEntry(self.maxID, "ID", missingID, byID = True)
+                IDChanges.append((self.maxID, missingID))
+                logging.info("Change ID of entry %s to %s", self.maxID, missingID)
+                self.maxID -= 1
+
+        return IDChanges
+
     def getAllValuebyItemName(self, itemName):
         """ Return a set of all values of name itemName """
         if itemName not in self.model.allItems:
@@ -274,7 +352,6 @@ class DataBase:
         logging.info(retlist)
         self.cachedValuesChanged[itemName] = False
         self.cachedValues[itemName] = set(retlist)
-
 
     def getSortedIDs(self, sortBy, reverseOrder=True):
         """
@@ -378,6 +455,7 @@ class DataBase:
         entry2remove = self.getEntryByItemName(removetype, str(identifier))[0]
         self.entries.remove(entry2remove)
         self.entrydict.pop(entry2remove.Path, None)
+        logging.info("Removed Entry %s", entry2remove)
 
     def modifySingleEntry(self, identifier, itemName, newValue, byID=False, byName=False, byPath=False):
         """
@@ -405,8 +483,12 @@ class DataBase:
         modEntry.changeItemValue(itemName, newValue)
         self.cachedValuesChanged[itemName] = True
         #Update the Changed date of the entry
-        self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
-                             byID=byID, byName=byName, byPath=byPath)
+        if (byID and itemName == "ID") or (byName and itemName == "Name") or (byPath and itemName == "Path"):
+            logging.warning("Changed value not changed because item it changed by itself")
+        else:
+            self.modifyListEntry(identifier, "Changed",
+                                 mimir.backend.helper.getTimeFormatted("Full"),
+                                 byID=byID, byName=byName, byPath=byPath)
 
     def modifyListEntry(self, identifier, itemName, newValue, method="Append", oldValue=None, byID=False, byName=False, byPath=False):
         """
@@ -629,6 +711,7 @@ class DataBase:
             if byPath:
                 query = "Path"
             if value not in self.getAllValuebyItemName(query):
+                print(value, self.getAllValuebyItemName(query))
                 raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
 
     @staticmethod

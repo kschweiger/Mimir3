@@ -108,7 +108,9 @@ def main(model, system, dryrun, queryItems):
     config["Window"]["DB"]["Text"] = ["This collections options on the database"]
     config["Window"]["DB"]["Options"] = [("Main", "Back to main menu"),
                                          ("Save","Saves the current state of the database"),
-                                         ("Read FS","Invokes a search for new files from the mimir root dir")]
+                                         ("Read FS","Invokes a search for new files from the mimir root dir"),
+                                         ("UpdatePaths", "Update paths of files"),
+                                         ("Missing files", "Removes missing file form the DB")  ]
 
     config["Window"]["Modify"] = {}
     config["Window"]["Modify"]["Type"] = "Window"

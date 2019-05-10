@@ -49,6 +49,12 @@ def getDataTime():
 
 @pytest.fixture(scope="module")
 def preCreatedDB():
+    os.system("touch "+dir2tests+"/testStructure/rootFile1")
+    os.system("touch "+dir2tests+"/testStructure/folder2/folder2file1.mp4")
+    os.system("touch "+dir2tests+"/testStructure/folder2/folder2file2.mp4")
+    os.system("touch "+dir2tests+"/testStructure/folder2/folder3/folder3file1.mp4")
+    os.system("touch "+dir2tests+"/testStructure/folder1/folder1file1.mp4")
+    os.system("touch "+dir2tests+"/testStructure/folder1/folder1file2.mp4")
     config = mimir_dir+"/conf/modeltest.json"
     dbRootPath = dir2tests+"/testStructure"
     if os.path.exists(dbRootPath+"/.mimir"):
@@ -243,11 +249,11 @@ def test_09_DB_getEntrybyItemName():
     found = False
     for entry in database.entries:
         print(entry.getItem("Name").value)
-        if entry.getItem("Name").value == "folder2file2":
+        if entry.getItem("Name").value == "folder2file1":
             found = True
             break
     assert found
-    entrybyItemName = database.getEntryByItemName("Name", "folder2file2")
+    entrybyItemName = database.getEntryByItemName("Name", "folder2file1")
     assert entry in entrybyItemName
     del database
 
@@ -639,6 +645,42 @@ def test_25_DB_cachedValues(mocker, preCreatedDB):
     values_ListItem_postChange = preCreatedDB.getAllValuebyItemName("SingleItem")
     assert DataBase.cacheAllValuebyItemName.call_count == 2
     assert oldValue not in values_ListItem_postChange and newValue in values_ListItem_postChange
+
+def test_26_DB_changedPaths(preCreatedDB):
+    updatedFiles = preCreatedDB.checkChangedPaths()
+    assert updatedFiles == []
+    preCreatedDB.modifySingleEntry("folder2/folder2file2.mp4", "Path", "folder2file2.mp4", byPath = True)
+    thisID = preCreatedDB.getEntryByItemName("Path", "folder2file2.mp4")[0].getItem("ID").value
+    updatedFiles = preCreatedDB.checkChangedPaths()
+    thisNewPath = preCreatedDB.getEntryByItemName("ID", thisID)[0].getItem("Path").value
+    theID, oldPath, newPath = updatedFiles[0]
+    assert theID == thisID
+    assert oldPath == "folder2file2.mp4"
+    assert newPath == "folder2/folder2file2.mp4"
+    assert thisNewPath == "folder2/folder2file2.mp4"
+
+def test_27_DB_missingFiles(preCreatedDB):
+    missingFiles = preCreatedDB.getMissingFiles()
+    assert missingFiles == []
+    os.system("rm "+dir2tests+"/testStructure/folder2/folder2file2.mp4")
+    missingFiles = preCreatedDB.getMissingFiles()
+    assert missingFiles == ["folder2/folder2file2.mp4"]
+    os.system("touch "+dir2tests+"/testStructure/folder2/folder2file2.mp4")
+
+def test_28_DB_checkMissingFileAndReSort(preCreatedDB):
+    preCreatedDB2 = copy.deepcopy(preCreatedDB)
+    os.system("rm "+dir2tests+"/testStructure/folder2/folder2file2.mp4")
+    removedID = preCreatedDB2.getEntryByItemName("Path", "folder2/folder2file2.mp4")[0].getItem("ID").value
+    movedPath = preCreatedDB2.getEntryByItemName("ID",
+                                                 str(preCreatedDB2.maxID))[0].getItem("Path").value
+    oldMaxID = preCreatedDB2.maxID
+    IDChanges = preCreatedDB2.checkMissingFiles()
+    os.system("touch "+dir2tests+"/testStructure/folder2/folder2file2.mp4")
+    oldID, newID = IDChanges[0]
+    assert newID == removedID
+    assert oldID == oldMaxID
+    assert movedPath == preCreatedDB2.getEntryByItemName("ID", removedID)[0].getItem("Path").value
+
 
 if __name__ == "__main__":
     unittest.main()
