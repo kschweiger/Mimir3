@@ -72,6 +72,8 @@ class App:
                                 modHeader)
         self.modWindow.setHeader()
         ################### Mulit Modification Window ###################
+        self.mulitModExecVal = len(self.config.windows["MultiModify"]["Options"])
+        self.config.windows["MultiModify"]["Options"].append(("Silent Execute", "Will not count to opened"))
         multiModHeader = {"Title" : self.config.windows["MultiModify"]["Title"],
                           "Text" : self.config.windows["MultiModify"]["Text"],
                           "Options" : self.config.windows["MultiModify"]["Options"],}
@@ -181,7 +183,7 @@ class App:
                 self.listWindow.update(tableElements)
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
-                tableElements = self.generateList("All")
+                #tableElements = self.generateList("All")
         self.runMainWindow(None)
 
     def runDBWindow(self, startVal):
@@ -329,18 +331,22 @@ class App:
             if retVal == "0":
                 pass
             elif retVal in thisWindow.validOptions:
-                for elem in thisWindow.headerOptions:
-                    modID, name, comment = elem
-                    if modID == retVal:
-                        thisWindow.update("%s, %s"%(modID, name)) ###TEMP
-                        if name in self.database.model.items.keys():
-                            thisWindow.update("%s is a Item"%name)###TEMP
-                            self.modSingleItem(thisWindow, [ID], name, fromMultiMod=True)
-                        elif name in self.database.model.listitems.keys():
-                            thisWindow.update("%s is a ListItem"%name)###TEMP
-                            self.modListItem(thisWindow, [ID], name, fromMultiMod=True)
-                        else:
-                            thisWindow.update("%s -- %s ??"%(name, itemType))
+                if retVal == str(self.mulitModExecVal):
+                    thisWindow.update("Silent Execute triggered")###TEMP
+                    self.execute(ID, thisWindow, silent=True)
+                else:
+                    for elem in thisWindow.headerOptions:
+                        modID, name, comment = elem
+                        if modID == retVal:
+                            thisWindow.update("%s, %s"%(modID, name)) ###TEMP
+                            if name in self.database.model.items.keys():
+                                thisWindow.update("%s is a Item"%name)###TEMP
+                                self.modSingleItem(thisWindow, [ID], name, fromMultiMod=True)
+                            elif name in self.database.model.listitems.keys():
+                                thisWindow.update("%s is a ListItem"%name)###TEMP
+                                self.modListItem(thisWindow, [ID], name, fromMultiMod=True)
+                            else:
+                                thisWindow.update("%s -- %s ??"%(name, itemType))
             else:
                 thisWindow.update("Please enter value present in %s"%thisWindow.validOptions)
         self.runModWindow(None, fromMain, fromList)
@@ -437,7 +443,7 @@ class App:
         else:
             pass
 
-    def execute(self, ID, window, fromList=False):
+    def execute(self, ID, window, fromList=False, silent=False):
         """
         Function called when a entry should be executed. The idea is, that for a desired execution program etc. a shell script with the called (as done in the terminal) is placed in the executable folder.
         After execution the **Opened** will be incrememented.
@@ -450,9 +456,10 @@ class App:
             if not fromList:
                 window.update("Path: %s"%path2Exec)
             os.system("{0} {1}".format(self.config.executable, path2Exec))
-            self.database.modifyListEntry(ID, "Opened",
-                                          mimir.backend.helper.getTimeFormatted("Full"),
-                                          byID=True)
+            if not silent:
+                self.database.modifyListEntry(ID, "Opened",
+                                              mimir.backend.helper.getTimeFormatted("Full"),
+                                              byID=True)
 
     def executeRandom(self, window, fromList=False):
         """
