@@ -106,11 +106,17 @@ class DataBase:
         allfiles = glob(self.databaseRoot+"/"+startdir+"**/*.*", recursive=True)
         logging.debug("All files from glob: %s", len(allfiles))
         matchingfiles = []
+        matchingfilesFull = []
         for f in allfiles:
             for ext in self.model.extentions:
                 if f.endswith(ext):
                     matchingfiles.append(f.replace(self.databaseRoot+"/", ""))
+                    logging.debug("Found file %s", f)
+                    matchingfilesFull.append(f)
                     continue
+        if len(allfiles) > len(matchingfilesFull):
+            for f in set(allfiles).difference(set(matchingfilesFull)):
+                logging.debug("Removed file %s", f)
         logging.debug("Matching files: %s", len(matchingfiles))
         return matchingfiles
 

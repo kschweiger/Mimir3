@@ -551,7 +551,10 @@ class App:
         for priority in self.config.itemInfo[item]["Priority"]:
             if priority in entry.getItem(item).value:
                 thisValue.append(priority)
-        for val in entry.getItem(item).value:
+        loopVals = deepcopy(entry.getItem(item).value)
+        if self.config.itemInfo[item]["Sorting"] == "reverse":
+            loopVals.reverse()
+        for val in loopVals:
             if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
                 if (val == self.database.model.getDefaultValue(item) and
                     self.config.itemInfo[item]["DisplayDefault"] is not None):
@@ -643,6 +646,15 @@ class MTFConfig:
                 self.itemInfo[item]["Hide"] = configDict[item]["Hide"]
                 self.itemInfo[item]["Priority"] = configDict[item]["Priority"]
                 self.itemInfo[item]["nDisplay"] = configDict[item]["nDisplay"]
+                if "Sorting" in configDict[item]:
+                    if configDict[item]["Sorting"] == "reverse":
+                        self.itemInfo[item]["Sorting"] = "reverse"
+                    elif configDict[item]["Sorting"] == "regular":
+                        self.itemInfo[item]["Sorting"] = "regular"
+                    else:
+                        raise RuntimeError("Only **reverse** and **regular** (default) are supported")
+                else:
+                    self.itemInfo[item]["Sorting"] = "regular"                 
             elif self.itemInfo[item]["Type"] == "Item":
                 self.itemInfo[item]["maxLen"] = configDict[item]["maxLen"]
             elif self.itemInfo[item]["Type"] == "Counter":
