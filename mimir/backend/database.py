@@ -49,8 +49,12 @@ class DataBase:
         self.savepath = root+"/.mimir/mainDB.json"
         self.maxID = 0
         self.isdummy = False
+        self.cachedValues = {}
+        self.cachedValuesChanged = {}
+    
         if status == "new":
             self._model = Model(modelConf)
+            self.initCaching() #initialize cache so self.createEntry works
             if os.path.exists(self.mimirdir) and not dummy:
                 raise RuntimeError(".mimir directory exiting in ROOT dir. Currently not supported!")
             elif dummy:
@@ -84,8 +88,9 @@ class DataBase:
         else:
             raise RuntimeError("Unsupported status: {0}".format(status))
 
-        self.cachedValues = {}
-        self.cachedValuesChanged = {}
+        self.initCaching() #Set intiial cache with new entries
+        
+    def initCaching(self):
         for item in self.model.allItems:
             self.cachedValuesChanged[item] = True
             self.cachedValues[item] = self.getAllValuebyItemName(item)

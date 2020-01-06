@@ -311,7 +311,7 @@ class App:
                             thisWindow.update("%s is a ListItem"%name)###TEMP
                             self.modListItem(thisWindow, [ID], name)
                         else:
-                            thisWindow.update("%s -- %s ??"%(name, itemType))
+                            thisWindow.update("Something weird happend for %s"%(name))
             else:
                 thisWindow.update("Please enter value present in %s"%thisWindow.validOptions)
         self.runModWindow(None, fromMain, fromList)
