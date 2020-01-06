@@ -190,3 +190,30 @@ def test_06_MTF_modify(preCreatedDB):
 
 def test_07_MTF_findnewFiles(preCreatedDB):
     app = MTF.App(preCreatedDB)
+
+def test_08_MTF_printItemValues_error(preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    with pytest.raises(KeyError):
+        app.getPrintItemValues("0", "Blubb")
+
+@pytest.mark.parametrize("id, item, expValue, printFull, maxLen, nMax", [
+        ("0", "ListItem", "Blue, Double Orange, ..", False, 99, 2),
+        ("0", "ListItem", "Blue, Double Orange, Triple Orange", True, 99, 99),
+        ("0", "SingleItem", "Xi", True, 99, 99),
+        ("0", "SingleItem", "X..", False, 1, 99),
+    ])
+def test_09_MTF_printItemValues(id, item, expValue, printFull, maxLen, nMax, preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    app.config.itemInfo[item]["maxLen"] = maxLen
+    app.config.itemInfo[item]["nDisplay"] = nMax
+    assert app.getPrintItemValues(id, item, joinFull=printFull) == expValue
+
+@pytest.mark.parametrize("item, value, expValue, modDisplay", [
+        ("Opened", "30.01.19|00:00:00", "30.01.19", "Date"),
+        ("Opened", "30.01.19|00:00:00", "00:00:00", "Time"),
+        ("Opened", "30.01.19|00:00:00", "30.01.19|00:00:00", "Full"),
+    ])
+def test_10_MTF_modDisaply(item, value, expValue, modDisplay, preCreatedDB):
+    app = MTF.App(preCreatedDB)
+    app.config.itemInfo[item]["modDisplay"] = modDisplay
+    assert app.modDisaply(item, value) == expValue

@@ -34,6 +34,7 @@ def main(model, system, dryrun, queryItems):
     config["General"] = {}
     config["General"]["Width"] = 110
     config["General"]["Height"] = 50
+    config["General"]["nListRestricted"] = 10
 
     if system == "Linux":
         config["General"]["Executable"] = "mimir/frontend/terminal/executable/linux/runVLC.sh"
@@ -98,14 +99,18 @@ def main(model, system, dryrun, queryItems):
                                            ("Execute","Execute a database entry"),
                                            ("Random","Execute a random entry from the last printed list"),
                                            ("Query","Print entries returned by a query. Will query items: {0}".format(", ".join(config["General"]["QueryItems"]))),
-                                           ("Newest","Print latest entries")]
+                                           ("Newest","Print latest added entries"),
+                                           ("Opened","Print latest executed entries"),
+                                           ("Modified","Print latest modified entries")]
     config["Window"]["DB"] = {}
     config["Window"]["DB"]["Type"] = "Window"
     config["Window"]["DB"]["Title"] = "Database optins"
     config["Window"]["DB"]["Text"] = ["This collections options on the database"]
     config["Window"]["DB"]["Options"] = [("Main", "Back to main menu"),
                                          ("Save","Saves the current state of the database"),
-                                         ("Read FS","Invokes a search for new files from the mimir root dir")]
+                                         ("Read FS","Invokes a search for new files from the mimir root dir"),
+                                         ("UpdatePaths", "Update paths of files"),
+                                         ("Missing files", "Removes missing file form the DB")  ]
 
     config["Window"]["Modify"] = {}
     config["Window"]["Modify"]["Type"] = "Window"

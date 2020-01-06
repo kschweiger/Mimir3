@@ -72,6 +72,8 @@ class App:
                                 modHeader)
         self.modWindow.setHeader()
         ################### Mulit Modification Window ###################
+        self.mulitModExecVal = len(self.config.windows["MultiModify"]["Options"])
+        self.config.windows["MultiModify"]["Options"].append(("Silent Execute", "Will not count to opened"))
         multiModHeader = {"Title" : self.config.windows["MultiModify"]["Title"],
                           "Text" : self.config.windows["MultiModify"]["Text"],
                           "Options" : self.config.windows["MultiModify"]["Options"],}
@@ -165,15 +167,23 @@ class App:
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
             elif retVal == "6":
-                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:10]
+                sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:self.config.restrictedListLen]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
-                #self.listWindow.draw(fillWindow = True)
-                #input("sss")
+            elif retVal == "7":
+                sortedIDs = self.database.getSortedIDs("Opened", reverseOrder=True)[0:self.config.restrictedListLen]
+                tableElements = self.generateList(sortedIDs)
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
+            elif retVal == "8":
+                sortedIDs = self.database.getSortedIDs("Changed", reverseOrder=True)[0:self.config.restrictedListLen]
+                tableElements = self.generateList(sortedIDs)
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
-                tableElements = self.generateList("All")
+                #tableElements = self.generateList("All")
         self.runMainWindow(None)
 
     def runDBWindow(self, startVal):
@@ -208,7 +218,21 @@ class App:
                                     self.database.modifyListEntry(ID, item, option, "Append", byID=True)
                                 else:
                                     raise RuntimeError("This should not happen!")
+            elif retVal == "3":
+                updatedFiles = self.database.checkChangedPaths()
+                if updatedFiles:
+                    for id_, oldPath_, newPath_ in updatedFiles:
+                        self.dbWindow.update("Moved entry with ID %s now has path %s"%(id_, newPath_))
+                else:
+                    self.dbWindow.update("No files with changed paths")
 
+            elif retVal == "4":
+                IDchanges = self.database.checkMissingFiles()
+                if IDchanges:
+                    for oldID, newID in IDchanges:
+                        self.dbWindow.update("Moved entry from ID %s to %s"%(oldID, newID))
+                else:
+                    self.dbWindow.update("No Files removed")
             else:
                 self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
         self.runMainWindow(None)
@@ -292,31 +316,42 @@ class App:
         """
         logging.info("Switching to multi modification window for ID %s", ID)
         thisWindow = self.allMultiModWindow[ID]
+        entry = self.database.getEntrybyID(ID)
         if isNewWindow:
-            thisWindow.headerText.append("Currently modifying ID: %s"%ID)
+            thisWindow.headerText.append("Entry information:")
+            thisWindow.headerText.append("ID: %s"%ID)
+            thisWindow.headerText.append("Path: %s"%entry.getItem("Path").value)
+        for elem in thisWindow.headerOptions:
+            modID, name, comment = elem
+            if name in self.database.model.allItems:
+                thisWindow.headerTextSecondary[name] = self.getPrintItemValues(ID, name, joinFull=True)
         retVal = startVal
         while retVal != "0":
             retVal = thisWindow.draw("Enter Value: ")
             if retVal == "0":
                 pass
             elif retVal in thisWindow.validOptions:
-                for elem in thisWindow.headerOptions:
-                    modID, name, comment = elem
-                    if modID == retVal:
-                        thisWindow.update("%s, %s"%(modID, name)) ###TEMP
-                        if name in self.database.model.items.keys():
-                            thisWindow.update("%s is a Item"%name)###TEMP
-                            self.modSingleItem(thisWindow, [ID], name)
-                        elif name in self.database.model.listitems.keys():
-                            thisWindow.update("%s is a ListItem"%name)###TEMP
-                            self.modListItem(thisWindow, [ID], name)
-                        else:
-                            thisWindow.update("Something weird happend for %s"%(name))
+                if retVal == str(self.mulitModExecVal):
+                    thisWindow.update("Silent Execute triggered")###TEMP
+                    self.execute(ID, thisWindow, silent=True)
+                else:
+                    for elem in thisWindow.headerOptions:
+                        modID, name, comment = elem
+                        if modID == retVal:
+                            thisWindow.update("%s, %s"%(modID, name)) ###TEMP
+                            if name in self.database.model.items.keys():
+                                thisWindow.update("%s is a Item"%name)###TEMP
+                                self.modSingleItem(thisWindow, [ID], name, fromMultiMod=True)
+                            elif name in self.database.model.listitems.keys():
+                                thisWindow.update("%s is a ListItem"%name)###TEMP
+                                self.modListItem(thisWindow, [ID], name, fromMultiMod=True)
+                            else:
+                                thisWindow.update("Something weird happend for %s"%(name))
             else:
                 thisWindow.update("Please enter value present in %s"%thisWindow.validOptions)
         self.runModWindow(None, fromMain, fromList)
 
-    def modListItem(self, window, IDs, name, verbose=True):
+    def modListItem(self, window, IDs, name, verbose=True, fromMultiMod=False):
         """
         Wrapper for the different modification options and how they are called in the database
 
@@ -354,6 +389,8 @@ class App:
                             window.update("Replaces %s with %s"%(oldValue, newValue))
         else:
             window.update("!!! - %s is Invalid Method"%method)
+        if fromMultiMod:
+            window.headerTextSecondary[name] = self.getPrintItemValues(IDs[0], name, joinFull=True)
 
     def modListOfItems(self, window, IDs):
         """
@@ -369,7 +406,7 @@ class App:
         else:
             window.update("Input is no valid item")
 
-    def modSingleItem(self, window, IDs, name = None):
+    def modSingleItem(self, window, IDs, name = None, fromMultiMod=False):
         """
         Wrapper for modifying a Single Item
         """
@@ -379,6 +416,8 @@ class App:
             newValue = window.draw("New Value for %s"%name)
             for ID in IDs:
                 self.database.modifySingleEntry(ID, name, newValue, byID=True)
+            if fromMultiMod:
+                window.headerTextSecondary[name] = self.getPrintItemValues(IDs[0], name, joinFull=True)
 
     def makeListModifications(self, ID, name, method, oldValue, newValue):
         """
@@ -404,7 +443,7 @@ class App:
         else:
             pass
 
-    def execute(self, ID, window, fromList=False):
+    def execute(self, ID, window, fromList=False, silent=False):
         """
         Function called when a entry should be executed. The idea is, that for a desired execution program etc. a shell script with the called (as done in the terminal) is placed in the executable folder.
         After execution the **Opened** will be incrememented.
@@ -417,9 +456,10 @@ class App:
             if not fromList:
                 window.update("Path: %s"%path2Exec)
             os.system("{0} {1}".format(self.config.executable, path2Exec))
-            self.database.modifyListEntry(ID, "Opened",
-                                          mimir.backend.helper.getTimeFormatted("Full"),
-                                          byID=True)
+            if not silent:
+                self.database.modifyListEntry(ID, "Opened",
+                                              mimir.backend.helper.getTimeFormatted("Full"),
+                                              byID=True)
 
     def executeRandom(self, window, fromList=False):
         """
@@ -448,8 +488,6 @@ class App:
     def generateList(self, get="All"):
         """
         Function generating the necessary table elements win using the ListWindow. Will used all items set in the DisplayItems configuration option
-
-        TODO: Factorize
         """
         #TODO Check get input
         tableElements = []
@@ -471,60 +509,103 @@ class App:
                     isCounter = True
                 else:
                     thisItem = thisEntry.getItem(item)
-                if isinstance(thisItem, ListItem):
-                    thisValue = []
-                    for priority in self.config.itemInfo[item]["Priority"]:
-                        if priority in thisItem.value:
-                            thisValue.append(priority)
-                    for val in thisItem.value:
-                        if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
-                            #print(val, self.database.model.getDefaultValue(item))
-                            if (val == self.database.model.getDefaultValue(item) and
-                                    self.config.itemInfo[item]["DisplayDefault"] is not None):
-                                if self.config.itemInfo[item]["DisplayDefault"] != "":
-                                    thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
-                            else:
-                                if "modDisplay" in self.config.itemInfo[item].keys():
-                                    if self.config.itemInfo[item]["modDisplay"] == "Date":
-                                        val = val.split("|")[0]
-                                    elif self.config.itemInfo[item]["modDisplay"] == "Time":
-                                        val = val.split("|")[1]
-                                    elif self.config.itemInfo[item]["modDisplay"] == "Full":
-                                        pass
-                                    else:
-                                        raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
-                                thisValue.append(val)
-                        if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
-                            if item not in ["Opened", "Changed"]:
-                                thisValue.append("..")
-                            break
-                    #TODO: Add maxlen to ListItems and make sure the joind sting is shorter
-                    value = ", ".join(thisValue)
-                elif isCounter:
+                if isCounter:
                     value = str(self.database.getCount(id, self.config.itemInfo[item]["Base"], byID=True))
                 else:
-                    if (thisItem.value == self.database.model.getDefaultValue(item) and
-                            self.config.itemInfo[item]["DisplayDefault"] is not None):
-                        itemValue = self.config.itemInfo[item]["DisplayDefault"]
-                    else:
-                        val = thisItem.value
-                        if "modDisplay" in self.config.itemInfo[item].keys():
-                            if self.config.itemInfo[item]["modDisplay"] == "Date":
-                                val = val.split("|")[0]
-                            elif self.config.itemInfo[item]["modDisplay"] == "Time":
-                                val = val.split("|")[1]
-                            elif self.config.itemInfo[item]["modDisplay"] == "Full":
-                                pass
-                            else:
-                                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
-                        itemValue = val
-                    if len(itemValue) > self.config.itemInfo[item]["maxLen"]:
-                        value = itemValue[:self.config.itemInfo[item]["maxLen"]]+".."
-                    else:
-                        value = itemValue
+                    value = self.getPrintItemValues(id, item)
                 entryElements.append(value)
             tableElements.append(tuple(entryElements))
         return tableElements
+
+    def getPrintItemValues(self, ID, item, joinWith=", ", joinFull=False):
+        retValue = None
+        thisEntry = self.database.getEntryByItemName("ID", ID)[0]
+        if item in self.database.model.items:
+            value = thisEntry.getItem(item).value
+            self.modDisaply(item, value)
+            if len(value) > self.config.itemInfo[item]["maxLen"] and not joinFull:
+                retValue = value[:self.config.itemInfo[item]["maxLen"]]+".."
+            else:
+                retValue = value
+        elif item in self.database.model.listitems:
+            retValue = self.joinItemValues(thisEntry, item, joinWith, joinFull)
+        else:
+            raise KeyError("Item %s no listitem or singelitem")
+
+        return retValue
+
+    def joinItemValues(self, entry, item, joinWith=", ", joinFull=False):
+        """
+        Will join all values in a ListItem. Will use the config settings Priority, DisplayDefault and nDisplay to format the return value. nDisplay can be overruled by the joinFull argument.
+
+        Args:
+            entry (DataBaseEntry)
+            item (str) : ListItem to be joined (Function expects listitem no check implemented)
+            joinWith (str) : String that will be used to join values
+            joinFull (bool) : Will overrule the maximum lenghts
+
+        Returns:
+            value (str) : Joined values
+        """
+        thisValue = []
+        for priority in self.config.itemInfo[item]["Priority"]:
+            if priority in entry.getItem(item).value:
+                thisValue.append(priority)
+        loopVals = deepcopy(entry.getItem(item).value)
+        if self.config.itemInfo[item]["Sorting"] == "reverse":
+            loopVals.reverse()
+        for val in loopVals:
+            if val not in thisValue and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]:
+                if (val == self.database.model.getDefaultValue(item) and
+                    self.config.itemInfo[item]["DisplayDefault"] is not None):
+                    if self.config.itemInfo[item]["DisplayDefault"] != "":
+                        thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
+                else:
+                    thisValue.append(self.modDisaply(item, val))
+            if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
+                if item not in ["Opened", "Changed"]:
+                    thisValue.append("..")
+                break
+        value = joinWith.join(thisValue)
+        return value
+
+    def modDisaply(self, item, value):
+        """
+        Function processes the modDisplay setting from the config.
+        """
+        if "modDisplay" in self.config.itemInfo[item].keys():
+            if self.config.itemInfo[item]["modDisplay"] == "Date":
+                value = value.split("|")[0]
+            elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                value = value.split("|")[1]
+            elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                pass
+            else:
+                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
+        return value
+
+    def modifyItemDisplay(self, item, value):
+        """
+        Function for processing the modDisplay option in the MTF coniguration:
+
+        Args:
+            value (str) : Item Value
+            item (str) : Item name
+
+        Returns:
+            value (str) : If modDispaly set will return modified value otherwise passed one
+        """
+        if "modDisplay" in self.config.itemInfo[item].keys():
+            if self.config.itemInfo[item]["modDisplay"] == "Date":
+                value = value.split("|")[0]
+            elif self.config.itemInfo[item]["modDisplay"] == "Time":
+                value = value.split("|")[1]
+            elif self.config.itemInfo[item]["modDisplay"] == "Full":
+                pass
+            else:
+                raise NotImplementedError("modDisplay value %s not implemented"%self.config.itemInfo[item]["modDisplay"])
+
+        return value
 
     def about(self):
         """
@@ -554,6 +635,7 @@ class MTFConfig:
         self.queryItems = configDict["General"]["QueryItems"]
         self.modItems = configDict["General"]["ModItems"]
         self.executable = configDict["General"]["Executable"]
+        self.restrictedListLen = int(configDict["General"]["nListRestricted"])
         self.itemInfo = {}
         for iItem, item in enumerate(self.alltems):
             self.itemInfo[item] = {}
@@ -564,6 +646,15 @@ class MTFConfig:
                 self.itemInfo[item]["Hide"] = configDict[item]["Hide"]
                 self.itemInfo[item]["Priority"] = configDict[item]["Priority"]
                 self.itemInfo[item]["nDisplay"] = configDict[item]["nDisplay"]
+                if "Sorting" in configDict[item]:
+                    if configDict[item]["Sorting"] == "reverse":
+                        self.itemInfo[item]["Sorting"] = "reverse"
+                    elif configDict[item]["Sorting"] == "regular":
+                        self.itemInfo[item]["Sorting"] = "regular"
+                    else:
+                        raise RuntimeError("Only **reverse** and **regular** (default) are supported")
+                else:
+                    self.itemInfo[item]["Sorting"] = "regular"                 
             elif self.itemInfo[item]["Type"] == "Item":
                 self.itemInfo[item]["maxLen"] = configDict[item]["maxLen"]
             elif self.itemInfo[item]["Type"] == "Counter":

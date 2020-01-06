@@ -47,6 +47,7 @@ class Window:
         #Define attributes that are defined outside __init__
         self.headerTitle = None
         self.headerText = None
+        self.headerTextSecondary = None
         self.headerOptions = None
         self.validOptions = None
         if setHeader:
@@ -62,6 +63,7 @@ class Window:
         """
         self.headerTitle = self.headerElements["Title"]
         self.headerText = []
+        self.headerTextSecondary = {}
         if "Text" in self.headerElements.keys():
             if isinstance(self.headerElements["Text"], str):
                 self.headerText.append(self.headerElements["Text"])
@@ -136,6 +138,11 @@ class Window:
         if not skipText:
             for text in self.headerText:
                 header.append("| "+text+(boxWidth-len(text)-1)*" "+"|")
+            if self.headerTextSecondary is not None:
+                for key in self.headerTextSecondary:
+                    text = "{0}: {1}".format(key, self.headerTextSecondary[key])
+                    header.append("| "+text+(boxWidth-len(text)-1)*" "+"|")
+                #self.headerTextSecondary = []
             if len(self.headerText) > 0:
                 header.append("|"+boxWidth*" "+"|")
 
