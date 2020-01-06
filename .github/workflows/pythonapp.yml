@@ -27,7 +27,7 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        cp tests/
+        cd tests/
         source makeTestStruc.sh
         cd ..
         python -m pytest -v --cov-report=html --cov=mimir tests/ 
