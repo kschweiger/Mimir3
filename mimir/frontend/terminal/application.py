@@ -465,16 +465,19 @@ class App:
         """
         Function for getting a random entry from the last printed List of entries (if none printed from all)
         """
-        randID = self.database.getRandomEntry(chooseFrom=self.lastIDList)
-        _listIDList = self.lastIDList
-        if fromList:
-            tableElements = self.generateList([randID])
-            self.lastIDList = _listIDList
-            window.lines = []
-            window.update(tableElements)
+        if not self.lastIDList:
+            window.print("No entries to choose from. Maybe requery?")
         else:
-            window.update("Executing entry with ID {0}".format(randID))
-        self.execute(randID, window, fromList)
+            randID = self.database.getRandomEntry(chooseFrom=self.lastIDList)
+            _listIDList = self.lastIDList
+            if fromList:
+                tableElements = self.generateList([randID])
+                self.lastIDList = _listIDList
+                window.lines = []
+                window.update(tableElements)
+            else:
+                window.update("Executing entry with ID {0}".format(randID))
+            self.execute(randID, window, fromList)
 
     def terminate(self):
         """
