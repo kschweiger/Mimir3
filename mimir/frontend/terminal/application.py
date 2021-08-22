@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import os
 import logging
 import json
@@ -8,6 +10,7 @@ from mimir.backend.database import DataBase
 from mimir.backend.entry import Item, ListItem
 from mimir.frontend.terminal.display import Window, ListWindow
 import mimir.backend.helper
+from mimir.frontend.terminal.utils import WinExecuter, LinuxExecuter, MacOSExecuter
 
 class App:
     """
@@ -31,6 +34,9 @@ class App:
         for item in self.config.items:
             self.tableColumnNames.append(self.config.itemInfo[item]["DisplayName"])
         self.tableColumnNames = tuple(self.tableColumnNames)
+
+        if self.config.platform == "win":
+            self.executer = WinExecuter()
 
         ################### Main Window ###################
         mainHeader = {"Title" : self.config.windows["Main"]["Title"],
@@ -455,7 +461,11 @@ class App:
             path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
             if not fromList:
                 window.update("Path: %s"%path2Exec)
-            os.system("{0} {1}".format(self.config.executable, path2Exec))
+            # exec_command = "{0} {1}".format(self.config.executable, path2Exec)
+            # logging.debug(exec_command)
+            # subprocess.Popen(["powershell.exe", exec_command], stdout=sys.stdout)
+            self.executer.execute(path2Exec)
+            #os.system(exec_command)
             if not silent:
                 self.database.modifyListEntry(ID, "Opened",
                                               mimir.backend.helper.getTimeFormatted("Full"),
@@ -638,6 +648,9 @@ class MTFConfig:
         self.queryItems = configDict["General"]["QueryItems"]
         self.modItems = configDict["General"]["ModItems"]
         self.executable = configDict["General"]["Executable"]
+        self.platform = configDict["General"]["platform"]
+        if self.platform not in ["win", "linux", "macOS"]:
+            raise RuntimeError("Unsupported plotform %s set in config"%self.platform)
         self.restrictedListLen = int(configDict["General"]["nListRestricted"])
         self.itemInfo = {}
         for iItem, item in enumerate(self.alltems):
@@ -657,7 +670,7 @@ class MTFConfig:
                     else:
                         raise RuntimeError("Only **reverse** and **regular** (default) are supported")
                 else:
-                    self.itemInfo[item]["Sorting"] = "regular"                 
+                    self.itemInfo[item]["Sorting"] = "regular"
             elif self.itemInfo[item]["Type"] == "Item":
                 self.itemInfo[item]["maxLen"] = configDict[item]["maxLen"]
             elif self.itemInfo[item]["Type"] == "Counter":

@@ -38,8 +38,13 @@ def main(model, system, dryrun, queryItems):
 
     if system == "Linux":
         config["General"]["Executable"] = "mimir/frontend/terminal/executable/linux/runVLC.sh"
+        config["General"]["platform"] = "linux"
     elif system == "macOS":
         config["General"]["Executable"] = "mimir/frontend/terminal/executable/macOS/runVLC.sh"
+        config["General"]["platform"] = "macOS"
+    elif system == "win":
+        config["General"]["Executable"] = "mimir/frontend/terminal/executable/win/runVLC.ps1"
+        config["General"]["platform"] = "win"
     else:
         raise NotImplementedError
 

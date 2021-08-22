@@ -39,6 +39,7 @@
             "timesOpened"
         ],
         "Executable": "mimir/frontend/terminal/executable/macOS/runVLC.sh",
+        "platform" : "win",
         "Height": 50,
         "ModItems": [
             "Name",
