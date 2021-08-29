@@ -1,13 +1,18 @@
 """
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
 """
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 
 class DataBaseEntry:
-    '''
+    """
     The Entry class describes all information stored in an database entry
 
     Args:
-        initItems (list) : Each Item has to be a tuple of ItemName, ItemType ("Single" or "List") and InitValues
+        initItems (list) : Each Item has to be a tuple of ItemName, ItemType ("Single" or "List") and I
+                           nitValues
     Attributes:
         names (list) : List of all item names in entry\n
         items (dict) : Dictionary with all Item/ListItem objects
@@ -15,13 +20,16 @@ class DataBaseEntry:
         TypeError : If initItems is not of type list\n
         TypeError : If initItems is no list of tuples\n
         RuntimeError : If the tuple of initItems is invalid (not exactly three of type str, typ, str/int/float
-    '''
-    def __init__(self, initItems):
+    """
+
+    def __init__(self, initItems: List[Tuple[str, str, Union[str, List[str]]]]):
         if not isinstance(initItems, list):
             raise TypeError("Entry initialization need to be a list")
         for initialItem in initItems:
             if not isinstance(initialItem, tuple):
-                raise TypeError("Every item in the initialization list needs to be a tuple")
+                raise TypeError(
+                    "Every item in the initialization list needs to be a tuple"
+                )
             else:
                 if not len(initialItem) == 3:
                     raise RuntimeError("Tuple {0} has != 3 objects".format(initialItem))
@@ -29,7 +37,7 @@ class DataBaseEntry:
                     name_, type_, value_ = initialItem
                     self.checkPassedItems(name_, type_, value_)
         self.names = []
-        self.items = {}
+        self.items: Dict[str, Union[Item, ListItem]] = {}
         for itemName, itemType, itemValue in initItems:
             self.names.append(itemName)
             if itemType == "List":
@@ -39,7 +47,7 @@ class DataBaseEntry:
         for item in self.names:
             setattr(self, item, self.items[item].value)
 
-    def getAllValuesbyName(self, names, split=False):
+    def getAllValuesbyName(self, names: Union[str, List[str]], split: bool = False):
         """
         Return all values matching items with name in names.
         Args:
@@ -70,7 +78,7 @@ class DataBaseEntry:
             result = result_
         return set(result)
 
-    def getItem(self, itemName):
+    def getItem(self, itemName: str) -> Union[ListItem, Item]:
         """Returns an item of the Database entry
 
         Raises:
@@ -80,19 +88,23 @@ class DataBaseEntry:
             raise RuntimeError("Entry has no item with name -- {0} --".format(itemName))
         return self.items[itemName]
 
-    def hasItem(self, itemName):
+    def hasItem(self, itemName: str) -> bool:
         """
         Check if a entry has an item with name itemName
         """
         return str(itemName) in self.names
 
-    def addItem(self, newItem_name, newItem_type, newItem_value):
+    def addItem(
+        self, newItem_name: str, newItem_type: str, newItem_value: Union[str, List[str]]
+    ):
         """
         Add a new item to the DataBaseEntry
         """
         self.checkPassedItems(newItem_name, newItem_type, newItem_value)
         if newItem_name in self.names:
-            raise RuntimeError("Entry already has item with name {0}".format(newItem_name))
+            raise RuntimeError(
+                "Entry already has item with name {0}".format(newItem_name)
+            )
         self.names.append(newItem_name)
         if newItem_type == "List":
             self.items[newItem_name] = ListItem(newItem_name, newItem_value)
@@ -101,19 +113,21 @@ class DataBaseEntry:
 
         setattr(self, newItem_name, self.items[newItem_name].value)
 
-    def changeItemValue(self, itemName, newValue):
+    def changeItemValue(self, itemName: str, newValue: str):
         """
         Change value if a Item
         """
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if not type(self.items[itemName]) == Item:# pylint: disable=unidiomatic-typecheck
+        if (
+            not type(self.items[itemName]) == Item
+        ):  # pylint: disable=unidiomatic-typecheck
             raise RuntimeError("Item {0} is not if type Item".format(itemName))
         self.items[itemName].replace(newValue)
         setattr(self, itemName, self.items[itemName].value)
 
-    def addItemValue(self, itemName, newValue):
+    def addItemValue(self, itemName: str, newValue: str):
         """
         Add a value to a ListItem
         """
@@ -125,7 +139,7 @@ class DataBaseEntry:
         self.getItem(itemName).add(newValue)
         setattr(self, itemName, self.items[itemName].value)
 
-    def removeItemValue(self, itemName, oldValue):
+    def removeItemValue(self, itemName: str, oldValue: str):
         """
         Remove a Value from a ListItem
         """
@@ -136,7 +150,7 @@ class DataBaseEntry:
             raise RuntimeError("Item {0} is not if type ListItem".format(itemName))
         self.getItem(itemName).remove(oldValue)
 
-    def replaceItemValue(self, itemName, newValue, oldValue):
+    def replaceItemValue(self, itemName: str, newValue: str, oldValue: str):
         """
         Replace value oldValue with new Value
         """
@@ -148,14 +162,14 @@ class DataBaseEntry:
         self.getItem(itemName).remove(oldValue)
         self.getItem(itemName).add(newValue)
         setattr(self, itemName, self.items[itemName].value)
-        #self.removeItemValue(itemName, oldValue)
-        #self.addItemValue(itemName, newValue)
+        # self.removeItemValue(itemName, oldValue)
+        # self.addItemValue(itemName, newValue)
 
-    def getDictRepr(self):
+    def getDictRepr(self) -> Dict[str, Dict[str, str]]:
         """
         Convert Database entry to a dictionary representation
         """
-        dictRepr = {}
+        dictRepr: Dict[str, Dict[str, str]] = {}
         for name in self.names:
             dictRepr[name] = {}
             if isinstance(self.items[name], ListItem):
@@ -165,7 +179,7 @@ class DataBaseEntry:
             dictRepr[name]["value"] = self.items[name].value
         return dictRepr
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """
         Implementation of equalitiy relation for DataBaseEntry class
         """
@@ -173,14 +187,14 @@ class DataBaseEntry:
             if self.names != other.names:
                 return False
             for item in self.items:
-                #print("Comparing",self.items[item].getValue(),other.items[item].getValue())
+                # print("Comparing",self.items[item].getValue(),other.items[item].getValue())
                 if self.items[item].getValue() != other.items[item].getValue():
                     return False
             return True
         else:
             return NotImplemented
 
-    def __str__(self):
+    def __str__(self) -> str:
         repres = "=========================\n"
         for item in self.items:
             repres += "{0} | {1}\n".format(item, self.items[item].value)
@@ -188,22 +202,31 @@ class DataBaseEntry:
         return repres
 
     @staticmethod
-    def checkPassedItems(passedName=None, passedType=None, passedValue=None):
+    def checkPassedItems(
+        passedName: Optional[str] = None,
+        passedType: Optional[str] = None,
+        passedValue: Optional[Union[str, List[str]]] = None,
+    ):
         """
         Helper function for checking items passed to DataBaseEntry and raising exceptions
         """
         if not isinstance(passedName, str) and passedName is not None:
-            msg = "New name {0} is type {1} not string".format(passedName, type(passedName))
+            msg = "New name {0} is type {1} not string".format(
+                passedName, type(passedName)
+            )
             raise TypeError(msg)
-        if not passedType in ["Single", "List"] and passedType is not None:
+        if passedType not in ["Single", "List"] and passedType is not None:
             msg = "New item {0} has ivalid type: {1}".format(passedName, passedType)
             raise RuntimeError(msg)
-        if not isinstance(passedValue, (str, list))  and passedValue is not None:
-            msg = "New name {0} of type {1} has invalid value type {2}".format(passedName, passedType, type(passedValue))
+        if not isinstance(passedValue, (str, list)) and passedValue is not None:
+            msg = "New name {0} of type {1} has invalid value type {2}".format(
+                passedName, passedType, type(passedValue)
+            )
             raise TypeError(msg)
 
+
 class Item:
-    '''
+    """
     Entry that contains a list of specs
 
     Args:
@@ -211,12 +234,13 @@ class Item:
         values (str) : Initial value of the item
     Attributes:
         name (str) : This is the name of the Item
-    '''
-    def __init__(self, name, value):
+    """
+
+    def __init__(self, name: str, value: Optional[str] = None):
         self.name = name
         self.value = value
 
-    def replace(self, newValue):
+    def replace(self, newValue: str):
         """
         Replace value of Item
 
@@ -225,15 +249,16 @@ class Item:
         """
         self.value = newValue
 
-    def getValue(self):
-        """ Returns the value of the entry """
+    def getValue(self) -> str:
+        """Returns the value of the entry"""
         return self.value
 
-    def __repr__(self):
-        return "{0} : {1}".format(self.name, self.value) #pragma: no cover
+    def __repr__(self) -> str:
+        return "{0} : {1}".format(self.name, self.value)  # pragma: no cover
+
 
 class ListItem(Item):
-    '''
+    """
     Entry that contains a list of specs
 
     Args:
@@ -245,8 +270,9 @@ class ListItem(Item):
 
     Raises:
         TypError: Raises error when valies is not str or list
-    '''
-    def __init__(self, name, values):
+    """
+
+    def __init__(self, name: str, values: Union[str, List[str]]):
         super().__init__(name, None)
         if not isinstance(values, (str, list)):
             raise TypeError
@@ -254,7 +280,7 @@ class ListItem(Item):
             values = [values]
         self.value = values
 
-    def add(self, val2Add):
+    def add(self, val2Add: Union[str, List[str]]) -> bool:
         """
         Add a value to the list of values in ListItem
 
@@ -275,13 +301,13 @@ class ListItem(Item):
             if newElem not in self.value:
                 uniqueElem.append(newElem)
 
-        if not uniqueElem: #apperently this is very pythonic
+        if not uniqueElem:  # apperently this is very pythonic
             return False
         else:
             self.value = self.value + uniqueElem
             return True
 
-    def remove(self, toRemove):
+    def remove(self, toRemove: Union[str, List[str]]):
         """
         Removes a value for the ListItem
 
@@ -295,7 +321,7 @@ class ListItem(Item):
         """
         if not isinstance(toRemove, (str, int)):
             raise TypeError
-        #Remove by Value
+        # Remove by Value
         if isinstance(toRemove, str):
             if toRemove not in self.value:
                 raise ValueError
@@ -303,11 +329,11 @@ class ListItem(Item):
             for val in self.value:
                 if val != toRemove:
                     newVals.append(val)
-            #The python remove method for some reaseon also removes the
-            #database.model._listitems[itemName]["default"] entry.. ¯\_(ツ)_/¯
-            #self.value.remove(toRemove)
+            # The python remove method for some reaseon also removes the
+            # database.model._listitems[itemName]["default"] entry.. ¯\_(ツ)_/¯
+            # self.value.remove(toRemove)
             self.value = newVals
         if isinstance(toRemove, int):
-            if toRemove > len(self.value)-1:
+            if toRemove > len(self.value) - 1:
                 raise IndexError
             self.value.pop(toRemove)
