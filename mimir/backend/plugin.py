@@ -8,6 +8,8 @@ import logging
 import hachoir.metadata
 import hachoir.parser
 
+logger = logging.getLogger(__name__)
+
 def get_VideoMetaData(fileName):
     """
     Get video metadata for height, weight and duration using hachior.
@@ -32,7 +34,7 @@ def get_VideoMetaData(fileName):
             voi_height = -1
         try:
             voi_duration = str(thisMetaData.get("duration"))
-            logging.debug("voi_duration from hachoir: %s", voi_duration)
+            logger.debug("voi_duration from hachoir: %s", voi_duration)
             voi_duration = voi_duration.split(".")[0]
         except ValueError:
             voi_duration = "00:00:00"
@@ -40,7 +42,7 @@ def get_VideoMetaData(fileName):
         voi_duration = "{0:02d}:{1:02d}:{2:02d}".format(int(voi_duration_h),
                                                         int(voi_duration_min),
                                                         int(voi_duration_sec))
-        logging.debug("voi_duration formatted: %s", voi_duration)
+        logger.debug("voi_duration formatted: %s", voi_duration)
 
     return {"width" : str(voi_width), "height" : str(voi_height), "duration" : voi_duration}
 

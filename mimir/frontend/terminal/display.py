@@ -5,6 +5,7 @@ import logging
 
 from mimir.frontend.terminal.helper import FixedList
 
+logger = logging.getLogger(__name__)
 
 class Window:
     """
@@ -193,7 +194,7 @@ class Window:
         text = str(text)
         total_exp = width - len(text)
         if total_exp < 0:
-            logging.warning("Text is longer than width")
+            logger.warning("Text is longer than width")
             return text
         if total_exp%2 == 0:
             expandLeft, expandRight = total_exp//2, total_exp//2
@@ -272,7 +273,7 @@ class ListWindow(Window):
         """
         Is used to print the lines. This functions only intention is to also keep track of the printed lines in additon to actiually printing them.
         """
-        logging.debug("Added: %s", printStatement[0:20])
+        logger.debug("Added: %s", printStatement[0:20])
         self.printedLines.append(printStatement)
         self.nLinesPrinted += 1
         self.nLinesPrintedGlobal += 1
@@ -290,7 +291,7 @@ class ListWindow(Window):
             TypeError : Raised if newContent is not tuple or list of tuples
             ValueError : Raised if len(tuple) != nColumns
         """
-        logging.debug("Running update in %s", self)
+        logger.debug("Running update in %s", self)
         if not isinstance(newContent, tuple) and not isinstance(newContent, list):
             raise TypeError("%s is required to be tuple or list"%newContent)
         if isinstance(newContent, list):
@@ -314,9 +315,9 @@ class ListWindow(Window):
         """
         Draw the current state of the window
         """
-        logging.debug("skipHeader=%s skipTable=%s fillWindow=%s", skipHeader, skipTable, fillWindow)
+        logger.debug("skipHeader=%s skipTable=%s fillWindow=%s", skipHeader, skipTable, fillWindow)
         #print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
-        logging.debug("Running draw in %s", self)
+        logger.debug("Running draw in %s", self)
         self.nLinesPrinted = 0
         self.makeheader()
         if self.nLinesPrintedGlobal > self.height:
@@ -328,17 +329,17 @@ class ListWindow(Window):
                 self.print(line)
         tableLines = self.makeTable(self.tableHeaderElements, self.lines, self.tableMaxLen)
         if fillWindow and self.nLinesPrinted < self.height:
-            logging.info("Drawing overflow lines - self.nLinesPrinted=%s", len(self.printedLines))
+            logger.info("Drawing overflow lines - self.nLinesPrinted=%s", len(self.printedLines))
             self.drawBeforeOverflow(newTableLines=len(tableLines), skipTable=skipTable)
         else:
-            logging.info("Skipping overflow - %s and %s < %s", fillWindow, len(self.printedLines), self.height)
+            logger.info("Skipping overflow - %s and %s < %s", fillWindow, len(self.printedLines), self.height)
         #print(tableLines)
         if not skipTable:
             for line in tableLines:
                 lineLen = len(line)
                 if self.alignment == "left":
                     if len(line) > self.width:
-                        logging.error("Table line is wider than defined width. Consider extenting the width to %s", len(line)+2)
+                        logger.error("Table line is wider than defined width. Consider extenting the width to %s", len(line)+2)
                         self.print(" "+line+" ")
                     else:
                         self.print(" "+line+" "+(self.boxWidth-lineLen)*" ")
@@ -355,7 +356,7 @@ class ListWindow(Window):
             newTableLines (int) : Number of lines expected form the next table to be drawn
             skipTable (bool) : Required of the next updated should not draw a table. This is required to correclty calculate the number of empty lines required
         """
-        logging.info("Entering function")
+        logger.info("Entering function")
         if skipTable:
             newTableLines = 0
 
@@ -364,7 +365,7 @@ class ListWindow(Window):
             if line not in self.header:
                 postFillLines.append(line)
 
-        logging.info("print Empty: %s - print printed %s - newTable %s",
+        logger.info("print Empty: %s - print printed %s - newTable %s",
                      self.height-len(postFillLines)-newTableLines-len(self.header),
                      len(postFillLines), newTableLines)
         for i in range(self.height-len(postFillLines)-newTableLines-len(self.header)):
@@ -401,7 +402,7 @@ class ListWindow(Window):
                 self.print(line)
         #print(self.nLinesPrinted, self.height)
         if not onlyInteraction:
-            logging.info("self.nLinesPrinted=%s/%s", self.nLinesPrinted, self.height)
+            logger.info("self.nLinesPrinted=%s/%s", self.nLinesPrinted, self.height)
             #print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
             self.draw(skipHeader=(self.nLinesPrinted > self.height),
                       skipTable=(not self.tableAdded),
@@ -409,7 +410,7 @@ class ListWindow(Window):
             #print("ooooooooooooooooooooooooooooooooo")
 
         answer = input(interaction+": ")
-        logging.info("Input: %s - Answer: %s", interaction, answer)
+        logger.info("Input: %s - Answer: %s", interaction, answer)
         toPrint = ""+interaction+": "+answer
         self.printedLines.append(toPrint+" "*(self.width-len(toPrint)))
         self.nLinesPrinted += 1

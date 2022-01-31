@@ -1,6 +1,8 @@
 """
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
 """
+import logging
+logger = logging.getLogger(__name__)
 
 class DataBaseEntry:
     '''

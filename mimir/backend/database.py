@@ -14,6 +14,8 @@ from mimir.backend.entry import DataBaseEntry, Item, ListItem
 import mimir.backend.helper
 import mimir.backend.plugin
 
+logger = logging.getLogger(__name__)
+
 class DataBase:
     """
     Database class that contains entries which are organized by an unique ID. The class contains methods for operating on the Database (save, load, queries, random entries) and modifing/reading/removing Entries. When a new database is created, a root directory (which contains all files) and a model are required. The Model can be created with makeModelDefinition.py and modified for specific needs. During initialization a .mimir directory will be created in the passed root directory. There the database and all affiliated files (backup, secondary databases) will be saved. The model passed in this process will alse be saved there for future reference.
@@ -41,7 +43,7 @@ class DataBase:
         valuesChanged (dict - bool) : Flag if cachedValues are still valid
     """
     def __init__(self, root, status, modelConf=None, dummy=False):
-        logging.info("Initializing DataBase")
+        logger.info("Initializing DataBase")
         self.databaseRoot = root
         self.entries = []
         self.entrydict = {}
@@ -58,18 +60,18 @@ class DataBase:
             if os.path.exists(self.mimirdir) and not dummy:
                 raise RuntimeError(".mimir directory exiting in ROOT dir. Currently not supported!")
             elif dummy:
-                logging.warning("Initializing Database as dummy - Disabling saving")
+                logger.warning("Initializing Database as dummy - Disabling saving")
                 self.isdummy = True
             else:
-                logging.info("Creating .mimir folder in %s", root)
+                logger.info("Creating .mimir folder in %s", root)
                 os.makedirs(self.mimirdir)
-                logging.debug("Saving model in .mimir dir")
+                logger.debug("Saving model in .mimir dir")
                 with open(self.mimirdir+"/model.json", 'w') as outfile:
                     json.dump(self._model.initDict, outfile, sort_keys=True, indent=4, separators=(',', ': '))
             #New database always runs a search of the filesystem starting from self.root
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
-                logging.debug("Adding file %s", path2file)
+                logger.debug("Adding file %s", path2file)
                 self.createNewEntry(path2file, self.maxID, skipCaching=True)
                 self.maxID += 1
             self.maxID = self.maxID - 1
@@ -77,7 +79,7 @@ class DataBase:
             if not os.path.exists(self.mimirdir) and not dummy:
                 raise RuntimeError("No .mimir dir existant in {0}".format(root))
             if dummy:
-                logging.warning("Loading Database from %s as dummy", root)
+                logger.warning("Loading Database from %s as dummy", root)
                 self.isdummy = True
             if modelConf is None:
                 self._model = Model(self.mimirdir+"/model.json")
@@ -109,20 +111,20 @@ class DataBase:
         if not startdir.endswith("/") and startdir != "":
             startdir = startdir+"/"
         allfiles = glob(self.databaseRoot+"/"+startdir+"**/*.*", recursive=True)
-        logging.debug("All files from glob: %s", len(allfiles))
+        logger.debug("All files from glob: %s", len(allfiles))
         matchingfiles = []
         matchingfilesFull = []
         for f in allfiles:
             for ext in self.model.extentions:
                 if f.endswith(ext):
                     matchingfiles.append(f.replace(self.databaseRoot+"/", ""))
-                    logging.debug("Found file %s", f)
+                    logger.debug("Found file %s", f)
                     matchingfilesFull.append(f)
                     continue
         if len(allfiles) > len(matchingfilesFull):
             for f in set(allfiles).difference(set(matchingfilesFull)):
-                logging.debug("Removed file %s", f)
-        logging.debug("Matching files: %s", len(matchingfiles))
+                logger.debug("Removed file %s", f)
+        logger.debug("Matching files: %s", len(matchingfiles))
         return matchingfiles
 
     def createNewEntry(self, path, cID, skipCaching=False):
@@ -135,12 +137,12 @@ class DataBase:
         Return:
             new DataBaseEntry object
         """
-        logging.info("Initializing file with path: %s", path)
+        logger.info("Initializing file with path: %s", path)
         filename = path.split("/")[-1]
         for ext in self.model.extentions:
             if filename.endswith(ext):
                 filename = filename.replace("."+ext, "")
-        logging.info("Initializing file with name: %s", filename)
+        logger.info("Initializing file with name: %s", filename)
         entryinit = {}
         for item in self.model.items:
             if item == "Path":
@@ -183,19 +185,19 @@ class DataBase:
         present.
         """
         if self.isdummy:
-            logging.error("Database isDummy - Saving disabled")
+            logger.error("Database isDummy - Saving disabled")
             return False
         status = False
         # Copy current DBfile and save it as backup
         if os.path.exists(self.savepath):
-            logging.debug("Making backup")
+            logger.debug("Making backup")
             backupDate = mimir.backend.helper.getTimeFormatted("Date", "-", inverted=True)
             copy2(self.savepath, self.savepath.replace(".json", ".{0}.backup".format(backupDate)))
         # Convert database to dict so json save can be used
         output = OrderedDict()
         for entry in self.entries:
             output.update({entry.Path : entry.getDictRepr()})
-        logging.debug("Saving database at %s", self.savepath)
+        logger.debug("Saving database at %s", self.savepath)
         with open(self.savepath, "w") as outfile:
             json.dump(output, outfile, indent=4)
             status = True
@@ -210,8 +212,8 @@ class DataBase:
             entryinit = []
             for item in savedEntry:
                 if not (item in self.model.items or item in self.model.listitems):
-                    logging.warning("Found item in saved json not in model. Item will be ignored")
-                    logging.warning("Currently this will result in loss of data when saving")
+                    logger.warning("Found item in saved json not in model. Item will be ignored")
+                    logger.warning("Currently this will result in loss of data when saving")
                     continue
                 entryinit.append((item, savedEntry[item]["type"], savedEntry[item]["value"]))
             e = DataBaseEntry(entryinit)
@@ -235,7 +237,7 @@ class DataBase:
             existingFiles.append(entry.Path)
             IDs.append(int(entry.ID))
 
-        logging.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+        logger.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
         #Find all IDs missing so new files can be inserted
         IDs = set(IDs)
         for i in range(len(self.entries)):
@@ -277,7 +279,7 @@ class DataBase:
             existingFilesNames.append(entry.Path.split("/")[-1])
             nameIDs[entry.Path.split("/")[-1]] = entry.ID
 
-        logging.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+        logger.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
 
         changedFiles = []
         changedFilePaths = {}
@@ -293,7 +295,7 @@ class DataBase:
                 thisID = nameIDs[name_]
                 thisEntry = self.getEntryByItemName("ID", thisID)[0]
                 oldPath = thisEntry.Path
-                logging.info("Updated path of entry %s to %s",thisID , changedFilePaths[name_])
+                logger.info("Updated path of entry %s to %s",thisID , changedFilePaths[name_])
                 thisEntry.changeItemValue("Path", changedFilePaths[name_])
                 updatedFiles.append((thisID, oldPath, changedFilePaths[name_]))
 
@@ -309,7 +311,7 @@ class DataBase:
             existingFilesNames.append(entry.Path.split("/")[-1])
             nameIDs[entry.Path.split("/")[-1]] = entry.ID
 
-        logging.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+        logger.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
 
         missingFiles = []
         if len(allfiles) != len(existingFiles):
@@ -336,7 +338,7 @@ class DataBase:
                 self.remove(missingID, byID = True)
                 self.modifySingleEntry(self.maxID, "ID", missingID, byID = True)
                 IDChanges.append((self.maxID, missingID))
-                logging.info("Change ID of entry %s to %s", self.maxID, missingID)
+                logger.info("Change ID of entry %s to %s", self.maxID, missingID)
                 self.maxID -= 1
 
         return IDChanges
@@ -360,7 +362,6 @@ class DataBase:
                 retlist += toAdd
             else:
                 retlist.append(toAdd)
-        logging.info(retlist)
         self.cachedValuesChanged[itemName] = False
         self.cachedValues[itemName] = set(retlist)
 
@@ -466,7 +467,7 @@ class DataBase:
         entry2remove = self.getEntryByItemName(removetype, str(identifier))[0]
         self.entries.remove(entry2remove)
         self.entrydict.pop(entry2remove.Path, None)
-        logging.info("Removed Entry %s", entry2remove)
+        logger.info("Removed Entry %s", entry2remove)
 
     def modifySingleEntry(self, identifier, itemName, newValue, byID=False, byName=False, byPath=False):
         """
@@ -495,7 +496,7 @@ class DataBase:
         self.cachedValuesChanged[itemName] = True
         #Update the Changed date of the entry
         if (byID and itemName == "ID") or (byName and itemName == "Name") or (byPath and itemName == "Path"):
-            logging.warning("Changed value not changed because item it changed by itself")
+            logger.warning("Changed value not changed because item it changed by itself")
         else:
             self.modifyListEntry(identifier, "Changed",
                                  mimir.backend.helper.getTimeFormatted("Full"),
@@ -628,9 +629,9 @@ class DataBase:
                 vetoValues.append(value.replace("!", ""))
             else:
                 hitValues.append(value)
-        logging.debug("Processing Query with:")
-        logging.debug("  hitValues: %s", hitValues)
-        logging.debug("  vetoValues: %s", vetoValues)
+        logger.debug("Processing Query with:")
+        logger.debug("  hitValues: %s", hitValues)
+        logger.debug("  vetoValues: %s", vetoValues)
         for entry in self.entries:
             entryValues = entry.getAllValuesbyName(itemNames, split=True)
             hit = 0
@@ -691,7 +692,7 @@ class DataBase:
     def getStatus(self):
         """ Check if current status of the database is saved """
         if not os.path.exists(self.savepath):
-            logging.info("No database saved yet")
+            logger.info("No database saved yet")
             return False
         dummyDB = DataBase(self.databaseRoot, "load", dummy=True)
         if self == dummyDB: # pylint: disable=simplifiable-if-statement
@@ -839,12 +840,12 @@ class DataBase:
                         if value in element:
                             if value in partialWhiteSpaces.keys():
                                 foundOptions[item] += partialWhiteSpaces[value]
-                                logging.debug("Adding %s for %s because %s in %s",
+                                logger.debug("Adding %s for %s because %s in %s",
                                               partialWhiteSpaces[value],
                                               item, value, element)
                             else:
                                 foundOptions[item].append(value)
-                                logging.debug("Adding %s for %s because %s in %s",
+                                logger.debug("Adding %s for %s because %s in %s",
                                               value, item, value, element)
 
         #Replace the lowercase versions of the options with the original case sensitive ones
@@ -896,7 +897,7 @@ class Model:
         extentions : File extentions that are used as criterion for searching files
     """
     def __init__(self, config):
-        logging.debug("Loading model from %s", config)
+        logger.debug("Loading model from %s", config)
         self.fileName = config
         modelDict = None
         with open(config) as f:
@@ -912,7 +913,7 @@ class Model:
 
         for key in modelDict:
             if key != "General":
-                logging.debug("Found item %s in model", key)
+                logger.debug("Found item %s in model", key)
                 newitem = {}
                 for itemKey in modelDict[key]:
                     if itemKey != "Type":

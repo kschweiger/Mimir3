@@ -9,6 +9,8 @@ from mimir.backend.entry import Item, ListItem
 from mimir.frontend.terminal.display import Window, ListWindow
 import mimir.backend.helper
 
+logger = logging.getLogger(__name__)
+
 class App:
     """
     App class that manages the communication between the Window module and the database model
@@ -95,14 +97,14 @@ class App:
         """
         Start point for the app. Launches the mainWindow.
         """
-        logging.info("Starting App")
+        logger.info("Starting App")
         self.runMainWindow(None)
 
     def runMainWindow(self, startVal):
         """
         Function defining the interactions of the main window
         """
-        logging.info("Switching to main window")
+        logger.info("Switching to main window")
         retVal = startVal
         while retVal != "0":
             retVal = self.mainWindow.draw("Enter Value")
@@ -126,12 +128,12 @@ class App:
         """
         Function defining the interactions of the List window
         """
-        logging.info("Switching to ListWindow")
+        logger.info("Switching to ListWindow")
         retVal = startVal
         if self.listWindow.nLinesPrinted > self.windowHeight:
-            logging.info("Listwindow in overflow -> nPrinted %s", self.listWindow.nLinesPrinted)
+            logger.info("Listwindow in overflow -> nPrinted %s", self.listWindow.nLinesPrinted)
             self.inOverflow = True
-        logging.debug("self.inOverflow=%s  self.listWindowDrawn=%s", self.inOverflow, self.listWindowDrawn)
+        logger.debug("self.inOverflow=%s  self.listWindowDrawn=%s", self.inOverflow, self.listWindowDrawn)
         self.listWindow.draw(skipHeader=self.inOverflow,
                              skipTable=(not self.listWindowDrawn),
                              fillWindow=(not self.inOverflow))
@@ -190,7 +192,7 @@ class App:
         """
         Function defining the interactions of the DB interaction window
         """
-        logging.info("Switching to main window")
+        logger.info("Switching to main window")
         retVal = startVal
         while retVal != "0":
             retVal = self.dbWindow.draw("Enter Value: ")
@@ -241,7 +243,7 @@ class App:
         """
         Function defining the interactions of the modification window
         """
-        logging.info("Switching to modification window")
+        logger.info("Switching to modification window")
         retVal = startVal
         while retVal != "0":
             retVal = self.modWindow.draw("Enter Value: ")
@@ -314,7 +316,7 @@ class App:
         """
         Function defining the interactions of the multi modification window. Will spawn a new one for each ID modified in the current scope of the app
         """
-        logging.info("Switching to multi modification window for ID %s", ID)
+        logger.info("Switching to multi modification window for ID %s", ID)
         thisWindow = self.allMultiModWindow[ID]
         entry = self.database.getEntrybyID(ID)
         if isNewWindow:
@@ -483,9 +485,9 @@ class App:
         """
         Function called form the main window to terminate the app
         """
-        logging.info("Checking if database was saved")
+        logger.info("Checking if database was saved")
         #TODO: CHeck if database is modified but nit saved
-        logging.info("Terminating app")
+        logger.info("Terminating app")
         exit()
 
     def generateList(self, get="All"):
@@ -501,7 +503,7 @@ class App:
         elif isinstance(get, list):
             ids2Print = get
         self.lastIDList = ids2Print
-        logging.info(ids2Print)
+        #logger.info(ids2Print)
         for id in ids2Print:
             entryElements = []
             thisEntry = self.database.getEntryByItemName("ID", id)[0]
@@ -626,7 +628,7 @@ class MTFConfig:
     Class for processing and saving MTF confugurations
     """
     def __init__(self, config):
-        logging.debug("Loading MTF config from %s", config)
+        logger.debug("Loading MTF config from %s", config)
         self.fileName = config
         configDict = None
         with open(config) as f:
@@ -696,14 +698,14 @@ def initDatabase(basedir, config=None):
         initType (str) : Either "new" or "loaded"
     """
     if os.path.exists(basedir+"/.mimir"):
-        logging.debug("Found .mimir dir for %s", basedir)
+        logger.debug("Found .mimir dir for %s", basedir)
         database = DataBase(basedir, "load")
         initType = "loaded"
     else:
         if config is None:
             raise RuntimeError("Found no .mimir in %s. Please pass initial config"%basedir)
         else:
-            logging.debug("Creating new databse")
+            logger.debug("Creating new databse")
             database = DataBase(basedir, "new", config)
             initType = "new"
 

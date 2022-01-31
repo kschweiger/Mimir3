@@ -2,6 +2,7 @@
 import datetime
 import logging
 
+logger = logging.getLogger(__name__)
 
 def getTimeFormatted(retFormat, delimDate=".", inverted=False):
     """
@@ -31,7 +32,7 @@ def getTimeFormatted(retFormat, delimDate=".", inverted=False):
     elif retFormat == "Date":
         return fulldate
     else:
-        logging.warning("Function was called with %s as argument. Falling back to Full output", retFormat)
+        logger.warning("Function was called with %s as argument. Falling back to Full output", retFormat)
         return fulldate+"|"+fulltime
 
 def sortDateTime(list2Sort):
@@ -44,7 +45,7 @@ def sortDateTime(list2Sort):
         try:
             datetimeObj.append(convertToDateTime(elem))
         except TypeError:
-            logging.debug("Converting %s to 01.01.00|00:00:00"%elem)
+            logger.debug("Converting %s to 01.01.00|00:00:00"%elem)
             datetimeObj.append(convertToDateTime("01.01.00|00:00:00"))
     datetimeObj = sorted(datetimeObj, reverse=True)
     retList = []
