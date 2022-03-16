@@ -19,7 +19,7 @@ class App:
         dababase (DataBase) : Initialized mimir DataBase
         enableStartupSeatch (bool) : If True, a search for new files will be enabled on startup
     """
-    def __init__(self, dababase, enableStartupSeatch=True):
+    def __init__(self, dababase: DataBase, enableStartupSeatch=True):
         self.database = dababase
         if not os.path.exists(self.database.mimirdir+"/MTF_model.json"):
             raise RuntimeError("No MTF configuration found in .mimir directory. Use make MTFconfig.py to create on from the database config")
@@ -183,6 +183,15 @@ class App:
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
+            elif retVal == "9":
+                del_ID = self.listWindow.interact("Enter ID to be marked/unmarked for deletion")
+                self.toggle_for_deletion(del_ID, self.listWindow)
+            elif retVal == "10":
+                queryIDs = self.database.query(["DeletionMark"], "1", returnIDs=True)
+                queryIDs = sorted(queryIDs, key=lambda x: int(x))
+                tableElements = self.generateList(queryIDs)
+                self.listWindow.lines = []
+                self.listWindow.update(tableElements)
             else:
                 self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
                 #tableElements = self.generateList("All")
@@ -235,6 +244,25 @@ class App:
                         self.dbWindow.update("Moved entry from ID %s to %s"%(oldID, newID))
                 else:
                     self.dbWindow.update("No Files removed")
+            elif retVal == "5":
+                queryIDs = self.database.query(["DeletionMark"], "1", returnIDs=True)
+                queryIDs = sorted(queryIDs, key=lambda x: int(x))
+                if len(queryIDs) > 0:
+                    total_size = 0
+                    for id_ in queryIDs:
+                        e = self.database.getEntryByItemName("ID", id_)[0]
+                        total_size += float(e.Size)
+                        self.dbWindow.update(f"{id_} is marked for delection(Name: {e.Name}; Size: {e.Size} GB)")
+                    self.dbWindow.update(f"{len(queryIDs)} entries marked for deletion with a total size of {total_size} GB")
+                    del_q = self.dbWindow.draw("Are you sure you want to delete these entries? [Y/n]: ")
+                    if del_q == "Y":
+                        self.del_ids(queryIDs, self.dbWindow)
+                        IDchanges = self.database.checkMissingFiles()
+                        if IDchanges:
+                            for oldID, newID in IDchanges:
+                                self.dbWindow.update("Moved entry from ID %s to %s"%(oldID, newID))
+                else:
+                    self.dbWindow.update("No entries marked for deletion")
             else:
                 self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
         self.runMainWindow(None)
@@ -447,7 +475,10 @@ class App:
 
     def execute(self, ID, window, fromList=False, silent=False):
         """
-        Function called when a entry should be executed. The idea is, that for a desired execution program etc. a shell script with the called (as done in the terminal) is placed in the executable folder.
+        Function called when a entry should be executed. The idea is, that for a desired 
+        execution program etc. a shell script with the called (as done in the terminal) 
+        is placed in the executable folder.
+
         After execution the **Opened** will be incrememented.
         """
         if ID not in self.database.getAllValuebyItemName("ID"):
@@ -481,6 +512,29 @@ class App:
                 window.update("Executing entry with ID {0}".format(randID))
             self.execute(randID, window, fromList)
 
+    def toggle_for_deletion(self, ID, window):
+        if ID not in self.database.getAllValuebyItemName("ID"):
+            window.update("ID %s not in database"%ID)
+        else:
+            e = self.database.getEntryByItemName("ID", ID)[0]
+            if e.DeletionMark == "0":
+                logger.info("Marking ID %s for deletion", ID)
+                self.database.modifySingleEntry(ID, "DeletionMark", "1", byID=True)
+            else:
+                logger.info("Unmarking ID %s for deletion", ID)
+                self.database.modifySingleEntry(ID, "DeletionMark", "0", byID=True)
+            
+    def del_ids(self, ids, window):
+        window.update("Will delete entries...")
+        for id_ in ids:
+            e = self.database.getEntryByItemName("ID", id_)[0]
+            path2del = self.database.databaseRoot + "/" + e.Path
+            window.update(f"Removing {path2del}")
+            os.remove(path2del)
+        window.update("...done deleting entries.")
+
+
+                
     def terminate(self):
         """
         Function called form the main window to terminate the app

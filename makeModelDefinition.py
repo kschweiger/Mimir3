@@ -24,14 +24,17 @@ def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=F
     else:
         model["General"]["Types"] = ["txt"]
     model["General"]["Separators"] = [".","-","_","+"]
-    items = ["ID", "Path", "Added", "Name"]+items
+    items = ["ID", "Path", "Added", "Name", "DeletionMark"]+items
     for item in items:
         model[item] = {}
         model[item]["Type"] = "Item"
-        model[item]["default"] = "empty"+item
+        if item == "DeletionMark":
+            model[item]["default"] = "0"
+        else:
+            model[item]["default"] = "empty"+item
         model[item]["hide"] = ""
         model[item]["plugin"] = ""
-        if item == "ID":
+        if item == "ID" or item == "DeletionMark":
             model[item]["itemType"] = "int"
         elif item == "Added":
             model[item]["itemType"] = "datetime"
