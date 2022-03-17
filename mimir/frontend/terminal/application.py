@@ -486,12 +486,12 @@ class App:
         After execution the **Opened** will be incrememented.
         """
         if ID not in self.database.getAllValuebyItemName("ID"):
-            window.update("ID %s not in database"%ID)
+            window.print("ID %s not in database"%ID)
         else:
             entry2Exec = self.database.getEntryByItemName("ID", ID)[0]
             path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
             if not fromList:
-                window.update("Path: %s"%path2Exec)
+                window.print("Path: %s"%path2Exec)
             os.system("{0} {1}".format(self.config.executable, path2Exec))
             if not silent:
                 self.database.modifyListEntry(ID, "Opened",
