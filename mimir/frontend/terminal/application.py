@@ -122,7 +122,8 @@ class App:
             elif retVal == "0":
                 self.terminate()
             else:
-                self.mainWindow.update("Please enter value present in %s"%self.mainWindow.validOptions)
+                if retVal != "0":
+                    self.mainWindow.update("Please enter value present in %s"%self.mainWindow.validOptions)
 
     def runListWindow(self, startVal):
         """
@@ -193,7 +194,8 @@ class App:
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
             else:
-                self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
+                if retVal != "0":
+                    self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
                 #tableElements = self.generateList("All")
         self.runMainWindow(None)
 
@@ -264,7 +266,8 @@ class App:
                 else:
                     self.dbWindow.update("No entries marked for deletion")
             else:
-                self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
+                if retVal != "0":
+                    self.dbWindow.update("Please enter value present in %s"%self.dbWindow.validOptions)
         self.runMainWindow(None)
 
     def runModWindow(self, startVal, fromMain, fromList):
@@ -316,7 +319,8 @@ class App:
                 else:
                     self.modWindow.update("%s is a invalid intput"%IDs)
             else:
-                self.modWindow.update("Please enter value present in %s"%self.modWindow.validOptions)
+                if retVal != "0":
+                    self.modWindow.update("Please enter value present in %s"%self.modWindow.validOptions)
         if fromMain:
             self.runMainWindow(None)
         if fromList:

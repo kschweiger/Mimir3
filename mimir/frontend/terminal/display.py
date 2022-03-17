@@ -334,7 +334,7 @@ class ListWindow(Window):
         else:
             logger.info("Skipping overflow - %s and %s < %s", fillWindow, len(self.printedLines), self.height)
         #print(tableLines)
-        if not skipTable:
+        if not skipTable and len(tableLines) > 2:
             for line in tableLines:
                 lineLen = len(line)
                 if self.alignment == "left":
