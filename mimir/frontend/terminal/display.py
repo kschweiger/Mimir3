@@ -2,6 +2,7 @@
 Classes for displaying information in ther terminal.
 """
 import logging
+from typing import Tuple, List
 
 from mimir.frontend.terminal.helper import FixedList
 
@@ -346,6 +347,12 @@ class ListWindow(Window):
                 if self.alignment == "center":
                     self.print(self.expandAndCenterText(line, self.width))
         return True
+
+    def draw_pre_table_title(self, content, replace:List[Tuple[str, str]] = []):
+        text = self.expandAndCenterText(content, self.width)
+        for r in replace:
+            text = text.replace(r[0], r[1])
+        self.print(text)
 
     def drawBeforeOverflow(self, newTableLines, skipTable):
         """

@@ -173,16 +173,25 @@ class App:
                 sortedIDs = self.database.getSortedIDs("Added", reverseOrder=True)[0:self.config.restrictedListLen]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
+                self.listWindow.draw_pre_table_title(f"-", [(" ","-")])
+                self.listWindow.draw_pre_table_title(f"_{self.config.restrictedListLen}_last_added_entries_", [(" ","-"), ("_"," ")])
+                self.listWindow.draw_pre_table_title(f"-", [(" ","-")])
                 self.listWindow.update(tableElements)
             elif retVal == "7":
                 sortedIDs = self.database.getSortedIDs("Opened", reverseOrder=True)[0:self.config.restrictedListLen]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
+                self.listWindow.draw_pre_table_title(f"-", [(" ","-")])
+                self.listWindow.draw_pre_table_title(f"_{self.config.restrictedListLen}_last_opened_entries_", [(" ","-"), ("_"," ")])
+                self.listWindow.draw_pre_table_title(f"-", [(" ","-")])
                 self.listWindow.update(tableElements)
             elif retVal == "8":
                 sortedIDs = self.database.getSortedIDs("Changed", reverseOrder=True)[0:self.config.restrictedListLen]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
+                self.listWindow.draw_pre_table_title(f"-", [(" ","-")])
+                self.listWindow.draw_pre_table_title(f"_{self.config.restrictedListLen}_last_changed_entries_", [(" ","-"), ("_"," ")])
+                self.listWindow.draw_pre_table_title(f"-", [(" ","-")])
                 self.listWindow.update(tableElements)
             elif retVal == "9":
                 del_ID = self.listWindow.interact("Enter ID to be marked/unmarked for deletion")
@@ -193,6 +202,10 @@ class App:
                 tableElements = self.generateList(queryIDs)
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
+            # "hidden" functions leading with a Zero
+            elif retVal == "03":
+                executeID = self.listWindow.interact("Enter ID to (silently) execute")
+                self.execute(executeID, self.listWindow, fromList=True, silent=True)
             else:
                 if retVal != "0":
                     self.listWindow.print("Please enter value present in %s"%self.listWindow.validOptions)
@@ -486,12 +499,19 @@ class App:
         After execution the **Opened** will be incrememented.
         """
         if ID not in self.database.getAllValuebyItemName("ID"):
-            window.print("ID %s not in database"%ID)
+            if isinstance(window, ListWindow):
+                window.print("ID %s not in database"%ID)
+            else:
+                window.update("ID %s not in database"%ID)
         else:
             entry2Exec = self.database.getEntryByItemName("ID", ID)[0]
             path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
             if not fromList:
-                window.print("Path: %s"%path2Exec)
+                if isinstance(window, ListWindow):
+                    window.print("Path: %s"%path2Exec)
+                else:
+                    window.update("Path: %s"%path2Exec)
+                
             os.system("{0} {1}".format(self.config.executable, path2Exec))
             if not silent:
                 self.database.modifyListEntry(ID, "Opened",
