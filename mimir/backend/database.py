@@ -361,7 +361,7 @@ class DataBase:
 
         return missingFiles
 
-    def checkMissingFiles(self, startdir=""):
+    def checkMissingFiles(self, startdir="", mod_id=True):
         """
         This function compares the files on the filesystem (from the db rootdir) to the
         existing path in the database. If one is missing, the Entry is deleted and the last entry
@@ -371,6 +371,7 @@ class DataBase:
         with accidents....
         """
         missingFiles = self.getMissingFiles(startdir)
+        logger.debug("Missing files: %s", missingFiles)
         IDChanges = []
         if missingFiles:
             for missingFile in missingFiles:
@@ -378,12 +379,20 @@ class DataBase:
                     self.getEntryByItemName("Path", missingFile)[0].getItem("ID").value
                 )
                 self.remove(missingID, byID=True)
-                self.modifySingleEntry(self.maxID, "ID", missingID, byID=True)
-                IDChanges.append((self.maxID, missingID))
-                logger.info("Change ID of entry %s to %s", self.maxID, missingID)
-                self.maxID -= 1
+                if mod_id:
+                    self.modifySingleEntry(self.maxID, "ID", missingID, byID=True)
+                    IDChanges.append((self.maxID, missingID))
+                    logger.info("Change ID of entry %s to %s", self.maxID, missingID)
+                    self.maxID -= 1
 
         return IDChanges
+
+    def reset_entry_ids(self):
+        i_id = 0
+        for entry_id in [e.ID for e in self.entries]:
+            logger.debug("Change ID of entry %s to %s", entry_id, i_id)
+            self.modifySingleEntry(entry_id, "ID", str(i_id), byID=True)
+            i_id += 1
 
     def getAllValuebyItemName(self, itemName):
         """Return a set of all values of name itemName"""
@@ -519,7 +528,9 @@ class DataBase:
         entry2remove = self.getEntryByItemName(removetype, str(identifier))[0]
         self.entries.remove(entry2remove)
         self.entrydict.pop(entry2remove.Path, None)
-        logger.info("Removed Entry %s", entry2remove)
+        logger.debug("Removed entry:")
+        for line in str(entry2remove).split("\n"):
+            logger.debug("  %s", line)
 
     def modifySingleEntry(
         self, identifier, itemName, newValue, byID=False, byName=False, byPath=False
@@ -560,9 +571,7 @@ class DataBase:
             or (byName and itemName == "Name")
             or (byPath and itemName == "Path")
         ):
-            logger.warning(
-                "Changed value not changed because item it changed by itself"
-            )
+            logger.debug("Changed value not changed because item it changed by itself")
         else:
             self.modifyListEntry(
                 identifier,
