@@ -16,6 +16,7 @@ import mimir.backend.plugin
 
 logger = logging.getLogger(__name__)
 
+
 class DataBase:
     """
     Database class that contains entries which are organized by an unique ID. The class contains methods for operating on the Database (save, load, queries, random entries) and modifing/reading/removing Entries. When a new database is created, a root directory (which contains all files) and a model are required. The Model can be created with makeModelDefinition.py and modified for specific needs. During initialization a .mimir directory will be created in the passed root directory. There the database and all affiliated files (backup, secondary databases) will be saved. The model passed in this process will alse be saved there for future reference.
@@ -42,23 +43,26 @@ class DataBase:
         cachedValue (dict - list) : Saved all present Values for item (key)
         valuesChanged (dict - bool) : Flag if cachedValues are still valid
     """
+
     def __init__(self, root, status, modelConf=None, dummy=False):
         logger.info("Initializing DataBase")
         self.databaseRoot = root
         self.entries = []
         self.entrydict = {}
-        self.mimirdir = root+"/.mimir"
-        self.savepath = root+"/.mimir/mainDB.json"
+        self.mimirdir = root + "/.mimir"
+        self.savepath = root + "/.mimir/mainDB.json"
         self.maxID = 0
         self.isdummy = False
         self.cachedValues = {}
         self.cachedValuesChanged = {}
-    
+
         if status == "new":
             self._model = Model(modelConf)
-            self.initCaching() #initialize cache so self.createEntry works
+            self.initCaching()  # initialize cache so self.createEntry works
             if os.path.exists(self.mimirdir) and not dummy:
-                raise RuntimeError(".mimir directory exiting in ROOT dir. Currently not supported!")
+                raise RuntimeError(
+                    ".mimir directory exiting in ROOT dir. Currently not supported!"
+                )
             elif dummy:
                 logger.warning("Initializing Database as dummy - Disabling saving")
                 self.isdummy = True
@@ -66,9 +70,15 @@ class DataBase:
                 logger.info("Creating .mimir folder in %s", root)
                 os.makedirs(self.mimirdir)
                 logger.debug("Saving model in .mimir dir")
-                with open(self.mimirdir+"/model.json", 'w') as outfile:
-                    json.dump(self._model.initDict, outfile, sort_keys=True, indent=4, separators=(',', ': '))
-            #New database always runs a search of the filesystem starting from self.root
+                with open(self.mimirdir + "/model.json", "w") as outfile:
+                    json.dump(
+                        self._model.initDict,
+                        outfile,
+                        sort_keys=True,
+                        indent=4,
+                        separators=(",", ": "),
+                    )
+            # New database always runs a search of the filesystem starting from self.root
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
                 logger.debug("Adding file %s", path2file)
@@ -82,7 +92,7 @@ class DataBase:
                 logger.warning("Loading Database from %s as dummy", root)
                 self.isdummy = True
             if modelConf is None:
-                self._model = Model(self.mimirdir+"/model.json")
+                self._model = Model(self.mimirdir + "/model.json")
             else:
                 self._model = Model(modelConf)
             self.loadMain()
@@ -90,8 +100,8 @@ class DataBase:
         else:
             raise RuntimeError("Unsupported status: {0}".format(status))
 
-        self.initCaching() #Set intiial cache with new entries
-        
+        self.initCaching()  # Set intiial cache with new entries
+
     def initCaching(self):
         for item in self.model.allItems:
             self.cachedValuesChanged[item] = True
@@ -99,7 +109,7 @@ class DataBase:
 
     @property
     def model(self):
-        """ Returns the model variable """
+        """Returns the model variable"""
         return self._model
 
     def getAllFilesMatchingModel(self, startdir=""):
@@ -109,15 +119,15 @@ class DataBase:
         Returns list with all matching file w/o database root dir
         """
         if not startdir.endswith("/") and startdir != "":
-            startdir = startdir+"/"
-        allfiles = glob(self.databaseRoot+"/"+startdir+"**/*.*", recursive=True)
+            startdir = startdir + "/"
+        allfiles = glob(self.databaseRoot + "/" + startdir + "**/*.*", recursive=True)
         logger.debug("All files from glob: %s", len(allfiles))
         matchingfiles = []
         matchingfilesFull = []
         for f in allfiles:
             for ext in self.model.extentions:
                 if f.endswith(ext):
-                    matchingfiles.append(f.replace(self.databaseRoot+"/", ""))
+                    matchingfiles.append(f.replace(self.databaseRoot + "/", ""))
                     logger.debug("Found file %s", f)
                     matchingfilesFull.append(f)
                     continue
@@ -128,7 +138,7 @@ class DataBase:
         return matchingfiles
 
     def createNewEntry(self, path, cID, skipCaching=False):
-        """ Create an entry for a file with path and ID.
+        """Create an entry for a file with path and ID.
         Called for each file that is found on filesystem
         Args:
             path (str) : Path to file added to DB on filesystem\n
@@ -141,7 +151,7 @@ class DataBase:
         filename = path.split("/")[-1]
         for ext in self.model.extentions:
             if filename.endswith(ext):
-                filename = filename.replace("."+ext, "")
+                filename = filename.replace("." + ext, "")
         logger.info("Initializing file with name: %s", filename)
         entryinit = {}
         for item in self.model.items:
@@ -152,15 +162,20 @@ class DataBase:
             elif item == "Name":
                 entryinit["Name"] = ("Single", filename)
             elif item == "Added":
-                entryinit["Added"] = ("Single", mimir.backend.helper.getTimeFormatted("Full"))
+                entryinit["Added"] = (
+                    "Single",
+                    mimir.backend.helper.getTimeFormatted("Full"),
+                )
             else:
                 entryinit[item] = ("Single", self.model.items[item]["default"])
         for listitem in self.model.listitems:
             entryinit[listitem] = ("List", self.model.listitems[listitem]["default"])
 
-        #If items with for plugins are degined run the pluging functions
+        # If items with for plugins are degined run the pluging functions
         if self.model.pluginDefinitions:
-            pluginValues = mimir.backend.plugin.getPluginValues(self.databaseRoot+"/"+path, self.model.pluginDefinitions)
+            pluginValues = mimir.backend.plugin.getPluginValues(
+                self.databaseRoot + "/" + path, self.model.pluginDefinitions
+            )
             for plugin in pluginValues:
                 eType, eValue = entryinit[self.model.pluginMap[plugin]]
                 entryinit[self.model.pluginMap[plugin]] = (eType, pluginValues[plugin])
@@ -191,12 +206,17 @@ class DataBase:
         # Copy current DBfile and save it as backup
         if os.path.exists(self.savepath):
             logger.debug("Making backup")
-            backupDate = mimir.backend.helper.getTimeFormatted("Date", "-", inverted=True)
-            copy2(self.savepath, self.savepath.replace(".json", ".{0}.backup".format(backupDate)))
+            backupDate = mimir.backend.helper.getTimeFormatted(
+                "Date", "-", inverted=True
+            )
+            copy2(
+                self.savepath,
+                self.savepath.replace(".json", ".{0}.backup".format(backupDate)),
+            )
         # Convert database to dict so json save can be used
         output = OrderedDict()
         for entry in self.entries:
-            output.update({entry.Path : entry.getDictRepr()})
+            output.update({entry.Path: entry.getDictRepr()})
         logger.debug("Saving database at %s", self.savepath)
         with open(self.savepath, "w") as outfile:
             json.dump(output, outfile, indent=4)
@@ -204,7 +224,7 @@ class DataBase:
         return status
 
     def loadMain(self):
-        """ Load the main DB from the .mimir folder """
+        """Load the main DB from the .mimir folder"""
         with open(self.savepath) as saveFile:
             savedDB = json.load(saveFile)
         for filepath in savedDB:
@@ -212,15 +232,22 @@ class DataBase:
             entryinit = []
             for item in savedEntry:
                 if not (item in self.model.items or item in self.model.listitems):
-                    logger.warning("Found item in saved json not in model. Item will be ignored")
-                    logger.warning("Currently this will result in loss of data when saving")
+                    logger.warning(
+                        "Found item in saved json not in model. Item will be ignored"
+                    )
+                    logger.warning(
+                        "Currently this will result in loss of data when saving"
+                    )
                     continue
-                entryinit.append((item, savedEntry[item]["type"], savedEntry[item]["value"]))
+                entryinit.append(
+                    (item, savedEntry[item]["type"], savedEntry[item]["value"])
+                )
             e = DataBaseEntry(entryinit)
             self.entries.append(e)
             self.maxID += 1
             self.entrydict[savedEntry["ID"]["value"]] = e
         self.maxID -= 1
+
     def findNewFiles(self, startdir=""):
         """
         Find new files in starting from the root directory.
@@ -237,8 +264,12 @@ class DataBase:
             existingFiles.append(entry.Path)
             IDs.append(int(entry.ID))
 
-        logger.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
-        #Find all IDs missing so new files can be inserted
+        logger.debug(
+            "Found %s files in FS. Entries in database: %s",
+            len(allfiles),
+            len(existingFiles),
+        )
+        # Find all IDs missing so new files can be inserted
         IDs = set(IDs)
         for i in range(len(self.entries)):
             if i not in IDs:
@@ -249,10 +280,9 @@ class DataBase:
             if file_ not in existingFiles:
                 newFiles.append(file_)
 
-
         toret = newFiles
         pairs = []
-        #Insert/Append new files
+        # Insert/Append new files
         for newFile in newFiles:
             if len(missingIDs) > 0:
                 cID = missingIDs[0]
@@ -279,7 +309,11 @@ class DataBase:
             existingFilesNames.append(entry.Path.split("/")[-1])
             nameIDs[entry.Path.split("/")[-1]] = entry.ID
 
-        logger.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+        logger.debug(
+            "Found %s files in FS. Entries in database: %s",
+            len(allfiles),
+            len(existingFiles),
+        )
 
         changedFiles = []
         changedFilePaths = {}
@@ -295,7 +329,9 @@ class DataBase:
                 thisID = nameIDs[name_]
                 thisEntry = self.getEntryByItemName("ID", thisID)[0]
                 oldPath = thisEntry.Path
-                logger.info("Updated path of entry %s to %s",thisID , changedFilePaths[name_])
+                logger.info(
+                    "Updated path of entry %s to %s", thisID, changedFilePaths[name_]
+                )
                 thisEntry.changeItemValue("Path", changedFilePaths[name_])
                 updatedFiles.append((thisID, oldPath, changedFilePaths[name_]))
 
@@ -311,7 +347,11 @@ class DataBase:
             existingFilesNames.append(entry.Path.split("/")[-1])
             nameIDs[entry.Path.split("/")[-1]] = entry.ID
 
-        logger.debug("Found %s files in FS. Entries in database: %s", len(allfiles), len(existingFiles))
+        logger.debug(
+            "Found %s files in FS. Entries in database: %s",
+            len(allfiles),
+            len(existingFiles),
+        )
 
         missingFiles = []
         if len(allfiles) != len(existingFiles):
@@ -334,9 +374,11 @@ class DataBase:
         IDChanges = []
         if missingFiles:
             for missingFile in missingFiles:
-                missingID = self.getEntryByItemName("Path", missingFile)[0].getItem("ID").value
-                self.remove(missingID, byID = True)
-                self.modifySingleEntry(self.maxID, "ID", missingID, byID = True)
+                missingID = (
+                    self.getEntryByItemName("Path", missingFile)[0].getItem("ID").value
+                )
+                self.remove(missingID, byID=True)
+                self.modifySingleEntry(self.maxID, "ID", missingID, byID=True)
                 IDChanges.append((self.maxID, missingID))
                 logger.info("Change ID of entry %s to %s", self.maxID, missingID)
                 self.maxID -= 1
@@ -344,7 +386,7 @@ class DataBase:
         return IDChanges
 
     def getAllValuebyItemName(self, itemName):
-        """ Return a set of all values of name itemName """
+        """Return a set of all values of name itemName"""
         if itemName not in self.model.allItems:
             raise KeyError("Arg {0} not in model items".format(itemName))
         if self.cachedValuesChanged[itemName]:
@@ -385,45 +427,55 @@ class DataBase:
         for ID in allIDs:
             map_id_sortby[ID] = self.getEntrybyID(ID).getItem(sortBy).value
         itemType = self.model.getItemType(sortBy)
-        #If sortBy is a ListItem we need to figure out the value to sort by
+        # If sortBy is a ListItem we need to figure out the value to sort by
         if sortBy in self.model.listitems:
             for ID in map_id_sortby:
                 if itemType == "datetime":
-                    map_id_sortby[ID] = mimir.backend.helper.sortDateTime(map_id_sortby[ID])[0]
+                    map_id_sortby[ID] = mimir.backend.helper.sortDateTime(
+                        map_id_sortby[ID]
+                    )[0]
                 else:
-                    #TODO: Think about a way to sort ListItems of type str/int
-                    raise NotImplementedError("Sorting for none datetime listitems not implemented")
+                    # TODO: Think about a way to sort ListItems of type str/int
+                    raise NotImplementedError(
+                        "Sorting for none datetime listitems not implemented"
+                    )
 
         pairs = []
         for ID in map_id_sortby:
             pairs.append((ID, map_id_sortby[ID]))
 
         if itemType == "datetime":
-            sortedPairs = sorted(pairs,
-                                 key=lambda x: (mimir.backend.helper.convertToDateTime(x[1]),
-                                                -int(x[0]) if reverseOrder else int(x[0])),
-                                 reverse=reverseOrder)
+            sortedPairs = sorted(
+                pairs,
+                key=lambda x: (
+                    mimir.backend.helper.convertToDateTime(x[1]),
+                    -int(x[0]) if reverseOrder else int(x[0]),
+                ),
+                reverse=reverseOrder,
+            )
         elif itemType == "int":
-            sortedPairs = sorted(pairs,
-                                 key=lambda x: (int(x[1]),
-                                                -int(x[0]) if reverseOrder else int(x[0])),
-                                 reverse=reverseOrder)
+            sortedPairs = sorted(
+                pairs,
+                key=lambda x: (int(x[1]), -int(x[0]) if reverseOrder else int(x[0])),
+                reverse=reverseOrder,
+            )
         elif itemType == "float":
-            sortedPairs = sorted(pairs,
-                                 key=lambda x: (float(x[1]),
-                                                -int(x[0]) if reverseOrder else int(x[0])),
-                                 reverse=reverseOrder)
+            sortedPairs = sorted(
+                pairs,
+                key=lambda x: (float(x[1]), -int(x[0]) if reverseOrder else int(x[0])),
+                reverse=reverseOrder,
+            )
         else:
-            sortedPairs = sorted(pairs,
-                                 key=lambda x: (x[1],
-                                                -int(x[0]) if reverseOrder else int(x[0])),
-                                 reverse=reverseOrder)
-
+            sortedPairs = sorted(
+                pairs,
+                key=lambda x: (x[1], -int(x[0]) if reverseOrder else int(x[0])),
+                reverse=reverseOrder,
+            )
 
         return [x[0] for x in sortedPairs]
 
     def getEntryByItemName(self, itemName, itemValue):
-        """ Get all entries that have value itemValue in Item with itemName """
+        """Get all entries that have value itemValue in Item with itemName"""
         if itemName not in self.model.allItems:
             raise KeyError("Arg {0} not in model items".format(itemName))
         machtingEntries = []
@@ -454,10 +506,10 @@ class DataBase:
             TypeError : If indentifier has a not supported type
             KeyError : If indentifier is no valid Name, Path or ID
         """
-        #Exceptions:
+        # Exceptions:
         self.checkModVector(identifier, byID, byName, byPath)
 
-        #Now the actual function
+        # Now the actual function
         if byID:
             removetype = "ID"
         if byName:
@@ -469,7 +521,9 @@ class DataBase:
         self.entrydict.pop(entry2remove.Path, None)
         logger.info("Removed Entry %s", entry2remove)
 
-    def modifySingleEntry(self, identifier, itemName, newValue, byID=False, byName=False, byPath=False):
+    def modifySingleEntry(
+        self, identifier, itemName, newValue, byID=False, byName=False, byPath=False
+    ):
         """
         Modify an entry of the Database
 
@@ -490,19 +544,46 @@ class DataBase:
         if byPath:
             Idtype = "Path"
         modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
-        if not type(modEntry.items[itemName]) == Item: # pylint: disable=unidiomatic-typecheck
-            raise TypeError("Called modifySingleEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
+        if (
+            not type(modEntry.items[itemName]) == Item
+        ):  # pylint: disable=unidiomatic-typecheck
+            raise TypeError(
+                "Called modifySingleEntry with a Entry of type {0}".format(
+                    type(modEntry.items[itemName])
+                )
+            )
         modEntry.changeItemValue(itemName, newValue)
         self.cachedValuesChanged[itemName] = True
-        #Update the Changed date of the entry
-        if (byID and itemName == "ID") or (byName and itemName == "Name") or (byPath and itemName == "Path"):
-            logger.warning("Changed value not changed because item it changed by itself")
+        # Update the Changed date of the entry
+        if (
+            (byID and itemName == "ID")
+            or (byName and itemName == "Name")
+            or (byPath and itemName == "Path")
+        ):
+            logger.warning(
+                "Changed value not changed because item it changed by itself"
+            )
         else:
-            self.modifyListEntry(identifier, "Changed",
-                                 mimir.backend.helper.getTimeFormatted("Full"),
-                                 byID=byID, byName=byName, byPath=byPath)
+            self.modifyListEntry(
+                identifier,
+                "Changed",
+                mimir.backend.helper.getTimeFormatted("Full"),
+                byID=byID,
+                byName=byName,
+                byPath=byPath,
+            )
 
-    def modifyListEntry(self, identifier, itemName, newValue, method="Append", oldValue=None, byID=False, byName=False, byPath=False):
+    def modifyListEntry(
+        self,
+        identifier,
+        itemName,
+        newValue,
+        method="Append",
+        oldValue=None,
+        byID=False,
+        byName=False,
+        byPath=False,
+    ):
         """
         Modify an entry of the Database.
 
@@ -524,9 +605,15 @@ class DataBase:
             Idtype = "Path"
         modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
         if not isinstance(modEntry.items[itemName], ListItem):
-            raise TypeError("Called modifyListEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
+            raise TypeError(
+                "Called modifyListEntry with a Entry of type {0}".format(
+                    type(modEntry.items[itemName])
+                )
+            )
         if method == "Append":
-            if (len(modEntry.getItem(itemName).value) == 1 and modEntry.getItem(itemName).value[0] == self.model.getDefaultValue(itemName)):
+            if len(modEntry.getItem(itemName).value) == 1 and modEntry.getItem(
+                itemName
+            ).value[0] == self.model.getDefaultValue(itemName):
                 default = self.model.getDefaultValue(itemName)
                 modEntry.replaceItemValue(itemName, newValue, default)
             else:
@@ -540,12 +627,18 @@ class DataBase:
         else:
             raise NotImplementedError
         self.cachedValuesChanged[itemName] = True
-        #Update the Changed date of the entry
+        # Update the Changed date of the entry
         if itemName not in ("Changed", "Opened"):
             # Exclude changed item since this would lead to inf. loop
             # Exclude opened since it is not considered a "change" to the entry
-            self.modifyListEntry(identifier, "Changed", mimir.backend.helper.getTimeFormatted("Full"),
-                                 byID=byID, byName=byName, byPath=byPath)
+            self.modifyListEntry(
+                identifier,
+                "Changed",
+                mimir.backend.helper.getTimeFormatted("Full"),
+                byID=byID,
+                byName=byName,
+                byPath=byPath,
+            )
 
     def getCount(self, identifier, itemName, byID=False, byName=False, byPath=False):
         """
@@ -573,15 +666,17 @@ class DataBase:
             Idtype = "Path"
         modEntry = self.getEntryByItemName(Idtype, str(identifier))[0]
         if not isinstance(modEntry.items[itemName], ListItem):
-            raise TypeError("Called modifyListEntry with a Entry of type {0}".format(type(modEntry.items[itemName])))
-        if ((len(modEntry.getItem(itemName).value) == 1 and
-             modEntry.getItem(itemName).value[0] == self.model.getDefaultValue(itemName))):
+            raise TypeError(
+                "Called modifyListEntry with a Entry of type {0}".format(
+                    type(modEntry.items[itemName])
+                )
+            )
+        if len(modEntry.getItem(itemName).value) == 1 and modEntry.getItem(
+            itemName
+        ).value[0] == self.model.getDefaultValue(itemName):
             return 0
         else:
             return len(modEntry.getItem(itemName).value)
-
-
-
 
     def updateOpened(self, identifier, byID=False, byName=False, byPath=False):
         """
@@ -597,9 +692,14 @@ class DataBase:
         """
         if not byID and not byName and not byPath:
             byID = True
-        self.modifyListEntry(identifier, "Opened", mimir.backend.helper.getTimeFormatted("Full"),
-                             byID=byID, byName=byName, byPath=byPath)
-
+        self.modifyListEntry(
+            identifier,
+            "Opened",
+            mimir.backend.helper.getTimeFormatted("Full"),
+            byID=byID,
+            byName=byName,
+            byPath=byPath,
+        )
 
     def query(self, itemNames, itemValues, returnIDs=False):
         """
@@ -668,18 +768,18 @@ class DataBase:
         return result
 
     def getEntrybyID(self, retID):
-        """ Faster method for getting entry by ID """
+        """Faster method for getting entry by ID"""
         return self.getEntryByItemName("ID", retID)[0]
 
     def __eq__(self, other):
-        """ Implementation of the equality relation """
+        """Implementation of the equality relation"""
         if isinstance(other, self.__class__):
             if len(self.entries) != len(other.entries):
                 return False
             for entry in self.entries:
                 foundequivalent = False
                 for otherentry in other.entries:
-                    #print("comparing",entry, otherentry)
+                    # print("comparing",entry, otherentry)
                     if entry == otherentry:
                         foundequivalent = True
                         break
@@ -690,18 +790,18 @@ class DataBase:
             return NotImplemented
 
     def getStatus(self):
-        """ Check if current status of the database is saved """
+        """Check if current status of the database is saved"""
         if not os.path.exists(self.savepath):
             logger.info("No database saved yet")
             return False
         dummyDB = DataBase(self.databaseRoot, "load", dummy=True)
-        if self == dummyDB: # pylint: disable=simplifiable-if-statement
+        if self == dummyDB:  # pylint: disable=simplifiable-if-statement
             return True
         else:
             return False
 
     def checkModVector(self, value, byID, byName, byPath):
-        """ Common function for modification methods input chekcing """
+        """Common function for modification methods input chekcing"""
         nVectorsActive = 0
         for vector in [byID, byName, byPath]:
             if not isinstance(vector, bool):
@@ -711,9 +811,17 @@ class DataBase:
         if nVectorsActive == 0 or nVectorsActive > 1:
             raise RuntimeError
         if not isinstance(value, (str, int)) and byID:
-            raise TypeError("byID vector supports str and int but value was type {0}".format(type(value)))
+            raise TypeError(
+                "byID vector supports str and int but value was type {0}".format(
+                    type(value)
+                )
+            )
         if not isinstance(value, str) and (byName or byPath):
-            raise TypeError("byName and byPath vector support str but value was type {0}".format(type(value)))
+            raise TypeError(
+                "byName and byPath vector support str but value was type {0}".format(
+                    type(value)
+                )
+            )
         if byID:
             if str(value) not in self.getAllValuebyItemName("ID"):
                 raise IndexError("Index {0} is out of range of DB".format(value))
@@ -779,19 +887,19 @@ class DataBase:
             foundOptions[item] = []
         whiteSpaceMatches = {}
         if whitespaceMatch:
-            #Add all values that have a whitespace with all possible sparators to list
-            #so exact matches can be found
+            # Add all values that have a whitespace with all possible sparators to list
+            # so exact matches can be found
             for item in items2Check:
                 origVals = list(values[item])
                 for value in origVals:
                     if " " in value:
                         for sep in self._model.separators:
-                            values[item].add(value.replace(" ", sep)) # Add since set
+                            values[item].add(value.replace(" ", sep))  # Add since set
                             whiteSpaceMatches[value.replace(" ", sep)] = value
-        #Remove file endings from model
+        # Remove file endings from model
         for fileType in self._model.extentions:
             if fullFileName.endswith(fileType):
-                fullFileName = fullFileName.replace("."+fileType, "")
+                fullFileName = fullFileName.replace("." + fileType, "")
                 break
         fullFileName = fullFileName.lower()
         pathElements = fullFileName.split("/")
@@ -808,10 +916,12 @@ class DataBase:
                         foundOptions[item].append(elem)
                     remUnsplitElements.remove(elem)
         if whitespaceMatch:
-            #For partial matched this is not needed.
+            # For partial matched this is not needed.
             for item in items2Check:
-                values[item] = set([x.lower() for x in self.getAllValuebyItemName(item)])
-        #Now we need to split elements with whitespace into two element to match partial matches
+                values[item] = set(
+                    [x.lower() for x in self.getAllValuebyItemName(item)]
+                )
+        # Now we need to split elements with whitespace into two element to match partial matches
         partialWhiteSpaces = {}
         for item in items2Check:
             newValueList = []
@@ -834,21 +944,30 @@ class DataBase:
             for element in remSplitElements:
                 for item in items2Check:
                     for value in values[item]:
-                        #If a single character is in whitespace name it will be skipped.
+                        # If a single character is in whitespace name it will be skipped.
                         if len(value) == 1:
                             continue
                         if value in element:
                             if value in partialWhiteSpaces.keys():
                                 foundOptions[item] += partialWhiteSpaces[value]
-                                logger.debug("Adding %s for %s because %s in %s",
-                                              partialWhiteSpaces[value],
-                                              item, value, element)
+                                logger.debug(
+                                    "Adding %s for %s because %s in %s",
+                                    partialWhiteSpaces[value],
+                                    item,
+                                    value,
+                                    element,
+                                )
                             else:
                                 foundOptions[item].append(value)
-                                logger.debug("Adding %s for %s because %s in %s",
-                                              value, item, value, element)
+                                logger.debug(
+                                    "Adding %s for %s because %s in %s",
+                                    value,
+                                    item,
+                                    value,
+                                    element,
+                                )
 
-        #Replace the lowercase versions of the options with the original case sensitive ones
+        # Replace the lowercase versions of the options with the original case sensitive ones
         for item in items2Check:
             for ioption, option in enumerate(foundOptions[item]):
                 for iorigOption, origOption in enumerate(values_orig[item]):
@@ -877,12 +996,13 @@ class DataBase:
 
     @staticmethod
     def splitBySep(separator, elementList):
-        """ Helper function to make splitStr nicer """
+        """Helper function to make splitStr nicer"""
         retList = []
         for elem in elementList:
             retList += elem.split(separator)
 
         return retList
+
 
 class Model:
     """
@@ -896,6 +1016,7 @@ class Model:
         modelDesc : Description of the model
         extentions : File extentions that are used as criterion for searching files
     """
+
     def __init__(self, config):
         logger.debug("Loading model from %s", config)
         self.fileName = config
@@ -919,9 +1040,9 @@ class Model:
                     if itemKey != "Type":
                         newitem[itemKey] = modelDict[key][itemKey]
                 if modelDict[key]["Type"] == "ListItem":
-                    self._listitems.update({key : newitem})
+                    self._listitems.update({key: newitem})
                 elif modelDict[key]["Type"] == "Item":
-                    self._items.update({key : newitem})
+                    self._items.update({key: newitem})
                 else:
                     raise TypeError("Invalid item type in model definition")
         self.allItems = set(self._items.keys()).union(set(self._listitems.keys()))
@@ -935,22 +1056,22 @@ class Model:
                 if not thisPlugIn in self.pluginMap.keys():
                     self.pluginMap[thisPlugIn] = item
                 else:
-                    raise RuntimeError("There should only be on Item with any given plugin")
+                    raise RuntimeError(
+                        "There should only be on Item with any given plugin"
+                    )
         for item in self._items:
             thisPlugIn = self._items[item]["plugin"]
-            if  thisPlugIn != "":
+            if thisPlugIn != "":
                 self.pluginDefinitions.append(thisPlugIn)
                 if not thisPlugIn in self.pluginMap.keys():
                     self.pluginMap[thisPlugIn] = item
                 else:
-                    raise RuntimeError("There should only be on Item with any given plugin")
+                    raise RuntimeError(
+                        "There should only be on Item with any given plugin"
+                    )
         self.pluginDefinitions = set(self.pluginDefinitions)
 
-
-
-
-
-        #TODO Check if required items are in model
+        # TODO Check if required items are in model
 
     def updateModel(self):
         """
@@ -961,7 +1082,7 @@ class Model:
         pass
 
     def getDefaultValue(self, itemName):
-        """ Returns the default item name of the modlue """
+        """Returns the default item name of the modlue"""
         if itemName in self._items.keys():
             defVal = self._items[itemName]["default"]
         elif itemName in self._listitems.keys():
@@ -976,7 +1097,7 @@ class Model:
             raise TypeError
 
     def getItemType(self, itemName):
-        """ Returns the default item name of the modlue """
+        """Returns the default item name of the modlue"""
         if itemName in self._items.keys():
             return self._items[itemName]["itemType"]
         elif itemName in self._listitems.keys():
@@ -986,15 +1107,16 @@ class Model:
 
     @property
     def items(self):
-        """ Retruns all item demfinitons in the model """
+        """Retruns all item demfinitons in the model"""
         return self._items
 
     @property
     def listitems(self):
-        """ Retruns all listitem demfinitons in the model """
+        """Retruns all listitem demfinitons in the model"""
         return self._listitems
 
-#def validateDatabaseJSON(database, jsonfile):
+
+# def validateDatabaseJSON(database, jsonfile):
 #    """
 #    Function for validating a saved database. This comparison requires the
 #    lastest version of the database to check in memory.

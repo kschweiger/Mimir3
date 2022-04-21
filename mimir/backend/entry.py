@@ -2,10 +2,12 @@
 Entry Module. Includes definitons for DatabaseEnties and item of these entries
 """
 import logging
+
 logger = logging.getLogger(__name__)
 
+
 class DataBaseEntry:
-    '''
+    """
     The Entry class describes all information stored in an database entry
 
     Args:
@@ -17,13 +19,16 @@ class DataBaseEntry:
         TypeError : If initItems is not of type list\n
         TypeError : If initItems is no list of tuples\n
         RuntimeError : If the tuple of initItems is invalid (not exactly three of type str, typ, str/int/float
-    '''
+    """
+
     def __init__(self, initItems):
         if not isinstance(initItems, list):
             raise TypeError("Entry initialization need to be a list")
         for initialItem in initItems:
             if not isinstance(initialItem, tuple):
-                raise TypeError("Every item in the initialization list needs to be a tuple")
+                raise TypeError(
+                    "Every item in the initialization list needs to be a tuple"
+                )
             else:
                 if not len(initialItem) == 3:
                     raise RuntimeError("Tuple {0} has != 3 objects".format(initialItem))
@@ -94,7 +99,9 @@ class DataBaseEntry:
         """
         self.checkPassedItems(newItem_name, newItem_type, newItem_value)
         if newItem_name in self.names:
-            raise RuntimeError("Entry already has item with name {0}".format(newItem_name))
+            raise RuntimeError(
+                "Entry already has item with name {0}".format(newItem_name)
+            )
         self.names.append(newItem_name)
         if newItem_type == "List":
             self.items[newItem_name] = ListItem(newItem_name, newItem_value)
@@ -110,7 +117,9 @@ class DataBaseEntry:
         self.checkPassedItems(itemName)
         if not self.hasItem(itemName):
             raise KeyError("Name {0} is not in names".format(itemName))
-        if not type(self.items[itemName]) == Item:# pylint: disable=unidiomatic-typecheck
+        if (
+            not type(self.items[itemName]) == Item
+        ):  # pylint: disable=unidiomatic-typecheck
             raise RuntimeError("Item {0} is not if type Item".format(itemName))
         self.items[itemName].replace(newValue)
         setattr(self, itemName, self.items[itemName].value)
@@ -150,8 +159,8 @@ class DataBaseEntry:
         self.getItem(itemName).remove(oldValue)
         self.getItem(itemName).add(newValue)
         setattr(self, itemName, self.items[itemName].value)
-        #self.removeItemValue(itemName, oldValue)
-        #self.addItemValue(itemName, newValue)
+        # self.removeItemValue(itemName, oldValue)
+        # self.addItemValue(itemName, newValue)
 
     def getDictRepr(self):
         """
@@ -175,7 +184,7 @@ class DataBaseEntry:
             if self.names != other.names:
                 return False
             for item in self.items:
-                #print("Comparing",self.items[item].getValue(),other.items[item].getValue())
+                # print("Comparing",self.items[item].getValue(),other.items[item].getValue())
                 if self.items[item].getValue() != other.items[item].getValue():
                     return False
             return True
@@ -195,17 +204,22 @@ class DataBaseEntry:
         Helper function for checking items passed to DataBaseEntry and raising exceptions
         """
         if not isinstance(passedName, str) and passedName is not None:
-            msg = "New name {0} is type {1} not string".format(passedName, type(passedName))
+            msg = "New name {0} is type {1} not string".format(
+                passedName, type(passedName)
+            )
             raise TypeError(msg)
         if not passedType in ["Single", "List"] and passedType is not None:
             msg = "New item {0} has ivalid type: {1}".format(passedName, passedType)
             raise RuntimeError(msg)
-        if not isinstance(passedValue, (str, list))  and passedValue is not None:
-            msg = "New name {0} of type {1} has invalid value type {2}".format(passedName, passedType, type(passedValue))
+        if not isinstance(passedValue, (str, list)) and passedValue is not None:
+            msg = "New name {0} of type {1} has invalid value type {2}".format(
+                passedName, passedType, type(passedValue)
+            )
             raise TypeError(msg)
 
+
 class Item:
-    '''
+    """
     Entry that contains a list of specs
 
     Args:
@@ -213,7 +227,8 @@ class Item:
         values (str) : Initial value of the item
     Attributes:
         name (str) : This is the name of the Item
-    '''
+    """
+
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -228,14 +243,15 @@ class Item:
         self.value = newValue
 
     def getValue(self):
-        """ Returns the value of the entry """
+        """Returns the value of the entry"""
         return self.value
 
     def __repr__(self):
-        return "{0} : {1}".format(self.name, self.value) #pragma: no cover
+        return "{0} : {1}".format(self.name, self.value)  # pragma: no cover
+
 
 class ListItem(Item):
-    '''
+    """
     Entry that contains a list of specs
 
     Args:
@@ -247,7 +263,8 @@ class ListItem(Item):
 
     Raises:
         TypError: Raises error when valies is not str or list
-    '''
+    """
+
     def __init__(self, name, values):
         super().__init__(name, None)
         if not isinstance(values, (str, list)):
@@ -277,7 +294,7 @@ class ListItem(Item):
             if newElem not in self.value:
                 uniqueElem.append(newElem)
 
-        if not uniqueElem: #apperently this is very pythonic
+        if not uniqueElem:  # apperently this is very pythonic
             return False
         else:
             self.value = self.value + uniqueElem
@@ -297,7 +314,7 @@ class ListItem(Item):
         """
         if not isinstance(toRemove, (str, int)):
             raise TypeError
-        #Remove by Value
+        # Remove by Value
         if isinstance(toRemove, str):
             if toRemove not in self.value:
                 raise ValueError
@@ -305,11 +322,11 @@ class ListItem(Item):
             for val in self.value:
                 if val != toRemove:
                     newVals.append(val)
-            #The python remove method for some reaseon also removes the
-            #database.model._listitems[itemName]["default"] entry.. ¯\_(ツ)_/¯
-            #self.value.remove(toRemove)
+            # The python remove method for some reaseon also removes the
+            # database.model._listitems[itemName]["default"] entry.. ¯\_(ツ)_/¯
+            # self.value.remove(toRemove)
             self.value = newVals
         if isinstance(toRemove, int):
-            if toRemove > len(self.value)-1:
+            if toRemove > len(self.value) - 1:
                 raise IndexError
             self.value.pop(toRemove)

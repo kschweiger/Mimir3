@@ -8,6 +8,7 @@ from mimir.frontend.terminal.helper import FixedList
 
 logger = logging.getLogger(__name__)
 
+
 class Window:
     """
     Object defining the window to be displayed
@@ -17,18 +18,23 @@ class Window:
         width (int) ; Window Width
         headerElements (dict) ; Head elements. See setHeader description
     """
+
     def __init__(self, height, width, headerElements, setHeader=False):
-        tests = [(height, "height", int),
-                 (width, "width", int),
-                 (headerElements, "headerElements", dict)]
+        tests = [
+            (height, "height", int),
+            (width, "width", int),
+            (headerElements, "headerElements", dict),
+        ]
         for testArg in tests:
             var, name, expectedType = testArg
             if not isinstance(var, expectedType):
-                raise TypeError("%s is required to be of type %s"%(name, expectedType))
+                raise TypeError(
+                    "%s is required to be of type %s" % (name, expectedType)
+                )
         self.debug = False
         self.height = height
         self.width = width
-        self.boxWidth = width-2
+        self.boxWidth = width - 2
         self.boxHeight = height
         self.headerElements = headerElements
         self.headerSet = False
@@ -39,14 +45,16 @@ class Window:
         self.optionMaxId = len(self.optionsTableId)
         self.optionMaxName = len(self.optionsTableName)
         self.optionMaxComment = len(self.optionsTableComment)
-        self.optionsTableTitleElements = (self.optionsTableId,
-                                          self.optionsTableName,
-                                          self.optionsTableComment)
+        self.optionsTableTitleElements = (
+            self.optionsTableId,
+            self.optionsTableName,
+            self.optionsTableComment,
+        )
 
         self.lines = []
         self.skipTitle = False
         self.skipText = False
-        #Define attributes that are defined outside __init__
+        # Define attributes that are defined outside __init__
         self.headerTitle = None
         self.headerText = None
         self.headerTextSecondary = None
@@ -72,13 +80,15 @@ class Window:
             elif isinstance(self.headerElements["Text"], list):
                 self.headerText += self.headerElements["Text"]
             else:
-                raise TypeError("Only str and list are supported for text headerelements")
+                raise TypeError(
+                    "Only str and list are supported for text headerelements"
+                )
             _headerText = []
             for line in self.headerText:
                 if len(line) > self.boxWidth:
                     firstChar = 0
                     lastChar = self.boxWidth
-                    for nOverFlow in range(len(line)//self.boxWidth):
+                    for nOverFlow in range(len(line) // self.boxWidth):
                         print(firstChar, lastChar, line[firstChar:lastChar])
                         _headerText.append(line[firstChar:lastChar])
                         firstChar = lastChar
@@ -115,7 +125,9 @@ class Window:
         """
         Sets the header
         """
-        self.header, self.boxHeight = self.createHeader(skipTitle, skipText, skipOptions)
+        self.header, self.boxHeight = self.createHeader(
+            skipTitle, skipText, skipOptions
+        )
 
     def createHeader(self, skipTitle=False, skipText=False, skipOptions=False):
         """
@@ -130,32 +142,38 @@ class Window:
 
         boxWidth = self.boxWidth
         header = []
-        header.append("+"+boxWidth*"-"+"+")
-        header.append("|"+boxWidth*" "+"|")
+        header.append("+" + boxWidth * "-" + "+")
+        header.append("|" + boxWidth * " " + "|")
 
         if not skipTitle:
-            header.append("|"+self.expandAndCenterText(self.headerElements["Title"], boxWidth)+"|")
-            header.append("|"+boxWidth*" "+"|")
+            header.append(
+                "|"
+                + self.expandAndCenterText(self.headerElements["Title"], boxWidth)
+                + "|"
+            )
+            header.append("|" + boxWidth * " " + "|")
 
         if not skipText:
             for text in self.headerText:
-                header.append("| "+text+(boxWidth-len(text)-1)*" "+"|")
+                header.append("| " + text + (boxWidth - len(text) - 1) * " " + "|")
             if self.headerTextSecondary is not None:
                 for key in self.headerTextSecondary:
                     text = "{0}: {1}".format(key, self.headerTextSecondary[key])
-                    header.append("| "+text+(boxWidth-len(text)-1)*" "+"|")
-                #self.headerTextSecondary = []
+                    header.append("| " + text + (boxWidth - len(text) - 1) * " " + "|")
+                # self.headerTextSecondary = []
             if len(self.headerText) > 0:
-                header.append("|"+boxWidth*" "+"|")
+                header.append("|" + boxWidth * " " + "|")
 
         if self.validOptions is not None and not skipOptions:
-            table = self.makeTable(self.optionsTableTitleElements,
-                                   self.headerOptions,
-                                   (self.optionMaxId, self.optionMaxName, self.optionMaxComment))
+            table = self.makeTable(
+                self.optionsTableTitleElements,
+                self.headerOptions,
+                (self.optionMaxId, self.optionMaxName, self.optionMaxComment),
+            )
             for tableLine in table:
-                header.append("|"+self.expandAndCenterText(tableLine, boxWidth)+"|")
-        header.append("|"+boxWidth*" "+"|")
-        header.append("+"+boxWidth*"-"+"+")
+                header.append("|" + self.expandAndCenterText(tableLine, boxWidth) + "|")
+        header.append("|" + boxWidth * " " + "|")
+        header.append("+" + boxWidth * "-" + "+")
         boxHeight = len(header)
 
         return header, boxHeight
@@ -174,17 +192,17 @@ class Window:
         for line in self.header:
             print(line)
         lines2print = self.lines
-        maxLines = self.height-self.boxHeight
+        maxLines = self.height - self.boxHeight
         if len(self.lines) > (maxLines):
             lines2print = self.lines[-maxLines:]
-        #Prepend empty lines so the window looks constant
+        # Prepend empty lines so the window looks constant
         if len(lines2print) < maxLines:
-            for emptyline in range(maxLines-len(lines2print)):
+            for emptyline in range(maxLines - len(lines2print)):
                 print("")
         for line in lines2print:
             print(line)
-        answer = input(inputString+": ")
-        self.lines.append(inputString+": "+answer)
+        answer = input(inputString + ": ")
+        self.lines.append(inputString + ": " + answer)
         return answer
 
     @staticmethod
@@ -197,12 +215,12 @@ class Window:
         if total_exp < 0:
             logger.warning("Text is longer than width")
             return text
-        if total_exp%2 == 0:
-            expandLeft, expandRight = total_exp//2, total_exp//2
+        if total_exp % 2 == 0:
+            expandLeft, expandRight = total_exp // 2, total_exp // 2
         else:
-            expandLeft, expandRight = total_exp//2, total_exp//2+1
+            expandLeft, expandRight = total_exp // 2, total_exp // 2 + 1
 
-        return (expandLeft*symbol)+text+(expandRight*symbol)
+        return (expandLeft * symbol) + text + (expandRight * symbol)
 
     @staticmethod
     def makeTable(headerElements, elements, maxLenElements):
@@ -216,29 +234,34 @@ class Window:
         headerLine = ""
         dividerLine = ""
         for ielement, element in enumerate(headerElements):
-            headerLine += element + (maxLenElements[ielement]-len(element))*" "
-            if ielement < len(maxLenElements)-1:
+            headerLine += element + (maxLenElements[ielement] - len(element)) * " "
+            if ielement < len(maxLenElements) - 1:
                 headerLine += " | "
             if ielement == 0:
-                dividerLine += (maxLenElements[ielement]+1)*"-"+"+"
-            elif ielement == len(maxLenElements)-1:
-                dividerLine += (maxLenElements[ielement]+1)*"-"
+                dividerLine += (maxLenElements[ielement] + 1) * "-" + "+"
+            elif ielement == len(maxLenElements) - 1:
+                dividerLine += (maxLenElements[ielement] + 1) * "-"
             else:
-                dividerLine += (maxLenElements[ielement]+2)*"-"+"+"
+                dividerLine += (maxLenElements[ielement] + 2) * "-" + "+"
         tableLines.append(headerLine)
         tableLines.append(dividerLine)
         for line in elements:
             thisLine = ""
             for ielement, element in enumerate(line):
                 if ielement == 0:
-                    thisLine += (maxLenElements[ielement]-len(element))*" "+element
+                    thisLine += (
+                        maxLenElements[ielement] - len(element)
+                    ) * " " + element
                 else:
-                    thisLine += element+(maxLenElements[ielement]-len(element))*" "
-                if ielement < len(maxLenElements)-1:
+                    thisLine += (
+                        element + (maxLenElements[ielement] - len(element)) * " "
+                    )
+                if ielement < len(maxLenElements) - 1:
                     thisLine += " | "
             tableLines.append(thisLine)
 
         return tableLines
+
 
 class ListWindow(Window):
     """
@@ -251,7 +274,16 @@ class ListWindow(Window):
         nColumns (int) : Number of colums for each line
         tableHeaderElements (tuple) : Header for the table
     """
-    def __init__(self, height, width, headerElements, nColumns, tableHeaderElements, alignment="left"):
+
+    def __init__(
+        self,
+        height,
+        width,
+        headerElements,
+        nColumns,
+        tableHeaderElements,
+        alignment="left",
+    ):
         super().__init__(height, width, headerElements)
         self.lines = []
         self.nColumns = nColumns
@@ -262,13 +294,12 @@ class ListWindow(Window):
         for i in range(self.nColumns):
             self.tableMaxLen.append(len(self.tableHeaderElements[i]))
         if alignment not in ["left", "center"]:
-            raise KeyError("%s not supported"%alignment)
+            raise KeyError("%s not supported" % alignment)
         self.alignment = alignment
         self.printedLines = FixedList(self.height)
         self.nLinesPrinted = 0
         self.nLinesPrintedGlobal = 0
         self.tableAdded = False
-
 
     def print(self, printStatement):
         """
@@ -278,7 +309,7 @@ class ListWindow(Window):
         self.printedLines.append(printStatement)
         self.nLinesPrinted += 1
         self.nLinesPrintedGlobal += 1
-        print(printStatement)#,self.nLinesPrinted)
+        print(printStatement)  # ,self.nLinesPrinted)
 
     def update(self, newContent, resetHeader=None):
         """
@@ -294,7 +325,7 @@ class ListWindow(Window):
         """
         logger.debug("Running update in %s", self)
         if not isinstance(newContent, tuple) and not isinstance(newContent, list):
-            raise TypeError("%s is required to be tuple or list"%newContent)
+            raise TypeError("%s is required to be tuple or list" % newContent)
         if isinstance(newContent, list):
             for elem in newContent:
                 self.update(elem)
@@ -316,8 +347,13 @@ class ListWindow(Window):
         """
         Draw the current state of the window
         """
-        logger.debug("skipHeader=%s skipTable=%s fillWindow=%s", skipHeader, skipTable, fillWindow)
-        #print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+        logger.debug(
+            "skipHeader=%s skipTable=%s fillWindow=%s",
+            skipHeader,
+            skipTable,
+            fillWindow,
+        )
+        # print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
         logger.debug("Running draw in %s", self)
         self.nLinesPrinted = 0
         self.makeheader()
@@ -328,27 +364,39 @@ class ListWindow(Window):
         if not skipHeader:
             for line in self.header:
                 self.print(line)
-        tableLines = self.makeTable(self.tableHeaderElements, self.lines, self.tableMaxLen)
+        tableLines = self.makeTable(
+            self.tableHeaderElements, self.lines, self.tableMaxLen
+        )
         if fillWindow and self.nLinesPrinted < self.height:
-            logger.info("Drawing overflow lines - self.nLinesPrinted=%s", len(self.printedLines))
+            logger.info(
+                "Drawing overflow lines - self.nLinesPrinted=%s", len(self.printedLines)
+            )
             self.drawBeforeOverflow(newTableLines=len(tableLines), skipTable=skipTable)
         else:
-            logger.info("Skipping overflow - %s and %s < %s", fillWindow, len(self.printedLines), self.height)
-        #print(tableLines)
+            logger.info(
+                "Skipping overflow - %s and %s < %s",
+                fillWindow,
+                len(self.printedLines),
+                self.height,
+            )
+        # print(tableLines)
         if not skipTable and len(tableLines) > 2:
             for line in tableLines:
                 lineLen = len(line)
                 if self.alignment == "left":
                     if len(line) > self.width:
-                        logger.error("Table line is wider than defined width. Consider extenting the width to %s", len(line)+2)
-                        self.print(" "+line+" ")
+                        logger.error(
+                            "Table line is wider than defined width. Consider extenting the width to %s",
+                            len(line) + 2,
+                        )
+                        self.print(" " + line + " ")
                     else:
-                        self.print(" "+line+" "+(self.boxWidth-lineLen)*" ")
+                        self.print(" " + line + " " + (self.boxWidth - lineLen) * " ")
                 if self.alignment == "center":
                     self.print(self.expandAndCenterText(line, self.width))
         return True
 
-    def draw_pre_table_title(self, content, replace:List[Tuple[str, str]] = []):
+    def draw_pre_table_title(self, content, replace: List[Tuple[str, str]] = []):
         text = self.expandAndCenterText(content, self.width)
         for r in replace:
             text = text.replace(r[0], r[1])
@@ -372,23 +420,37 @@ class ListWindow(Window):
             if line not in self.header:
                 postFillLines.append(line)
 
-        logger.info("print Empty: %s - print printed %s - newTable %s",
-                     self.height-len(postFillLines)-newTableLines-len(self.header),
-                     len(postFillLines), newTableLines)
-        for i in range(self.height-len(postFillLines)-newTableLines-len(self.header)):
+        logger.info(
+            "print Empty: %s - print printed %s - newTable %s",
+            self.height - len(postFillLines) - newTableLines - len(self.header),
+            len(postFillLines),
+            newTableLines,
+        )
+        for i in range(
+            self.height - len(postFillLines) - newTableLines - len(self.header)
+        ):
             if i == 0 and self.debug:
-                print("print Empty:", self.height-len(postFillLines)-newTableLines-len(self.header),
-                      " - print printed:", len(postFillLines), "- newTable:", newTableLines)
+                print(
+                    "print Empty:",
+                    self.height - len(postFillLines) - newTableLines - len(self.header),
+                    " - print printed:",
+                    len(postFillLines),
+                    "- newTable:",
+                    newTableLines,
+                )
             else:
                 print(self.width * " ")
 
         for iline, line in enumerate(postFillLines):
             print(line)
 
-
-
-
-    def interact(self, interaction, printOptions=None, rePrintInitial=False, onlyInteraction=False):
+    def interact(
+        self,
+        interaction,
+        printOptions=None,
+        rePrintInitial=False,
+        onlyInteraction=False,
+    ):
         """
         Interaction with window, but the new lines will just be append (unlike the main windows draw method).
         Can also invoce the next draw method. So draw does not have to be called after each interaction.
@@ -404,22 +466,24 @@ class ListWindow(Window):
                 options, optionHeight = self.createHeader(True, True, False)
             else:
                 options, optionsHeight = self.makeSmallOptionTable()
-            #Print requestion option version
+            # Print requestion option version
             for line in options:
                 self.print(line)
-        #print(self.nLinesPrinted, self.height)
+        # print(self.nLinesPrinted, self.height)
         if not onlyInteraction:
             logger.info("self.nLinesPrinted=%s/%s", self.nLinesPrinted, self.height)
-            #print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-            self.draw(skipHeader=(self.nLinesPrinted > self.height),
-                      skipTable=(not self.tableAdded),
-                      fillWindow=(self.nLinesPrinted < self.height))
-            #print("ooooooooooooooooooooooooooooooooo")
+            # print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            self.draw(
+                skipHeader=(self.nLinesPrinted > self.height),
+                skipTable=(not self.tableAdded),
+                fillWindow=(self.nLinesPrinted < self.height),
+            )
+            # print("ooooooooooooooooooooooooooooooooo")
 
-        answer = input(interaction+": ")
+        answer = input(interaction + ": ")
         logger.info("Input: %s - Answer: %s", interaction, answer)
-        toPrint = ""+interaction+": "+answer
-        self.printedLines.append(toPrint+" "*(self.width-len(toPrint)))
+        toPrint = "" + interaction + ": " + answer
+        self.printedLines.append(toPrint + " " * (self.width - len(toPrint)))
         self.nLinesPrinted += 1
         self.nLinesPrintedGlobal += 1
         return answer
@@ -446,12 +510,12 @@ class ListWindow(Window):
             optionLines.append(" | ".join(thisElements))
         else:
             optionLines.append(joinedString)
-        retList.append("+"+self.boxWidth*"-"+"+")
-        retList.append("|"+self.boxWidth*" "+"|")
+        retList.append("+" + self.boxWidth * "-" + "+")
+        retList.append("|" + self.boxWidth * " " + "|")
         for line in optionLines:
-            retList.append("|"+self.expandAndCenterText(line, self.boxWidth)+"|")
-        retList.append("|"+self.boxWidth*" "+"|")
-        retList.append("+"+self.boxWidth*"-"+"+")
+            retList.append("|" + self.expandAndCenterText(line, self.boxWidth) + "|")
+        retList.append("|" + self.boxWidth * " " + "|")
+        retList.append("+" + self.boxWidth * "-" + "+")
 
         return retList, len(retList)
 

@@ -10,6 +10,7 @@ import hachoir.parser
 
 logger = logging.getLogger(__name__)
 
+
 def get_VideoMetaData(fileName):
     """
     Get video metadata for height, weight and duration using hachior.
@@ -20,7 +21,9 @@ def get_VideoMetaData(fileName):
     Returns:
         dict : Dict keys are width, height, duration
     """
-    thisMetaData = hachoir.metadata.extractMetadata(hachoir.parser.createParser(fileName))
+    thisMetaData = hachoir.metadata.extractMetadata(
+        hachoir.parser.createParser(fileName)
+    )
     if thisMetaData is None:
         voi_width, voi_height, voi_duration = -1, -1, "00:00:00"
     else:
@@ -39,12 +42,17 @@ def get_VideoMetaData(fileName):
         except ValueError:
             voi_duration = "00:00:00"
         voi_duration_h, voi_duration_min, voi_duration_sec = voi_duration.split(":")
-        voi_duration = "{0:02d}:{1:02d}:{2:02d}".format(int(voi_duration_h),
-                                                        int(voi_duration_min),
-                                                        int(voi_duration_sec))
+        voi_duration = "{0:02d}:{1:02d}:{2:02d}".format(
+            int(voi_duration_h), int(voi_duration_min), int(voi_duration_sec)
+        )
         logger.debug("voi_duration formatted: %s", voi_duration)
 
-    return {"width" : str(voi_width), "height" : str(voi_height), "duration" : voi_duration}
+    return {
+        "width": str(voi_width),
+        "height": str(voi_height),
+        "duration": voi_duration,
+    }
+
 
 def get_osData(filename, SF=1e9):
     """
@@ -58,8 +66,9 @@ def get_osData(filename, SF=1e9):
         dict : Dict keys are: size
     """
     filesize = os.path.getsize(filename)
-    filesize = filesize/SF
-    return {"size" : "{0:.2f}".format(filesize)}
+    filesize = filesize / SF
+    return {"size": "{0:.2f}".format(filesize)}
+
 
 def getPluginValues(fileName, pluginDefs, modules=["VideoMetaData", "osData"]):
     """
@@ -78,10 +87,14 @@ def getPluginValues(fileName, pluginDefs, modules=["VideoMetaData", "osData"]):
     for definition in pluginDefs:
         check = re.search("[a-zA-Z0-9]+:[a-zA-Z0-9]+", definition)
         if check is None:
-            raise ValueError("%s is no valid plugin. Should be 'module:value'"%definition)
+            raise ValueError(
+                "%s is no valid plugin. Should be 'module:value'" % definition
+            )
         else:
             if check.span() != (0, len(definition)):
-                raise ValueError("%s is no valid pluging. Check Definition"%definition)
+                raise ValueError(
+                    "%s is no valid pluging. Check Definition" % definition
+                )
         module, value = definition.split(":")
         if module not in modules:
             raise ValueError("Module %s not defined")
