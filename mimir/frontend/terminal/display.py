@@ -2,7 +2,7 @@
 Classes for displaying information in ther terminal.
 """
 import logging
-from typing import Tuple, List
+from typing import List, Tuple
 
 from mimir.frontend.terminal.helper import FixedList
 
@@ -65,11 +65,15 @@ class Window:
 
     def setHeader(self):
         """
-        Method for setting more explicit members for the header from the passed headerElements:
-        The headerElements passed to the class can have the following options:
+        Method for setting more explicit members for the header from the passed
+        headerElements: The headerElements passed to the class can have the following
+        options:
         Title : Single String that will be displayed as Title
         Text : List of strings / one string that will be displayed under the Title
-        Options : This is the list that displays the input options for the windows. It is expected to be a List of tuples, with each tuple consiting of two elements (name and comment). The options will be numbered (this is the input value) by the passed order
+        Options : This is the list that displays the input options for the windows. It
+                  is expected to be a List of tuples, with each tuple consiting of two
+                  elements (name and comment). The options will be numbered (this is
+                  the input value) by the passed order
         """
         self.headerTitle = self.headerElements["Title"]
         self.headerText = []
@@ -186,7 +190,8 @@ class Window:
 
     def draw(self, inputString):
         """
-        Draw the current state of the window. Will check if the lines exeed the height and will not print earlier lines if found.
+        Draw the current state of the window. Will check if the lines exeed the height
+        and will not print earlier lines if found.
         """
         self.makeheader()
         for line in self.header:
@@ -208,7 +213,8 @@ class Window:
     @staticmethod
     def expandAndCenterText(text, width, symbol=" "):
         """
-        Misc function for expanding the passes string text to width width by adding symbole before and after text
+        Misc function for expanding the passes string text to width width by adding
+        symbole before and after text
         """
         text = str(text)
         total_exp = width - len(text)
@@ -225,7 +231,8 @@ class Window:
     @staticmethod
     def makeTable(headerElements, elements, maxLenElements):
         """
-        Misc class for generating a table view of the massed arguments. Result will look like this:
+        Misc class for generating a table view of the massed arguments. Result will
+        look like this:
              header[0] | header[1]      | header[2]
         ---------------+----------------+---------------
         elements[0][0] | elements[0][1] | elements[0][1]
@@ -265,7 +272,11 @@ class Window:
 
 class ListWindow(Window):
     """
-    Window class for displaying lists of database entries. No header will be displayed. The ListWindow class will figure out the fomatting of the lines. In the context of MTF each line will be split into fields for each Item requested for display in the config based in the maximum width. Generated List will be longer than the maxim height of the windows.
+    Window class for displaying lists of database entries. No header will be displayed.
+    The ListWindow class will figure out the fomatting of the lines. In the context of
+    MTF each line will be split into fields for each Item requested for display in the
+    config based in the maximum width. Generated List will be longer than the maxim
+    height of the windows.
 
     Args:
         height (int) : Window height
@@ -303,7 +314,8 @@ class ListWindow(Window):
 
     def print(self, printStatement):
         """
-        Is used to print the lines. This functions only intention is to also keep track of the printed lines in additon to actiually printing them.
+        Is used to print the lines. This functions only intention is to also keep track
+        of the printed lines in additon to actiually printing them.
         """
         logger.debug("Added: %s", printStatement[0:20])
         self.printedLines.append(printStatement)
@@ -313,10 +325,12 @@ class ListWindow(Window):
 
     def update(self, newContent, resetHeader=None):
         """
-        Update the internal state of the window. For ListWindow object this are new lines of the list
+        Update the internal state of the window. For ListWindow object this are new
+        lines of the list
 
         Args:
-            newContent (tuple, list(tuple)) : tuble or list of tuples with nColumns elements
+            newContent (tuple, list(tuple)) : tuble or list of tuples with nColumns
+                                              elements
             resetHeader (str) : Pass a new Title
 
         Raises:
@@ -386,7 +400,8 @@ class ListWindow(Window):
                 if self.alignment == "left":
                     if len(line) > self.width:
                         logger.error(
-                            "Table line is wider than defined width. Consider extenting the width to %s",
+                            "Table line is wider than defined width. Consider "
+                            "extenting the width to %s",
                             len(line) + 2,
                         )
                         self.print(" " + line + " ")
@@ -404,12 +419,16 @@ class ListWindow(Window):
 
     def drawBeforeOverflow(self, newTableLines, skipTable):
         """
-        Function for (re)drawing the current state while the maximum height of the windows is not reached.
-        Will add empty lines unter the header so the previously draw lines are at the bottom the window.
+        Function for (re)drawing the current state while the maximum height of the
+        windows is not reached. Will add empty lines unter the header so the previously
+        draw lines are at the bottom the window.
 
         Args:
-            newTableLines (int) : Number of lines expected form the next table to be drawn
-            skipTable (bool) : Required of the next updated should not draw a table. This is required to correclty calculate the number of empty lines required
+            newTableLines (int) : Number of lines expected form the next table to be
+                                  drawn
+            skipTable (bool) : Required of the next updated should not draw a table.
+                               This is required to correclty calculate the number of
+                               empty lines required
         """
         logger.info("Entering function")
         if skipTable:
@@ -452,8 +471,9 @@ class ListWindow(Window):
         onlyInteraction=False,
     ):
         """
-        Interaction with window, but the new lines will just be append (unlike the main windows draw method).
-        Can also invoce the next draw method. So draw does not have to be called after each interaction.
+        Interaction with window, but the new lines will just be append (unlike the main
+        windows draw method). Can also invoce the next draw method. So draw does not
+        have to be called after each interaction.
 
         Args:
             interaction (str) : Text that will be displayedi n a sdtin statement
@@ -490,7 +510,8 @@ class ListWindow(Window):
 
     def makeSmallOptionTable(self):
         """
-        Make a small version of the option table. Intendet to be used once the window reach maximum height and new lines will only be appended.
+        Make a small version of the option table. Intendet to be used once the window
+        reach maximum height and new lines will only be appended.
         """
         retList = []
         elements = []
@@ -529,7 +550,8 @@ class ListWindow(Window):
             maxlen (int) : Maximum allowed length elements can be joined to
 
         Returns:
-            nElements (int) : Index where the input elements have to be split so the joined fit into maxLen
+            nElements (int) : Index where the input elements have to be split so the
+                              joined fit into maxLen
             remainingElements (list) : Remaining elements that exceed the joined maxLen
         """
         nElements = len(elements)
@@ -544,7 +566,8 @@ class ListWindow(Window):
 
 # class InteractionWindow(Window):
 #     """
-#     Window class used when interacting with the database. The windows will render a header with interaction options and some sequence of interactions.
+#     Window class used when interacting with the database. The windows will render a
+#     header with interaction options and some sequence of interactions.
 #     """
 #     def __init__(self, height, width, headerElements):
 #         super().__init__(height, width, headerElements)
@@ -558,7 +581,8 @@ class ListWindow(Window):
 #
 #     def draw(self, inputString):
 #         """
-#         Draw the current state of the window. Will check if the lines exeed the height and will not print earlier lines if found.
+#         Draw the current state of the window. Will check if the lines exeed the
+#         height and will not print earlier lines if found.
 #         """
 #         self.makeheader()
 #         for line in self.header:

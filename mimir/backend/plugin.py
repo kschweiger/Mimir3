@@ -1,9 +1,9 @@
 """
 Module for processing plugins set for certain Items in the model definition
 """
+import logging
 import os
 import re
-import logging
 
 import hachoir.metadata
 import hachoir.parser
@@ -76,8 +76,10 @@ def getPluginValues(fileName, pluginDefs, modules=["VideoMetaData", "osData"]):
 
     Args:
         fileName (str) : Path to a file
-        pluginDefs (list) : List of plugins (in form module:value) -> Get from model.pluginDefinitions
-        modules (list) : Not intendet to be passed by user. Just defines the plugins usuable
+        pluginDefs (list) : List of plugins (in form module:value)
+                            -> Get from model.pluginDefinitions
+        modules (list) : Not intended to be passed by user. Just defines the plugins
+                         usable
 
     Returns:
         dict : Dict keys are module:value and values are the plugin return values

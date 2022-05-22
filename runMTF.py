@@ -1,5 +1,6 @@
 import argparse
 import logging
+
 from mimir.frontend.terminal.application import App, initDatabase
 
 

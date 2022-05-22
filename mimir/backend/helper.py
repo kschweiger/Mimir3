@@ -42,8 +42,8 @@ def getTimeFormatted(retFormat, delimDate=".", inverted=False):
 
 def sortDateTime(list2Sort):
     """
-    Helper function to convert the datetime values from getTimeFormatted() back to datetime
-    objects and return them in a sorted list
+    Helper function to convert the datetime values from getTimeFormatted() back
+    to datetime objects and return them in a sorted list
     """
     datetimeObj = []
     for elem in list2Sort:

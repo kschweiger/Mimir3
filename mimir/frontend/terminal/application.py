@@ -1,31 +1,33 @@
-import os
-import logging
 import json
+import logging
+import os
 import re
 from copy import deepcopy
 
-from mimir.backend.database import DataBase
-from mimir.backend.entry import Item, ListItem
-from mimir.frontend.terminal.display import Window, ListWindow
 import mimir.backend.helper
+from mimir.backend.database import DataBase
+from mimir.frontend.terminal.display import ListWindow, Window
 
 logger = logging.getLogger(__name__)
 
 
 class App:
     """
-    App class that manages the communication between the Window module and the database model
+    App class that manages the communication between the Window module and the database
+    model
 
     Args:
         dababase (DataBase) : Initialized mimir DataBase
-        enableStartupSeatch (bool) : If True, a search for new files will be enabled on startup
+        enableStartupSeatch (bool) : If True, a search for new files will be enabled
+                                     on startup
     """
 
     def __init__(self, dababase: DataBase, enableStartupSeatch=True):
         self.database = dababase
         if not os.path.exists(self.database.mimirdir + "/MTF_model.json"):
             raise RuntimeError(
-                "No MTF configuration found in .mimir directory. Use make MTFconfig.py to create on from the database config"
+                "No MTF configuration found in .mimir directory. "
+                "Use make MTFconfig.py to create on from the database config"
             )
         self.config = MTFConfig(self.database.mimirdir + "/MTF_model.json")
         self.lastIDList = self.database.getAllValuebyItemName("ID")
@@ -175,13 +177,8 @@ class App:
                     key=lambda x: int(x),
                 )
                 tableElements = self.generateList(allIDs)
-                # tableElements = self.generateList("All")
                 self.listWindow.lines = []
                 self.listWindow.update(tableElements)
-                # print("=========================================")
-                # self.listWindow.draw(skipHeader = True, skipTable = False, fillWindow = False)
-                # print("+++++++++++++++++++++++++++++++++++++++++")
-                # retVal = self.listWindow.interact("Enter Value", None, onlyInteraction = False)
             elif retVal == "2":
                 self.runModWindow(None, fromMain=False, fromList=True)
             elif retVal == "3" or retVal == "03":
@@ -214,12 +211,12 @@ class App:
                 ]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
-                self.listWindow.draw_pre_table_title(f"-", [(" ", "-")])
+                self.listWindow.draw_pre_table_title("-", [(" ", "-")])
                 self.listWindow.draw_pre_table_title(
                     f"_{self.config.restrictedListLen}_last_added_entries_",
                     [(" ", "-"), ("_", " ")],
                 )
-                self.listWindow.draw_pre_table_title(f"-", [(" ", "-")])
+                self.listWindow.draw_pre_table_title("-", [(" ", "-")])
                 self.listWindow.update(tableElements)
             elif retVal == "7":
                 sortedIDs = self.database.getSortedIDs("Opened", reverseOrder=True)[
@@ -227,12 +224,12 @@ class App:
                 ]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
-                self.listWindow.draw_pre_table_title(f"-", [(" ", "-")])
+                self.listWindow.draw_pre_table_title("-", [(" ", "-")])
                 self.listWindow.draw_pre_table_title(
                     f"_{self.config.restrictedListLen}_last_opened_entries_",
                     [(" ", "-"), ("_", " ")],
                 )
-                self.listWindow.draw_pre_table_title(f"-", [(" ", "-")])
+                self.listWindow.draw_pre_table_title("-", [(" ", "-")])
                 self.listWindow.update(tableElements)
             elif retVal == "8":
                 sortedIDs = self.database.getSortedIDs("Changed", reverseOrder=True)[
@@ -240,12 +237,12 @@ class App:
                 ]
                 tableElements = self.generateList(sortedIDs)
                 self.listWindow.lines = []
-                self.listWindow.draw_pre_table_title(f"-", [(" ", "-")])
+                self.listWindow.draw_pre_table_title("-", [(" ", "-")])
                 self.listWindow.draw_pre_table_title(
                     f"_{self.config.restrictedListLen}_last_changed_entries_",
                     [(" ", "-"), ("_", " ")],
                 )
-                self.listWindow.draw_pre_table_title(f"-", [(" ", "-")])
+                self.listWindow.draw_pre_table_title("-", [(" ", "-")])
                 self.listWindow.update(tableElements)
             elif retVal == "9":
                 del_ID = self.listWindow.interact(
@@ -333,10 +330,12 @@ class App:
                         e = self.database.getEntryByItemName("ID", id_)[0]
                         total_size += float(e.Size)
                         self.dbWindow.update(
-                            f"{id_} is marked for delection(Name: {e.Name}; Size: {e.Size} GB)"
+                            f"{id_} is marked for deletion "
+                            f"(Name: {e.Name}; Size: {e.Size} GB)"
                         )
                     self.dbWindow.update(
-                        f"{len(queryIDs)} entries marked for deletion with a total size of {total_size} GB"
+                        f"{len(queryIDs)} entries marked for deletion "
+                        f"with a total size of {total_size} GB"
                     )
                     del_q = self.dbWindow.draw(
                         "Are you sure you want to delete these entries? [Y/n]: "
@@ -418,7 +417,8 @@ class App:
 
     def processListOfModification(self, window, IDList):
         """
-        Function prevalidating the IDs set in the ModWindows for bulk updating of Entries
+        Function prevalidating the IDs set in the ModWindows for bulk updating of
+        Entries
         """
         IDList = sorted(IDList, key=lambda x: int(x))
         _validIDs = []
@@ -439,7 +439,8 @@ class App:
 
     def runMultiModWindow(self, startVal, ID, isNewWindow, fromMain, fromList):
         """
-        Function defining the interactions of the multi modification window. Will spawn a new one for each ID modified in the current scope of the app
+        Function defining the interactions of the multi modification window. Will spawn
+        a new one for each ID modified in the current scope of the app
         """
         logger.info("Switching to multi modification window for ID %s", ID)
         thisWindow = self.allMultiModWindow[ID]
@@ -461,20 +462,20 @@ class App:
                 pass
             elif retVal in thisWindow.validOptions:
                 if retVal == str(self.mulitModExecVal):
-                    thisWindow.update("Silent Execute triggered")  ###TEMP
+                    thisWindow.update("Silent Execute triggered")  # TEMP
                     self.execute(ID, thisWindow, silent=True)
                 else:
                     for elem in thisWindow.headerOptions:
                         modID, name, comment = elem
                         if modID == retVal:
-                            thisWindow.update("%s, %s" % (modID, name))  ###TEMP
+                            thisWindow.update("%s, %s" % (modID, name))  # TEMP
                             if name in self.database.model.items.keys():
-                                thisWindow.update("%s is a Item" % name)  ###TEMP
+                                thisWindow.update("%s is a Item" % name)  # TEMP
                                 self.modSingleItem(
                                     thisWindow, [ID], name, fromMultiMod=True
                                 )
                             elif name in self.database.model.listitems.keys():
-                                thisWindow.update("%s is a ListItem" % name)  ###TEMP
+                                thisWindow.update("%s is a ListItem" % name)  # TEMP
                                 self.modListItem(
                                     thisWindow, [ID], name, fromMultiMod=True
                                 )
@@ -490,7 +491,8 @@ class App:
 
     def modListItem(self, window, IDs, name, verbose=True, fromMultiMod=False):
         """
-        Wrapper for the different modification options and how they are called in the database
+        Wrapper for the different modification options and how they are called in the
+        database
 
         Args:
             windows (Window or ListWindows) : Current window
@@ -627,7 +629,8 @@ class App:
 
     def executeRandom(self, window, fromList=False, silent=False):
         """
-        Function for getting a random entry from the last printed List of entries (if none printed from all)
+        Function for getting a random entry from the last printed List of entries
+        (if none printed from all)
         """
         if not self.lastIDList:
             window.print("No entries to choose from. Maybe requery?")
@@ -677,7 +680,8 @@ class App:
 
     def generateList(self, get="All"):
         """
-        Function generating the necessary table elements win using the ListWindow. Will used all items set in the DisplayItems configuration option
+        Function generating the necessary table elements win using the ListWindow.
+        Will used all items set in the DisplayItems configuration option
         """
         # TODO Check get input
         tableElements = []
@@ -691,14 +695,10 @@ class App:
         # logger.info(ids2Print)
         for id in ids2Print:
             entryElements = []
-            thisEntry = self.database.getEntryByItemName("ID", id)[0]
             for item in self.tableColumnItems:
                 isCounter = False
                 if self.config.itemInfo[item]["Type"] == "Counter":
-                    thisItem = None
                     isCounter = True
-                else:
-                    thisItem = thisEntry.getItem(item)
                 if isCounter:
                     value = str(
                         self.database.getCount(
@@ -730,11 +730,14 @@ class App:
 
     def joinItemValues(self, entry, item, joinWith=", ", joinFull=False):
         """
-        Will join all values in a ListItem. Will use the config settings Priority, DisplayDefault and nDisplay to format the return value. nDisplay can be overruled by the joinFull argument.
+        Will join all values in a ListItem. Will use the config settings Priority,
+        DisplayDefault and nDisplay to format the return value. nDisplay can be
+        overruled by the joinFull argument.
 
         Args:
             entry (DataBaseEntry)
-            item (str) : ListItem to be joined (Function expects listitem no check implemented)
+            item (str) : ListItem to be joined (Function expects listitem no check
+                         implemented)
             joinWith (str) : String that will be used to join values
             joinFull (bool) : Will overrule the maximum lenghts
 
@@ -794,8 +797,7 @@ class App:
             value (str) : Item Value
             item (str) : Item name
 
-        Returns:
-            value (str) : If modDispaly set will return modified value otherwise passed one
+        Returns: If modDispaly set will return modified value otherwise passed one
         """
         if "modDisplay" in self.config.itemInfo[item].keys():
             if self.config.itemInfo[item]["modDisplay"] == "Date":
@@ -814,7 +816,8 @@ class App:
 
     def about(self):
         """
-        Method that returns the information for the about screen. Like python-version, number entryies, number if values per ListItem, most used Value
+        Method that returns the information for the about screen. Like python-version,
+        number entr/ies, number if values per ListItem, most used Value
 
         Returns:
             aboutInfo (dict) : All values of interest

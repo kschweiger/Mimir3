@@ -1,19 +1,19 @@
 """
 Toplevel Database class for the Mimir database
 """
-import logging
-import random
-import json
-import os
 import copy
-from shutil import copy2
-from glob import glob
+import json
+import logging
+import os
+import random
 from collections import OrderedDict
-from typing import Union, List, Set
+from glob import glob
+from shutil import copy2
+from typing import List, Set, Union
 
-from mimir.backend.entry import DataBaseEntry, Item, ListItem
 import mimir.backend.helper
 import mimir.backend.plugin
+from mimir.backend.entry import DataBaseEntry, Item, ListItem
 from mimir.backend.enums import RandomWeightingMethod
 
 logger = logging.getLogger(__name__)
@@ -21,16 +21,28 @@ logger = logging.getLogger(__name__)
 
 class DataBase:
     """
-    Database class that contains entries which are organized by an unique ID. The class contains methods for operating on the Database (save, load, queries, random entries) and modifing/reading/removing Entries. When a new database is created, a root directory (which contains all files) and a model are required. The Model can be created with makeModelDefinition.py and modified for specific needs. During initialization a .mimir directory will be created in the passed root directory. There the database and all affiliated files (backup, secondary databases) will be saved. The model passed in this process will alse be saved there for future reference.
+    Database class that contains entries which are organized by an unique ID. The class
+    contains methods for operating on the Database (save, load, queries, random entries)
+    and modifing/reading/removing Entries. When a new database is created, a root
+    directory (which contains all files) and a model are required. The Model can be
+    created with makeModelDefinition.py and modified for specific needs. During
+    initialization a .mimir directory will be created in the passed root directory.
+    There the database and all affiliated files (backup, secondary databases) will be
+    saved. The model passed in this process will alse be saved there for future
+    reference.
 
     Args:
-        root (str) : Base path of the database. This can change between different session for example if the data base is on a removable drive
-        status (str) : Initializes a new Database or loads a existing database in root dir
+        root (str) : Base path of the database. This can change between different
+                     session for example if the data base is on a removable drive
+        status (str) : Initializes a new Database or loads an existing database
+                       in root dir
         model (str) : Path to the model used for database initialization
 
     Raises:
-        RuntimeError : Raised if .mimir folder already existis and a new database is being created
-        RuntimeError : Raised if a database is being loaded from a folder that has no initialized database
+        RuntimeError : Raised if .mimir folder already existis and a new database is
+                       being created
+        RuntimeError : Raised if a database is being loaded from a folder that has no
+                       initialized database
         RuntimeError : Raised for invalid status argument
 
     Attributes:
@@ -41,7 +53,8 @@ class DataBase:
         entries (list) : List of all Entry Object in the database
         entrydict (dict) : Dict of all entries with IDs as key
         _model (Model) : General information of the database model
-        isdummy (bool) : Flag used for dummy databases --> Currently only disables saveing
+        isdummy (bool) : Flag used for dummy databases
+                         --> Currently only disables saveing
         cachedValue (dict - list) : Saved all present Values for item (key)
         valuesChanged (dict - bool) : Flag if cachedValues are still valid
     """
@@ -80,7 +93,7 @@ class DataBase:
                         indent=4,
                         separators=(",", ": "),
                     )
-            # New database always runs a search of the filesystem starting from self.root
+            # New database always runs a search of the filesystem starting from root
             filesFound = self.getAllFilesMatchingModel()
             for path2file in filesFound:
                 logger.debug("Adding file %s", path2file)
@@ -301,7 +314,6 @@ class DataBase:
         """
         Function that finds if files changed their path
         """
-        newFiles = []
         existingFiles = []
         existingFilesNames = []
         allfiles = self.getAllFilesMatchingModel(startdir)
@@ -366,11 +378,11 @@ class DataBase:
     def checkMissingFiles(self, startdir="", mod_id=True):
         """
         This function compares the files on the filesystem (from the db rootdir) to the
-        existing path in the database. If one is missing, the Entry is deleted and the last entry
-        (with the highest ID) will be moved in its place.
+        existing path in the database. If one is missing, the Entry is deleted and the
+        last entry (with the highest ID) will be moved in its place.
 
-        NOTE: This does not ask for permission! But the backup funcitonality on saving should help
-        with accidents....
+        NOTE: This does not ask for permission! But the backup funcitonality on saving
+        should help with accidents....
         """
         missingFiles = self.getMissingFiles(startdir)
         logger.debug("Missing files: %s", missingFiles)
@@ -501,13 +513,14 @@ class DataBase:
 
     def remove(self, identifier, byID=False, byName=False, byPath=False):
         """
-        Remove a entry from the databse by specifing indentifier. Indentifier can be ID, Name\n
-        or Path (vector). When calling the function only one can be set to True otherwise a\n
-        exception will be raised
+        Remove a entry from the databse by specifing indentifier. Indentifier can be ID,
+        Name or Path (vector). When calling the function only one can be set to True
+        otherwise a exception will be raised
 
         Args:
-            indentifier (int, string) : Indentifier by with the entry will be removed. For can be of\n
-                                  type string for all vectors and also int for ID vector
+            identifier (int, string) : Indentifier by with the entry will be removed.
+                                       For can be of type string for all vectors and
+                                       also int for ID vector
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
             byPath (bool) : Switch for using the Path vector
@@ -541,8 +554,9 @@ class DataBase:
         Modify an entry of the Database
 
         Args:
-            indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
-                                        type string for all vectors and also int for ID vector
+            identifier (int, string) : Indentifier by which the entry will selected.
+                                        It can be of\n type string for all vectors and
+                                        also int for ID vector
             itemName (str) : Name of Item to be modified
             newValue (str) : New value for the item
             byID (bool) : Switch for using the ID vector
@@ -599,7 +613,9 @@ class DataBase:
         Modify an entry of the Database.
 
         Args:
-            indentifier (int, string) : Indentifier by which the entry will selected. It can be of type string for all vectors and also int for ID vector
+            identifier (int, string) : Indentifier by which the entry will selected.
+                                        It can be of type string for all vectors and
+                                        also int for ID vector
             itemName (str) : Name of Item to be modified
             newValue (str) : New value for the item
             oldValue (str) : Required for replacement
@@ -653,10 +669,14 @@ class DataBase:
 
     def getCount(self, identifier, itemName, byID=False, byName=False, byPath=False):
         """
-        Method for counting the number of values in a ListItem. This need to be a database operation, because the Entry is not aware of it's default value which is not counted
+        Method for counting the number of values in a ListItem. This need to be a
+        database operation, because the Entry is not aware of it's default value which
+        is not counted
 
         Args:
-            indentifier (int, string) : Indentifier by which the entry will selected. It can be of type string for all vectors and also int for ID vector
+            identifier (int, string) : Indentifier by which the entry will selected.
+                                        It can be of type string for all vectors and
+                                        also int for ID vector
             itemName (str) : ListItem that will be counted
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
@@ -691,12 +711,14 @@ class DataBase:
 
     def updateOpened(self, identifier, byID=False, byName=False, byPath=False):
         """
-        Wrapper for modifyListEntry that is supposed to be called after a file has been openend.
-        For this function the byID is enable on default when none of the arguments is set to true.
+        Wrapper for modifyListEntry that is supposed to be called after a file has been
+        openend. For this function the byID is enable on default when none of the
+        arguments is set to true.
 
         Args:
-            indentifier (int, string) : Indentifier by which the entry will selected. It can be of\n
-                                        type string for all vectors and also int for ID vector
+            identifier (int, string) : Indentifier by which the entry will selected.
+                                        It can be of type string for all vectors and
+                                        also int for ID vector
             byID (bool) : Switch for using the ID vector
             byName (bool) : Switch for using the Name vector
             byPath (bool) : Switch for using the Path vector
@@ -714,13 +736,15 @@ class DataBase:
 
     def query(self, itemNames, itemValues, returnIDs=False):
         """
-        Query database: Will get all values for items with names itemNames and searches\n
-        for all values given in the itemValues parameter. Leading ! on a value will be used as a veto.
+        Query database: Will get all values for items with names itemNames and searches
+        for all values given in the itemValues parameter. Leading ! on a value will be
+        used as a veto.
 
         Args:
             itemNames (str, list) : itemNames used for the query
             itemValues (str, list) : itemValues used for the query
-            returnIDs (bool) : If True function will return a list of IDs instead of entries
+            returnIDs (bool) : If True function will return a list of IDs instead of
+                               entries
 
         Return:
             result (list) : list of all entries (ids) matching the query
@@ -852,7 +876,8 @@ class DataBase:
         method: RandomWeightingMethod = RandomWeightingMethod.TIMES_OPENED,
     ) -> str:
         """
-        Get a random entry from the database out of the ID passed in the chooseFrom variable
+        Get a random entry from the database out of the ID passed in the chooseFrom
+        variable
 
         Args:
             choose_from (list, set) : List of ID to choose a random ID from
@@ -883,7 +908,8 @@ class DataBase:
 
     def getRandomEntryAll(self, weighted=False):
         """
-        Get a random entry from the database out of all IDs. This is just a wrapper for getRandomEntry
+        Get a random entry from the database out of all IDs. This is just a wrapper for
+        getRandomEntry
 
         Args:
             chooseFrom (list, set) : List of ID to choose a random ID from
@@ -894,16 +920,19 @@ class DataBase:
 
     def getItemsPyPath(self, fullFileName, fast=False, whitespaceMatch=True):
         """
-        Function will parse the filename for values pesent in the Items defined in SecondaryDBs.
-        The passed file name will be split by separators define in model. Implemented as a two stage process.
+        Function will parse the filename for values pesent in the Items defined in
+        SecondaryDBs. The passed file name will be split by separators define in model.
+        Implemented as a two stage process.
         1. Split at / and try to identify full know values
         2.
 
         Args:
-            fullFileName (str) : Expects full file name starting from the mimir base dictRepr
+            fullFileName (str) : Expects full file name starting from the mimir
+                                 base dictRepr
 
         Returns:
-            foundOptions (dict) : List of values that could be matched to the path by Item
+            foundOptions (dict) : List of values that could be matched to the path
+                                  by Item
         """
         foundOptions = {}
         items2Check = self._model.secondaryDBs
@@ -949,7 +978,8 @@ class DataBase:
                 values[item] = set(
                     [x.lower() for x in self.getAllValuebyItemName(item)]
                 )
-        # Now we need to split elements with whitespace into two element to match partial matches
+        # Now we need to split elements with whitespace into
+        # two element to match partial matches
         partialWhiteSpaces = {}
         for item in items2Check:
             newValueList = []
@@ -958,7 +988,7 @@ class DataBase:
                     splitValues = value.split(" ")
                     newValueList += splitValues
                     for val in splitValues:
-                        if not val in partialWhiteSpaces.keys():
+                        if val not in partialWhiteSpaces.keys():
                             partialWhiteSpaces[val] = [value]
                         else:
                             partialWhiteSpaces[val].append(value)
@@ -972,7 +1002,8 @@ class DataBase:
             for element in remSplitElements:
                 for item in items2Check:
                     for value in values[item]:
-                        # If a single character is in whitespace name it will be skipped.
+                        # If a single character is in whitespace name
+                        # it will be skipped.
                         if len(value) == 1:
                             continue
                         if value in element:
@@ -995,7 +1026,8 @@ class DataBase:
                                     element,
                                 )
 
-        # Replace the lowercase versions of the options with the original case sensitive ones
+        # Replace the lowercase versions of the options with the original
+        # case sensitive ones
         for item in items2Check:
             for ioption, option in enumerate(foundOptions[item]):
                 for iorigOption, origOption in enumerate(values_orig[item]):
@@ -1081,7 +1113,7 @@ class Model:
             thisPlugIn = self._listitems[item]["plugin"]
             if thisPlugIn != "":
                 self.pluginDefinitions.append(thisPlugIn)
-                if not thisPlugIn in self.pluginMap.keys():
+                if thisPlugIn not in self.pluginMap.keys():
                     self.pluginMap[thisPlugIn] = item
                 else:
                     raise RuntimeError(
@@ -1091,7 +1123,7 @@ class Model:
             thisPlugIn = self._items[item]["plugin"]
             if thisPlugIn != "":
                 self.pluginDefinitions.append(thisPlugIn)
-                if not thisPlugIn in self.pluginMap.keys():
+                if thisPlugIn not in self.pluginMap.keys():
                     self.pluginMap[thisPlugIn] = item
                 else:
                     raise RuntimeError(
@@ -1105,7 +1137,9 @@ class Model:
         """
         Function for updating the model
 
-        TODO: Will beused if one wants to change the model of the database. If called a new model .json will be loaded and the changes will be propagated **savely** to the databse model
+        TODO: Will beused if one wants to change the model of the database.
+        TODO: If called a new model .json will be loaded and the changes will be
+        TODO: propagated **savely** to the databse model
         """
         pass
 
@@ -1142,15 +1176,3 @@ class Model:
     def listitems(self):
         """Retruns all listitem demfinitons in the model"""
         return self._listitems
-
-
-# def validateDatabaseJSON(database, jsonfile):
-#    """
-#    Function for validating a saved database. This comparison requires the
-#    lastest version of the database to check in memory.
-#
-#    Args:
-#        databse (DataBase) : Reference database (in Runtime)
-#        json (str) : Path to json file to be checked
-#    """
-#    checkDB = Database(database.databaseRoot, "load", database.model.fileName, jsonfile)

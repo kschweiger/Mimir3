@@ -30,4 +30,4 @@ jobs:
         cd tests/
         source makeTestStruc.sh
         cd ..
-        python -m pytest -v --cov-report=html --cov=mimir tests/ 
+        python -m pytest -v --cov-report=html --cov=mimir tests/

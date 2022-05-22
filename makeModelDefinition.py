@@ -1,15 +1,28 @@
 import json
 import sys
-def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=False, setItemType=None, setDefault=None):
+
+
+def main(
+    inputLine,
+    outputName,
+    DBtype,
+    items,
+    listitems,
+    secondaryDBs,
+    dryrun=False,
+    setItemType=None,
+    setDefault=None,
+):
     """
     Function for generating a DataBase model configuration.
 
     Args:
-        outputname (str) : Will be used as default name of the model and as filename\n
-        DBtype (str)  : Used to set up the file types for the database. Currently supported: Video, Audio and Text\n
-        items (list)  : DB entries with this names will be created as Item\n
-        items (list)  : DB entries with this names will be created as ListItem\n
-        dryrun (bool) : If True the output json will be printed instead saved\n
+        outputName (str) : Will be used as default name of the model and as filename
+        DBtype (str)  : Used to set up the file types for the database. Currently
+                        supported: Video, Audio and Text
+        items (list)  : DB entries with this names will be created as Item
+        items (list)  : DB entries with this names will be created as ListItem
+        dryrun (bool) : If True the output json will be printed instead saved
 
     """
     model = {}
@@ -17,21 +30,31 @@ def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=F
     model["General"]["Name"] = outputName
     model["General"]["Description"] = "Description of {0}".format(outputName)
     if DBtype == "Video":
-        model["General"]["Types"] = ["mp4", "wmv", "avi", "mov", "mpg", "mp7",
-                                     "flv", "mkv", "f4v", "mpeg"]
+        model["General"]["Types"] = [
+            "mp4",
+            "wmv",
+            "avi",
+            "mov",
+            "mpg",
+            "mp7",
+            "flv",
+            "mkv",
+            "f4v",
+            "mpeg",
+        ]
     elif DBtype == "Audio":
         model["General"]["Types"] = ["mp3", "wav"]
     else:
         model["General"]["Types"] = ["txt"]
-    model["General"]["Separators"] = [".","-","_","+"]
-    items = ["ID", "Path", "Added", "Name", "DeletionMark"]+items
+    model["General"]["Separators"] = [".", "-", "_", "+"]
+    items = ["ID", "Path", "Added", "Name", "DeletionMark"] + items
     for item in items:
         model[item] = {}
         model[item]["Type"] = "Item"
         if item == "DeletionMark":
             model[item]["default"] = "0"
         else:
-            model[item]["default"] = "empty"+item
+            model[item]["default"] = "empty" + item
         model[item]["hide"] = ""
         model[item]["plugin"] = ""
         if item == "ID" or item == "DeletionMark":
@@ -41,11 +64,11 @@ def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=F
         else:
             model[item]["itemType"] = "str"
 
-    listitems = ["Opened", "Changed"]+listitems
+    listitems = ["Opened", "Changed"] + listitems
     for item in listitems:
         model[item] = {}
         model[item]["Type"] = "ListItem"
-        model[item]["default"] = ["empty"+item]
+        model[item]["default"] = ["empty" + item]
         model[item]["hide"] = ""
         model[item]["plugin"] = ""
         if item == "Opened" or item == "Changed":
@@ -54,39 +77,44 @@ def main(inputLine, outputName, DBtype, items, listitems, secondaryDBs, dryrun=F
             model[item]["itemType"] = "str"
 
     if setItemType is not None:
-        for item in items+listitems:
+        for item in items + listitems:
             if item in setItemType.keys():
                 model[item]["itemType"] = setItemType[item]
 
     if setDefault is not None:
-        for item in items+listitems:
+        for item in items + listitems:
             if item in setDefault.keys():
                 model[item]["default"] = setDefault[item]
 
     for item in secondaryDBs:
         if not (item in items or item in listitems):
-            print("Item {0} in secondaryDBs is no valid item of model. Fix arguments and rerun. Exiting....".format(item))
+            print(
+                "Item {0} in secondaryDBs is no valid item of model.".format(item),
+                "Fix arguments and rerun. Exiting....",
+            )
             exit()
     model["General"]["SecondaryDBs"] = secondaryDBs
 
     model["General"]["CreationCommend"] = " ".join(inputLine)
     if dryrun:
-        print(json.dumps(model, sort_keys=True, indent=4, separators=(',', ': ')))
+        print(json.dumps(model, sort_keys=True, indent=4, separators=(",", ": ")))
     else:
-        with open("conf/{0}.json".format(outputName), 'w') as outfile:
-            json.dump(model, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+        with open("conf/{0}.json".format(outputName), "w") as outfile:
+            json.dump(model, outfile, sort_keys=True, indent=4, separators=(",", ": "))
+
 
 if __name__ == "__main__":
     import argparse
+
     argumentparser = argparse.ArgumentParser(
-        description='Function for making a DataBase model'
+        description="Function for making a DataBase model"
     )
     argumentparser.add_argument(
         "--output",
         action="store",
         help="Output file name. Saved in conf/",
         type=str,
-        required=True
+        required=True,
     )
 
     argumentparser.add_argument(
@@ -95,40 +123,42 @@ if __name__ == "__main__":
         help="Sets up default file types for database",
         type=str,
         default="Video",
-        choices=["Video", "Audio", "Text"]
+        choices=["Video", "Audio", "Text"],
     )
     argumentparser.add_argument(
         "--items",
         action="store",
         help="Items that will be put in the config",
-        nargs='+',
+        nargs="+",
         type=str,
-        default=["SingleItem"]
+        default=["SingleItem"],
     )
     argumentparser.add_argument(
         "--listitems",
         action="store",
         help="ListItems that will be put in the config",
-        nargs='+',
+        nargs="+",
         type=str,
-        default=["ListItem"]
+        default=["ListItem"],
     )
     argumentparser.add_argument(
         "--setItemType",
         action="store",
-        help="Sets the itemType of a added item (default is str). \n Pass itemName,type (comma separated w/o space!)",
-        nargs='+',
+        help="Sets the itemType of a added item (default is str). "
+        "Pass itemName,type (comma separated w/o space!)",
+        nargs="+",
         type=str,
-        default=None
+        default=None,
     )
 
     argumentparser.add_argument(
         "--setDefault",
         action="store",
-        help="Sets the the default value of a added item (default is empty[Name]). \n Pass itemName,default (comma separated w/o space!)",
-        nargs='+',
+        help="Sets the the default value of a added item (default is empty[Name]). "
+        "Pass itemName,default (comma separated w/o space!)",
+        nargs="+",
         type=str,
-        default=None
+        default=None,
     )
 
     argumentparser.add_argument(
@@ -142,7 +172,7 @@ if __name__ == "__main__":
         help="Items for which a seconary database will be created",
         nargs="+",
         type=str,
-        default=["SingleItem", "ListItem"]
+        default=["SingleItem", "ListItem"],
     )
 
     args = argumentparser.parse_args()
@@ -162,4 +192,14 @@ if __name__ == "__main__":
     else:
         setDefault = None
 
-    main(sys.argv, args.output, args.type, args.items, args.listitems, args.secondaryDBs, args.dryrun, setItemType, setDefault)
+    main(
+        sys.argv,
+        args.output,
+        args.type,
+        args.items,
+        args.listitems,
+        args.secondaryDBs,
+        args.dryrun,
+        setItemType,
+        setDefault,
+    )

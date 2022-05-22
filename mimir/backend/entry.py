@@ -11,14 +11,16 @@ class DataBaseEntry:
     The Entry class describes all information stored in an database entry
 
     Args:
-        initItems (list) : Each Item has to be a tuple of ItemName, ItemType ("Single" or "List") and InitValues
+        initItems (list) : Each Item has to be a tuple of ItemName, ItemType ("Single"
+                           or "List") and InitValues
     Attributes:
         names (list) : List of all item names in entry\n
         items (dict) : Dictionary with all Item/ListItem objects
     Raises:
         TypeError : If initItems is not of type list\n
         TypeError : If initItems is no list of tuples\n
-        RuntimeError : If the tuple of initItems is invalid (not exactly three of type str, typ, str/int/float
+        RuntimeError : If the tuple of initItems is invalid (not exactly three of type
+                       str, typ, str/int/float
     """
 
     def __init__(self, initItems):
@@ -184,7 +186,6 @@ class DataBaseEntry:
             if self.names != other.names:
                 return False
             for item in self.items:
-                # print("Comparing",self.items[item].getValue(),other.items[item].getValue())
                 if self.items[item].getValue() != other.items[item].getValue():
                     return False
             return True
@@ -201,14 +202,15 @@ class DataBaseEntry:
     @staticmethod
     def checkPassedItems(passedName=None, passedType=None, passedValue=None):
         """
-        Helper function for checking items passed to DataBaseEntry and raising exceptions
+        Helper function for checking items passed to DataBaseEntry and raising
+        exceptions
         """
         if not isinstance(passedName, str) and passedName is not None:
             msg = "New name {0} is type {1} not string".format(
                 passedName, type(passedName)
             )
             raise TypeError(msg)
-        if not passedType in ["Single", "List"] and passedType is not None:
+        if passedType not in ["Single", "List"] and passedType is not None:
             msg = "New item {0} has ivalid type: {1}".format(passedName, passedType)
             raise RuntimeError(msg)
         if not isinstance(passedValue, (str, list)) and passedValue is not None:

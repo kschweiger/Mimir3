@@ -1,12 +1,13 @@
 import json
-import sys
+
 
 def main(model, system, dryrun, queryItems):
     """
     Function for creating a MTF config based on a passed model.json
 
     Args:
-        model (str) : Input model.json created with makeModelDefinition.py. Will be used to set MTF configuration based on defined Items
+        model (str) : Input model.json created with makeModelDefinition.py. Will be
+        used to set MTF configuration based on defined Items
     """
     modelDict = None
     with open(model) as f:
@@ -23,12 +24,15 @@ def main(model, system, dryrun, queryItems):
             elif modelDict[section]["Type"] == "Item":
                 modelSingleItems.append(section)
             else:
-                raise RuntimeError("Section %s has no valid type. Found %s"%(section, modelDict[section]["Type"]))
+                raise RuntimeError(
+                    "Section %s has no valid type. Found %s"
+                    % (section, modelDict[section]["Type"])
+                )
         if "itemType" in modelDict[section].keys():
             if modelDict[section]["itemType"] == "datetime":
                 modelDatetimeItems.append(section)
 
-    modelItems = modelSingleItems+modelListItems
+    modelItems = modelSingleItems + modelListItems
 
     config = {}
     config["General"] = {}
@@ -37,9 +41,13 @@ def main(model, system, dryrun, queryItems):
     config["General"]["nListRestricted"] = 10
 
     if system == "Linux":
-        config["General"]["Executable"] = "mimir/frontend/terminal/executable/linux/runVLC.sh"
+        config["General"][
+            "Executable"
+        ] = "mimir/frontend/terminal/executable/linux/runVLC.sh"
     elif system == "macOS":
-        config["General"]["Executable"] = "mimir/frontend/terminal/executable/macOS/runVLC.sh"
+        config["General"][
+            "Executable"
+        ] = "mimir/frontend/terminal/executable/macOS/runVLC.sh"
     else:
         raise NotImplementedError
 
@@ -63,7 +71,7 @@ def main(model, system, dryrun, queryItems):
             config[item]["maxLen"] = 99
             config[item]["Type"] = "Item"
         if item in modelDatetimeItems:
-            config[item]["modDisplay"] = "Full" #Full, Date, Time
+            config[item]["modDisplay"] = "Full"  # Full, Date, Time
     config["Name"]["maxLen"] = 32
 
     config["General"]["DisplayItems"].append("timesOpened")
@@ -75,51 +83,75 @@ def main(model, system, dryrun, queryItems):
     config["timesOpened"]["Base"] = "Opened"
 
     outputName = model.split("/")[-1].replace(".json", "")
-    config["General"]["Windows"] = ["Main", "List", "DB","Modify","MultiModify"]
+    config["General"]["Windows"] = ["Main", "List", "DB", "Modify", "MultiModify"]
 
     config["Window"] = {}
     config["Window"]["Main"] = {}
     config["Window"]["Main"]["Type"] = "Window"
     config["Window"]["Main"]["Title"] = "Main Window of MTF"
-    config["Window"]["Main"]["Text"] = ["This is a config generated from "+str(model),
-                                        "The Following options are available for interaction"]
-    config["Window"]["Main"]["Options"] = [("Exit", "Exit MTF"),
-                                           ("Execute","Execute a database entry"),
-                                           ("Modify","Enter modification mode"),
-                                           ("List","Enter list mode"),
-                                           ("Random","Execute a random entry"),
-                                           ("DB Option","Database options (save, etc.)")]
+    config["Window"]["Main"]["Text"] = [
+        "This is a config generated from " + str(model),
+        "The Following options are available for interaction",
+    ]
+    config["Window"]["Main"]["Options"] = [
+        ("Exit", "Exit MTF"),
+        ("Execute", "Execute a database entry"),
+        ("Modify", "Enter modification mode"),
+        ("List", "Enter list mode"),
+        ("Random", "Execute a random entry"),
+        ("DB Option", "Database options (save, etc.)"),
+    ]
     config["Window"]["List"] = {}
     config["Window"]["List"]["Type"] = "ListWindow"
     config["Window"]["List"]["Title"] = "MTF Lists"
     config["Window"]["List"]["Text"] = None
-    config["Window"]["List"]["Options"] = [("Main", "Back to main menu"),
-                                           ("All","Prints all entries"),
-                                           ("Modify","Enter modification mode"),
-                                           ("Execute","Execute a database entry"),
-                                           ("Random","Execute a random entry from the last printed list"),
-                                           ("Query","Print entries returned by a query. Will query items: {0}".format(", ".join(config["General"]["QueryItems"]))),
-                                           ("Newest","Print latest added entries"),
-                                           ("Opened","Print latest executed entries"),
-                                           ("Modified","Print latest modified entries")]
+    config["Window"]["List"]["Options"] = [
+        ("Main", "Back to main menu"),
+        ("All", "Prints all entries"),
+        ("Modify", "Enter modification mode"),
+        ("Execute", "Execute a database entry"),
+        ("Random", "Execute a random entry from the last printed list"),
+        (
+            "Query",
+            "Print entries returned by a query. Will query items: {0}".format(
+                ", ".join(config["General"]["QueryItems"])
+            ),
+        ),
+        ("Newest", "Print latest added entries"),
+        ("Opened", "Print latest executed entries"),
+        ("Modified", "Print latest modified entries"),
+    ]
     config["Window"]["DB"] = {}
     config["Window"]["DB"]["Type"] = "Window"
     config["Window"]["DB"]["Title"] = "Database optins"
     config["Window"]["DB"]["Text"] = ["This collections options on the database"]
-    config["Window"]["DB"]["Options"] = [("Main", "Back to main menu"),
-                                         ("Save","Saves the current state of the database"),
-                                         ("Read FS","Invokes a search for new files from the mimir root dir"),
-                                         ("UpdatePaths", "Update paths of files"),
-                                         ("Missing files", "Removes missing file form the DB")  ]
+    config["Window"]["DB"]["Options"] = [
+        ("Main", "Back to main menu"),
+        ("Save", "Saves the current state of the database"),
+        ("Read FS", "Invokes a search for new files from the mimir root dir"),
+        ("UpdatePaths", "Update paths of files"),
+        ("Missing files", "Removes missing file form the DB"),
+    ]
 
     config["Window"]["Modify"] = {}
     config["Window"]["Modify"]["Type"] = "Window"
     config["Window"]["Modify"]["Title"] = "Database modification"
     config["Window"]["Modify"]["Text"] = ["Modifications"]
-    config["Window"]["Modify"]["Options"] = [("Main", "Back to main menu"),
-                                             ("Single Entry","Will spawn a window where one entry can be modified mulitple times"),
-                                             ("Entry Range","Modify a range of entries multiple times. Input ** XXX - YYY ***"),
-                                             ("List Range","Modify a list of entries multiple times. Input comma separted list")]
+    config["Window"]["Modify"]["Options"] = [
+        ("Main", "Back to main menu"),
+        (
+            "Single Entry",
+            "Will spawn a window where one entry can be modified mulitple times",
+        ),
+        (
+            "Entry Range",
+            "Modify a range of entries multiple times. Input ** XXX - YYY ***",
+        ),
+        (
+            "List Range",
+            "Modify a list of entries multiple times. Input comma separted list",
+        ),
+    ]
 
     config["Window"]["MultiModify"] = {}
     config["Window"]["MultiModify"]["Type"] = "Window"
@@ -133,22 +165,20 @@ def main(model, system, dryrun, queryItems):
         config["General"]["ModItems"].append(item)
 
     if dryrun:
-        print(json.dumps(config, sort_keys=True, indent=4, separators=(',', ': ')))
+        print(json.dumps(config, sort_keys=True, indent=4, separators=(",", ": ")))
     else:
-        with open("conf/MTF_{0}.json".format(outputName), 'w') as outfile:
-            json.dump(config, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+        with open("conf/MTF_{0}.json".format(outputName), "w") as outfile:
+            json.dump(config, outfile, sort_keys=True, indent=4, separators=(",", ": "))
+
 
 if __name__ == "__main__":
     import argparse
+
     argumentparser = argparse.ArgumentParser(
-        description='Function generating the MTF definitons from a given model'
+        description="Function generating the MTF definitons from a given model"
     )
     argumentparser.add_argument(
-        "--inputModel",
-        action="store",
-        help="Input model",
-        type=str,
-        required=True
+        "--inputModel", action="store", help="Input model", type=str, required=True
     )
     argumentparser.add_argument(
         "--system",
@@ -156,7 +186,7 @@ if __name__ == "__main__":
         help="System that will run MTF. Required for executable",
         type=str,
         required=True,
-        choices=["Linux", "macOS"]
+        choices=["Linux", "macOS"],
     )
     argumentparser.add_argument(
         "--dryrun",
@@ -167,10 +197,9 @@ if __name__ == "__main__":
         "--queryItems",
         action="store",
         help="Pass items that are considered for database queries",
-        nargs = "+",
-        default = ["SingleItem", "ListItem"]
+        nargs="+",
+        default=["SingleItem", "ListItem"],
     )
-
 
     args = argumentparser.parse_args()
 

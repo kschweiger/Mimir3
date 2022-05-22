@@ -26,7 +26,7 @@ python runMTF.py --folder tests/testStructure/
 
 # Testing, code quality, documentation
 ## Testing framework
-Testing functionality is implemented using `py.test` in the `tests/` directory.      
+Testing functionality is implemented using `py.test` in the `tests/` directory.
 Run test from repository root directory with the `runTests.sh` script:
 
 ```bash
@@ -59,10 +59,10 @@ sphinx-apidoc mimir/ -o docs -n --implicit-namespaces
 You maybe have to explicitly point to the `sphinx-apidoc` bin directory of you python installation.
 
 # What has a database to do?
-[ ] Add entries to database  
-[ ] Remove entries from database   
-[ ] Read a database  
-[ ] Save a database   
-[ ] Backup database     
+[ ] Add entries to database
+[ ] Remove entries from database
+[ ] Read a database
+[ ] Save a database
+[ ] Backup database
 [ ] Find a entry in the database
-[ ]  
+[ ]

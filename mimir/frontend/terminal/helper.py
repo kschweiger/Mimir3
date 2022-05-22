@@ -5,8 +5,8 @@ Module collection helper funktions only required for the terminal fromtend
 
 class FixedList:
     """
-    Custom list that is initialized with a fixed leangth. If items are added after the maximum lengths
-    is reached, the earlier elements will be removed.
+    Custom list that is initialized with a fixed leangth. If items are added after the
+    maximum lengths is reached, the earlier elements will be removed.
     """
 
     def __init__(self, maxLen):
