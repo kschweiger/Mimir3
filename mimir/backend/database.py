@@ -901,7 +901,7 @@ class DataBase:
                 1 / (2 * len([elem for elem in entry.Opened if "|" in elem]) + 1)
                 for entry in entries
             ]
-            weights = [(3 if w == 1 else w) for w in weights]
+            weights = [(5 if w == 1 else w) for w in weights]
             return random.choices(choose_from, weights)[0]
         else:
             raise NotImplementedError

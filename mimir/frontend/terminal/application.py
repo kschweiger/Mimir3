@@ -764,7 +764,7 @@ class App:
                         thisValue.append(self.config.itemInfo[item]["DisplayDefault"])
                 else:
                     thisValue.append(self.modDisaply(item, val))
-            if len(thisValue) >= self.config.itemInfo[item]["nDisplay"]:
+            if len(thisValue) > self.config.itemInfo[item]["nDisplay"]:
                 if item not in ["Opened", "Changed"]:
                     thisValue.append("..")
                 break
