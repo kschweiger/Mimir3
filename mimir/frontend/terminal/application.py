@@ -632,7 +632,9 @@ class App:
         if not self.lastIDList:
             window.print("No entries to choose from. Maybe requery?")
         else:
-            randID = self.database.getRandomEntry(chooseFrom=self.lastIDList)
+            randID = self.database.getRandomEntry(
+                choose_from=self.lastIDList, weighted=True
+            )
             _listIDList = self.lastIDList
             if fromList:
                 tableElements = self.generateList([randID])

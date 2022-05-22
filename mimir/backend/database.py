@@ -9,10 +9,12 @@ import copy
 from shutil import copy2
 from glob import glob
 from collections import OrderedDict
+from typing import Union, List, Set
 
 from mimir.backend.entry import DataBaseEntry, Item, ListItem
 import mimir.backend.helper
 import mimir.backend.plugin
+from mimir.backend.enums import RandomWeightingMethod
 
 logger = logging.getLogger(__name__)
 
@@ -483,7 +485,7 @@ class DataBase:
 
         return [x[0] for x in sortedPairs]
 
-    def getEntryByItemName(self, itemName, itemValue):
+    def getEntryByItemName(self, itemName: str, itemValue: str) -> List[DataBaseEntry]:
         """Get all entries that have value itemValue in Item with itemName"""
         if itemName not in self.model.allItems:
             raise KeyError("Arg {0} not in model items".format(itemName))
@@ -843,24 +845,41 @@ class DataBase:
                 print(value, self.getAllValuebyItemName(query))
                 raise KeyError("Value w/ {0} {1} not in Database".format(query, value))
 
-    @staticmethod
-    def getRandomEntry(chooseFrom, weighted=False):
+    def getRandomEntry(
+        self,
+        choose_from: Union[List[str], Set[str]],
+        weighted: bool = False,
+        method: RandomWeightingMethod = RandomWeightingMethod.TIMES_OPENED,
+    ) -> str:
         """
         Get a random entry from the database out of the ID passed in the chooseFrom variable
 
         Args:
-            chooseFrom (list, set) : List of ID to choose a random ID from
+            choose_from (list, set) : List of ID to choose a random ID from
             weighted (bool) : Weighted random function (to be implemented)
-        Return:
-            retID (str) : Random ID
+            method (RandomWeightingMethod) : Method for the weighting
+        Return: Random ID
         """
-        if isinstance(chooseFrom, set):
-            chooseFrom = list(chooseFrom)
+        if isinstance(choose_from, set):
+            choose_from = list(choose_from)
         if not weighted:
-            retID = random.choice(chooseFrom)
+            return random.choice(choose_from)
+        else:
+            return self._get_weighted_random_entry(choose_from, method)
+
+    def _get_weighted_random_entry(
+        self, choose_from: List[str], method: RandomWeightingMethod
+    ) -> str:
+        entries = [self.getEntryByItemName("ID", i)[0] for i in choose_from]
+        if method == RandomWeightingMethod.TIMES_OPENED:
+            weights = [
+                1 / (2 * len([elem for elem in entry.Opened if "|" in elem]) + 1)
+                for entry in entries
+            ]
+            weights = [(3 if w == 1 else w) for w in weights]
+            return random.choices(choose_from, weights)[0]
         else:
             raise NotImplementedError
-        return retID
 
     def getRandomEntryAll(self, weighted=False):
         """
