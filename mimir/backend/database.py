@@ -503,11 +503,14 @@ class DataBase:
             raise KeyError("Arg {0} not in model items".format(itemName))
         machtingEntries = []
         for entry in self.entries:
-            if isinstance(entry, Item):
-                if entry.getItem(itemName).value == itemValue:
+            item = entry.getItem(itemName)
+            if isinstance(item, Item):
+                if item.value == itemValue:
                     machtingEntries.append(entry)
+                    if itemName in "ID":
+                        break
             else:
-                if itemValue in entry.getItem(itemName).value:
+                if itemValue in item.value:
                     machtingEntries.append(entry)
         return machtingEntries
 

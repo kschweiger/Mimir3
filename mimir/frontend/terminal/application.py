@@ -191,7 +191,10 @@ class App:
                 )
             elif retVal == "4" or retVal == "04":
                 self.executeRandom(
-                    self.listWindow, fromList=True, silent=retVal.startswith("0")
+                    self.listWindow,
+                    fromList=True,
+                    silent=retVal.startswith("0"),
+                    weighted=(not retVal.startswith("0")),
                 )
             elif retVal == "5":
                 queryString = self.listWindow.interact(
@@ -627,7 +630,7 @@ class App:
                     byID=True,
                 )
 
-    def executeRandom(self, window, fromList=False, silent=False):
+    def executeRandom(self, window, fromList=False, silent=False, weighted=True):
         """
         Function for getting a random entry from the last printed List of entries
         (if none printed from all)
@@ -636,7 +639,7 @@ class App:
             window.print("No entries to choose from. Maybe requery?")
         else:
             randID = self.database.getRandomEntry(
-                choose_from=self.lastIDList, weighted=True
+                choose_from=self.lastIDList, weighted=weighted
             )
             _listIDList = self.lastIDList
             if fromList:
