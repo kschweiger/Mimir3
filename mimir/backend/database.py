@@ -71,6 +71,8 @@ class DataBase:
         self.cachedValues = {}
         self.cachedValuesChanged = {}
 
+        self.last_executed_ids = mimir.backend.helper.IdQueue(100)
+
         if status == "new":
             self._model = Model(modelConf)
             self.initCaching()  # initialize cache so self.createEntry works
@@ -890,6 +892,11 @@ class DataBase:
         """
         if isinstance(choose_from, set):
             choose_from = list(choose_from)
+
+        choose_from = [
+            e for e in choose_from if not self.last_executed_ids.containes(e)
+        ]
+
         if not weighted:
             return random.choice(choose_from)
         else:

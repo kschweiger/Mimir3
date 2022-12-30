@@ -5,6 +5,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class IdQueue:
+    def __init__(self, max_len: int):
+        self.container = []
+        self.max_len = max_len
+
+    def append(self, elem) -> None:
+        self.container.append(elem)
+        if len(self.container) > self.max_len:
+            self.container.pop(0)
+
+    def containes(self, elem) -> bool:
+        return elem in self.container
+
+
 def getTimeFormatted(retFormat, delimDate=".", inverted=False):
     """
     Helper function to get the the current time/date

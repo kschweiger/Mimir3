@@ -622,6 +622,7 @@ class App:
                     window.update("Path: %s" % path2Exec)
 
             os.system("{0} {1}".format(self.config.executable, path2Exec))
+            self.database.last_executed_ids.append(ID)
             if not silent:
                 self.database.modifyListEntry(
                     ID,
