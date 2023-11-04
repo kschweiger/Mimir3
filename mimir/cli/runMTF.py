@@ -1,8 +1,6 @@
-import argparse
 import logging
 
 import click
-from pkg_resources import require
 
 from mimir.frontend.terminal.application import App, initDatabase
 

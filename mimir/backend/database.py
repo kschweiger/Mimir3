@@ -59,7 +59,7 @@ class DataBase:
         valuesChanged (dict - bool) : Flag if cachedValues are still valid
     """
 
-    def __init__(self, root, status, modelConf=None, dummy=False):
+    def __init__(self, root, status, modelConf=None, dummy=False) -> None:
         logger.info("Initializing DataBase")
         self.databaseRoot = root
         self.entries = []
@@ -1087,7 +1087,7 @@ class Model:
         extentions : File extentions that are used as criterion for searching files
     """
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         logger.debug("Loading model from %s", config)
         self.fileName = config
         modelDict = None

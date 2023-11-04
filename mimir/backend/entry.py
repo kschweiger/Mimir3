@@ -23,7 +23,7 @@ class DataBaseEntry:
                        str, typ, str/int/float
     """
 
-    def __init__(self, initItems):
+    def __init__(self, initItems) -> None:
         if not isinstance(initItems, list):
             raise TypeError("Entry initialization need to be a list")
         for initialItem in initItems:
@@ -192,7 +192,7 @@ class DataBaseEntry:
         else:
             return NotImplemented
 
-    def __str__(self):
+    def __str__(self) -> str:
         repres = "=========================\n"
         for item in self.items:
             repres += "{0} | {1}\n".format(item, self.items[item].value)
@@ -231,7 +231,7 @@ class Item:
         name (str) : This is the name of the Item
     """
 
-    def __init__(self, name, value):
+    def __init__(self, name, value) -> None:
         self.name = name
         self.value = value
 
@@ -248,7 +248,7 @@ class Item:
         """Returns the value of the entry"""
         return self.value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{0} : {1}".format(self.name, self.value)  # pragma: no cover
 
 
@@ -267,7 +267,7 @@ class ListItem(Item):
         TypError: Raises error when valies is not str or list
     """
 
-    def __init__(self, name, values):
+    def __init__(self, name, values) -> None:
         super().__init__(name, None)
         if not isinstance(values, (str, list)):
             raise TypeError

@@ -22,7 +22,7 @@ class App:
                                      on startup
     """
 
-    def __init__(self, dababase: DataBase, enableStartupSeatch=True):
+    def __init__(self, dababase: DataBase, enableStartupSeatch=True) -> None:
         self.database = dababase
         if not os.path.exists(self.database.mimirdir + "/MTF_model.json"):
             raise RuntimeError(
@@ -773,8 +773,7 @@ class App:
                 if item not in ["Opened", "Changed"]:
                     thisValue.append("..")
                 break
-        value = joinWith.join(thisValue)
-        return value
+        return joinWith.join(thisValue)
 
     def modDisaply(self, item, value):
         """
@@ -837,7 +836,7 @@ class MTFConfig:
     Class for processing and saving MTF confugurations
     """
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         logger.debug("Loading MTF config from %s", config)
         self.fileName = config
         configDict = None

@@ -9,11 +9,11 @@ class FixedList:
     maximum lengths is reached, the earlier elements will be removed.
     """
 
-    def __init__(self, maxLen):
+    def __init__(self, maxLen) -> None:
         self.maxLen = maxLen
         self.elements = []
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.elements)
 
     def append(self, value):
@@ -24,7 +24,7 @@ class FixedList:
         if len(self.elements) == self.maxLen + 1:
             self.elements = self.elements[1:]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.elements)
 
     def __getitem__(self, index):

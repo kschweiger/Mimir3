@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class IdQueue:
-    def __init__(self, max_len: int):
+    def __init__(self, max_len: int) -> None:
         self.container = []
         self.max_len = max_len
 

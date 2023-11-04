@@ -19,7 +19,7 @@ class Window:
         headerElements (dict) ; Head elements. See setHeader description
     """
 
-    def __init__(self, height, width, headerElements, setHeader=False):
+    def __init__(self, height, width, headerElements, setHeader=False) -> None:
         tests = [
             (height, "height", int),
             (width, "width", int),
@@ -294,7 +294,7 @@ class ListWindow(Window):
         nColumns,
         tableHeaderElements,
         alignment="left",
-    ):
+    ) -> None:
         super().__init__(height, width, headerElements)
         self.lines = []
         self.nColumns = nColumns
