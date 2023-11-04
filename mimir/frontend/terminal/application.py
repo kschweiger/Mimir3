@@ -292,9 +292,11 @@ class App:
                     for item in suggestedOptions:
                         for option in suggestedOptions[item]:
                             answer = self.dbWindow.draw(
-                                "Do you want to add %s to %s [Yes/No]" % (option, item)
+                                "Do you want to add %s to %s [Yes/No] or Add and Quit %s by appending Quit"
+                                % (option, item, item)
                             )
-                            if answer.lower() == "yes":
+                            answer_elements = [a.lower() for a in answer.split(" ")]
+                            if any(e in answer_elements for e in ["y", "yes"]):
                                 if item in self.database.model.items:
                                     self.database.modifySingleEntry(
                                         ID, item, option, byID=True
@@ -305,6 +307,8 @@ class App:
                                     )
                                 else:
                                     raise RuntimeError("This should not happen!")
+                                if any(e in answer_elements for e in ["q", "quit"]):
+                                    break
             elif retVal == "3":
                 updatedFiles = self.database.checkChangedPaths()
                 if updatedFiles:
@@ -502,37 +506,34 @@ class App:
             IDs (list) : List of IDs to be modified
             name (str) : Item name to be modified
         """
-        method = window.draw("Choose Method (Append | Replace | Remove)")
-        if method in ["Append", "Replace", "Remove"]:
-            if method == "Append":
-                newValue = window.draw("New Value")
-                for ID in IDs:
-                    self.makeListModifications(ID, name, "Append", None, newValue)
+        method = window.draw("Choose Method (Append/App/A | Replace/RP | Remove/RM)")
+        if method.lower() in ["append", "app", "a"]:
+            newValue = window.draw("New Value")
+            for ID in IDs:
+                self.makeListModifications(ID, name, "Append", None, newValue)
+                if verbose:
+                    window.update("Appended %s" % newValue)
+        elif method.lower() in ["remove", "rm"]:
+            oldValue = window.draw("Remove Value")
+            for ID in IDs:
+                sucess = self.makeListModifications(ID, name, "Remove", oldValue, None)
+                if sucess:
                     if verbose:
-                        window.update("Appended %s" % newValue)
-            elif method == "Remove":
-                oldValue = window.draw("Remove Value")
-                for ID in IDs:
-                    sucess = self.makeListModifications(
-                        ID, name, "Remove", oldValue, None
-                    )
-                    if sucess:
-                        if verbose:
-                            window.update("Removed %s from entry" % oldValue)
-                    else:
-                        window.update("Value %s no in entry" % oldValue)
-            else:
-                oldValue = window.draw("Value to replace")
-                newValue = window.draw("New Value")
-                for ID in IDs:
-                    sucess = self.makeListModifications(
-                        ID, name, "Replace", oldValue, newValue
-                    )
-                    if not sucess:
-                        window.update("Value %s no in entry" % oldValue)
-                    else:
-                        if verbose:
-                            window.update("Replaces %s with %s" % (oldValue, newValue))
+                        window.update("Removed %s from entry" % oldValue)
+                else:
+                    window.update("Value %s no in entry" % oldValue)
+        elif method.lower() in ["replace", "rp"]:
+            oldValue = window.draw("Value to replace")
+            newValue = window.draw("New Value")
+            for ID in IDs:
+                sucess = self.makeListModifications(
+                    ID, name, "Replace", oldValue, newValue
+                )
+                if not sucess:
+                    window.update("Value %s no in entry" % oldValue)
+                else:
+                    if verbose:
+                        window.update("Replaces %s with %s" % (oldValue, newValue))
         else:
             window.update("!!! - %s is Invalid Method" % method)
         if fromMultiMod:
