@@ -2,12 +2,12 @@ name: Mimir CI
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
+      - dev
   pull_request:
     branches:
-      - main
-      - develop
+      - master
+      - dev
 
 jobs:
   test:
