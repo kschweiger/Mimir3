@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from mimir.frontend.terminal.application import App, initDatabase
+from mimir.frontend.terminal.application import App, init_database
 
 
 def initLogging(thisLevel, funcLen="24"):
@@ -31,7 +31,7 @@ def initLogging(thisLevel, funcLen="24"):
 
 
 def run(baseDir, config=None, autofind=True):
-    database, status = initDatabase(baseDir, config)
+    database, status = init_database(baseDir, config)
     logging.info("Got database at %s with status %s", database, status)
     logging.info("Starting application")
     app = App(database)

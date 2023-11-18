@@ -565,9 +565,9 @@ def test_16_DB_random():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    allIDs = database.getAllValuebyItemName("ID")
-    randID = database.getRandomEntry(chooseFrom=allIDs)
-    assert randID in allIDs
+    all_ids = database.getAllValuebyItemName("ID")
+    randID = database.getRandomEntry(chooseFrom=all_ids)
+    assert randID in all_ids
 
 
 def test_17_DB_random_all():
@@ -576,9 +576,9 @@ def test_17_DB_random_all():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    allIDs = database.getAllValuebyItemName("ID")
+    all_ids = database.getAllValuebyItemName("ID")
     randID = database.getRandomEntryAll()
-    assert randID in allIDs
+    assert randID in all_ids
 
 
 def test_18_DB_random_weighted():
@@ -587,11 +587,11 @@ def test_18_DB_random_weighted():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    allIDs = database.getAllValuebyItemName("ID")
+    all_ids = database.getAllValuebyItemName("ID")
 
     with pytest.raises(NotImplementedError):
-        randID = database.getRandomEntry(chooseFrom=allIDs, weighted=True)
-    # assert randID in allIDs
+        randID = database.getRandomEntry(chooseFrom=all_ids, weighted=True)
+    # assert randID in all_ids
 
 
 def test_19_DB_getSortedIDs(preCreatedDB):

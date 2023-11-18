@@ -122,15 +122,15 @@ def test_01_MTF_initDatabase():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     with pytest.raises(RuntimeError):
-        newDatabase, status = MTF.initDatabase(dir2tests + "/testStructure")
+        newDatabase, status = MTF.init_database(dir2tests + "/testStructure")
 
-    newDatabase, status = MTF.initDatabase(
+    newDatabase, status = MTF.init_database(
         dir2tests + "/testStructure", mimir_dir + "/conf/modeltest.json"
     )
     assert isinstance(newDatabase, DataBase)
     assert status == "new"
     newDatabase.saveMain()
-    loadedDatabase, status = MTF.initDatabase(dir2tests + "/testStructure")
+    loadedDatabase, status = MTF.init_database(dir2tests + "/testStructure")
     assert isinstance(loadedDatabase, DataBase)
     assert status == "loaded"
     shutil.rmtree(dir2tests + "/testStructure" + "/.mimir")
@@ -171,7 +171,7 @@ def test_04_MTF_generateList(preCreatedDB):
         "Opened",
         "timesOpened",
     ]
-    checkThis = app.generateList(["0"])
+    checkThis = app.generate_list(["0"])
     print(checkThis)
     entry = preCreatedDB.getEntryByItemName("ID", "0")[0]
     entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
@@ -190,15 +190,15 @@ def test_04_MTF_generateList(preCreatedDB):
     assert expectation == checkThis
     app.config.itemInfo["ListItem"]["Priority"] = ["Orange", "Magenta"]
     app.config.itemInfo["Name"]["maxLen"] = 8
-    checkThis = app.generateList(["1"])
+    checkThis = app.generate_list(["1"])
     print(checkThis)
     expectation_ListItem = "Orange, Magenta, Blue, Red"
     expectation_name = entry1.getItem("Name").value[:8] + ".."
     assert checkThis[0][3] == expectation_ListItem
     assert checkThis[0][1] == expectation_name
-    checkThis = app.generateList(["2"])
+    checkThis = app.generate_list(["2"])
     app.config.itemInfo["ListItem"]["nDisplay"] = 2
-    checkThis = app.generateList(["0"])
+    checkThis = app.generate_list(["0"])
     expectation_LitItem_nDisplay = ", ".join(
         entry.getItem("ListItem").value[:2] + [".."]
     )
@@ -211,7 +211,7 @@ def test_05_MTF_generateList_dateFormatting(preCreatedDB):
     app.tableColumnItems = ["Opened", "Changed", "Added"]
     app.config.itemInfo["Opened"]["modDisplay"] = "Date"
     app.config.itemInfo["Changed"]["modDisplay"] = "Time"
-    checkThis = app.generateList(["0"])
+    checkThis = app.generate_list(["0"])
     entry = preCreatedDB.getEntryByItemName("ID", "0")[0]
     print(checkThis)
     formattedOpened = [x.split("|")[0] for x in entry.getItem("Opened").value]
@@ -230,19 +230,19 @@ def test_05_MTF_generateList_dateFormatting(preCreatedDB):
 def test_06_MTF_modify(preCreatedDB):
     app = MTF.App(preCreatedDB)
     ### Append
-    assert app.makeListModifications("1", "ListItem", "Append", None, "Magenta")
+    assert app.make_list_modifications("1", "ListItem", "Append", None, "Magenta")
     Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
     assert "Magenta" in Entry1.getItem("ListItem").value
     ##Remove
-    assert app.makeListModifications("1", "ListItem", "Remove", "Magenta", None)
+    assert app.make_list_modifications("1", "ListItem", "Remove", "Magenta", None)
     Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
     assert "Magenta" not in Entry1.getItem("ListItem").value
-    assert not app.makeListModifications("1", "ListItem", "Remove", "SomeColor", None)
+    assert not app.make_list_modifications("1", "ListItem", "Remove", "SomeColor", None)
     ##Replace
-    assert app.makeListModifications("1", "ListItem", "Append", None, "Cyan")
+    assert app.make_list_modifications("1", "ListItem", "Append", None, "Cyan")
     Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
     assert "Cyan" in Entry1.getItem("ListItem").value
-    assert app.makeListModifications("1", "ListItem", "Replace", "Cyan", "Yellow")
+    assert app.make_list_modifications("1", "ListItem", "Replace", "Cyan", "Yellow")
     Entry1 = preCreatedDB.getEntryByItemName("ID", "1")[0]
     assert "Cyan" not in Entry1.getItem("ListItem").value
     assert "Yellow" in Entry1.getItem("ListItem").value
@@ -255,7 +255,7 @@ def test_07_MTF_findnewFiles(preCreatedDB):
 def test_08_MTF_printItemValues_error(preCreatedDB):
     app = MTF.App(preCreatedDB)
     with pytest.raises(KeyError):
-        app.getPrintItemValues("0", "Blubb")
+        app.get_print_item_values("0", "Blubb")
 
 
 @pytest.mark.parametrize(
@@ -273,7 +273,7 @@ def test_09_MTF_printItemValues(
     app = MTF.App(preCreatedDB)
     app.config.itemInfo[item]["maxLen"] = maxLen
     app.config.itemInfo[item]["nDisplay"] = nMax
-    assert app.getPrintItemValues(id, item, joinFull=printFull) == expValue
+    assert app.get_print_item_values(id, item, joinFull=printFull) == expValue
 
 
 @pytest.mark.parametrize(
@@ -287,4 +287,4 @@ def test_09_MTF_printItemValues(
 def test_10_MTF_modDisaply(item, value, expValue, modDisplay, preCreatedDB):
     app = MTF.App(preCreatedDB)
     app.config.itemInfo[item]["modDisplay"] = modDisplay
-    assert app.modDisaply(item, value) == expValue
+    assert app.mod_disaply(item, value) == expValue

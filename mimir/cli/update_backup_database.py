@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from mimir.frontend.terminal.application import initDatabase
+from mimir.frontend.terminal.application import init_database
 
 log_format = "[%(asctime)s] %(name)-40s %(levelname)-8s %(message)s"
 logging.basicConfig(
@@ -22,7 +22,7 @@ def cli(mimir_base):
     This explicitly expects that no **new** files are added when running it. Only fewer
     """
 
-    database, status = initDatabase(mimir_base)
+    database, status = init_database(mimir_base)
     logger.info("Got database at %s with status %s", database, status)
     logger.info("Checking paths")
     database.checkChangedPaths()

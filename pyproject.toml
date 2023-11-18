@@ -19,8 +19,8 @@ click = "^8.1.7"
 ruff = "^0.1.4"
 bpython = "^0.24"
 pre-commit = "^3.5.0"
-black = "^23.10.1"
-mypy = "^1.6.1"
+black = "^23.11.0"
+mypy = "^1.7.0"
 sphinx = "^7.2.6"
 
 

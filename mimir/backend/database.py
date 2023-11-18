@@ -51,7 +51,7 @@ class DataBase:
         mimirdir (str) : Points to the .mimir dir of the DB
         savepath (str) : Points to the path where the database is saved
         entries (list) : List of all Entry Object in the database
-        entrydict (dict) : Dict of all entries with IDs as key
+        entrydict (dict) : Dict of all entries with ids as key
         _model (Model) : General information of the database model
         isdummy (bool) : Flag used for dummy databases
                          --> Currently only disables saveing
@@ -274,22 +274,22 @@ class DataBase:
         """
         newFiles = []
         allfiles = self.getAllFilesMatchingModel(startdir)
-        IDs = []
+        ids = []
         existingFiles = []
         missingIDs = []
         for entry in self.entries:
             existingFiles.append(entry.Path)
-            IDs.append(int(entry.ID))
+            ids.append(int(entry.ID))
 
         logger.debug(
             "Found %s files in FS. Entries in database: %s",
             len(allfiles),
             len(existingFiles),
         )
-        # Find all IDs missing so new files can be inserted
-        IDs = set(IDs)
+        # Find all ids missing so new files can be inserted
+        ids = set(ids)
         for i in range(len(self.entries)):
-            if i not in IDs:
+            if i not in ids:
                 missingIDs.append(i)
 
         existingFiles = set(existingFiles)
@@ -434,7 +434,7 @@ class DataBase:
 
     def getSortedIDs(self, sortBy, reverseOrder=True):
         """
-        Returns a list of database IDs sorted by itemName sortBy.
+        Returns a list of database ids sorted by itemName sortBy.
 
         Args:
             sortBy (str) : itemName that will be used for sorting. The exact sorting \n
@@ -447,9 +447,9 @@ class DataBase:
         """
         if sortBy not in self.model.allItems:
             raise KeyError("Arg {0} not in model items".format(sortBy))
-        allIDs = self.getAllValuebyItemName("ID")
+        all_ids = self.getAllValuebyItemName("ID")
         map_id_sortby = {}
-        for ID in allIDs:
+        for ID in all_ids:
             map_id_sortby[ID] = self.getEntrybyID(ID).getItem(sortBy).value
         itemType = self.model.getItemType(sortBy)
         # If sortBy is a ListItem we need to figure out the value to sort by
@@ -748,7 +748,7 @@ class DataBase:
         Args:
             itemNames (str, list) : itemNames used for the query
             itemValues (str, list) : itemValues used for the query
-            returnIDs (bool) : If True function will return a list of IDs instead of
+            returnIDs (bool) : If True function will return a list of ids instead of
                                entries
 
         Return:
@@ -918,7 +918,7 @@ class DataBase:
 
     def getRandomEntryAll(self, weighted=False):
         """
-        Get a random entry from the database out of all IDs. This is just a wrapper for
+        Get a random entry from the database out of all ids. This is just a wrapper for
         getRandomEntry
 
         Args:
