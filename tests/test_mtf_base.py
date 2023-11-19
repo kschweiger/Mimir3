@@ -50,68 +50,68 @@ def preCreatedDB():
         json.dump(jsonConf, o, sort_keys=True, indent=4, separators=(",", ": "))
     ## Set Ratings for furure tests
     # Expected Order: ["3", "2", "4", "1", "5", "0"]
-    database.modifySingleEntry("1", "Rating", "2", byID=True)
-    database.modifySingleEntry("2", "Rating", "4", byID=True)
-    database.modifySingleEntry("3", "Rating", "5", byID=True)
-    database.modifySingleEntry("4", "Rating", "3", byID=True)
-    database.modifySingleEntry("5", "Rating", "1", byID=True)
+    database.modify_single_entry("1", "Rating", "2", by_id=True)
+    database.modify_single_entry("2", "Rating", "4", by_id=True)
+    database.modify_single_entry("3", "Rating", "5", by_id=True)
+    database.modify_single_entry("4", "Rating", "3", by_id=True)
+    database.modify_single_entry("5", "Rating", "1", by_id=True)
     # Expected Order: ["5", "4", "3", "2", "1", "0"]
-    database.modifySingleEntry("0", "SingleItem", "Xi", byID=True)
-    database.modifySingleEntry("1", "SingleItem", "Tau", byID=True)
-    database.modifySingleEntry("2", "SingleItem", "Ny", byID=True)
-    database.modifySingleEntry("3", "SingleItem", "Eta", byID=True)
-    database.modifySingleEntry("4", "SingleItem", "Bea", byID=True)
-    database.modifySingleEntry("5", "SingleItem", "Alpha", byID=True)
-    database.modifyListEntry("0", "ListItem", "Blue", byID=True)
-    database.modifyListEntry("0", "ListItem", "Double Orange", byID=True)
-    database.modifyListEntry("0", "ListItem", "Triple Orange", byID=True)
-    database.modifyListEntry("1", "ListItem", "Blue", byID=True)
-    database.modifyListEntry("1", "ListItem", "Red", byID=True)
-    database.modifyListEntry("1", "ListItem", "Orange", byID=True)
-    database.modifyListEntry("1", "ListItem", "Magenta", byID=True)
-    Entry0 = database.getEntryByItemName("ID", "0")[0]
-    Entry1 = database.getEntryByItemName("ID", "1")[0]
-    Entry2 = database.getEntryByItemName("ID", "2")[0]
-    Entry3 = database.getEntryByItemName("ID", "3")[0]
-    Entry4 = database.getEntryByItemName("ID", "4")[0]
-    Entry5 = database.getEntryByItemName("ID", "5")[0]
+    database.modify_single_entry("0", "SingleItem", "Xi", by_id=True)
+    database.modify_single_entry("1", "SingleItem", "Tau", by_id=True)
+    database.modify_single_entry("2", "SingleItem", "Ny", by_id=True)
+    database.modify_single_entry("3", "SingleItem", "Eta", by_id=True)
+    database.modify_single_entry("4", "SingleItem", "Bea", by_id=True)
+    database.modify_single_entry("5", "SingleItem", "Alpha", by_id=True)
+    database.modify_list_entry("0", "ListItem", "Blue", by_id=True)
+    database.modify_list_entry("0", "ListItem", "Double Orange", by_id=True)
+    database.modify_list_entry("0", "ListItem", "Triple Orange", by_id=True)
+    database.modify_list_entry("1", "ListItem", "Blue", by_id=True)
+    database.modify_list_entry("1", "ListItem", "Red", by_id=True)
+    database.modify_list_entry("1", "ListItem", "Orange", by_id=True)
+    database.modify_list_entry("1", "ListItem", "Magenta", by_id=True)
+    Entry0 = database.get_entry_by_item_name("ID", "0")[0]
+    Entry1 = database.get_entry_by_item_name("ID", "1")[0]
+    Entry2 = database.get_entry_by_item_name("ID", "2")[0]
+    Entry3 = database.get_entry_by_item_name("ID", "3")[0]
+    Entry4 = database.get_entry_by_item_name("ID", "4")[0]
+    Entry5 = database.get_entry_by_item_name("ID", "5")[0]
     # Expected Order: ["0", "2", "3", "5", "1", "4"]
-    Entry0.changeItemValue("Added", "30.01.19|00:00:00")
-    Entry1.changeItemValue("Added", "20.01.19|00:00:00")
-    Entry2.changeItemValue("Added", "29.01.19|00:00:00")
-    Entry3.changeItemValue("Added", "29.01.19|00:00:00")  # Same time: Fall back to ID
-    Entry4.changeItemValue("Added", "15.01.19|00:00:00")
-    Entry5.changeItemValue("Added", "26.01.19|00:00:00")
+    Entry0.change_item_value("Added", "30.01.19|00:00:00")
+    Entry1.change_item_value("Added", "20.01.19|00:00:00")
+    Entry2.change_item_value("Added", "29.01.19|00:00:00")
+    Entry3.change_item_value("Added", "29.01.19|00:00:00")  # Same time: Fall back to ID
+    Entry4.change_item_value("Added", "15.01.19|00:00:00")
+    Entry5.change_item_value("Added", "26.01.19|00:00:00")
     # Expected Order: ["0", "3", "4", "5", "1", "2"]
-    Entry0.replaceItemValue(
-        "Changed", "24.02.19|00:00:00", Entry0.getItem("Changed").value[0]
+    Entry0.replace_item_value(
+        "Changed", "24.02.19|00:00:00", Entry0.get_item("Changed").value[0]
     )
-    Entry1.replaceItemValue(
-        "Changed", "10.02.19|00:00:00", Entry1.getItem("Changed").value[0]
+    Entry1.replace_item_value(
+        "Changed", "10.02.19|00:00:00", Entry1.get_item("Changed").value[0]
     )
-    Entry2.replaceItemValue(
-        "Changed", "23.02.19|00:00:00", Entry2.getItem("Changed").value[0]
+    Entry2.replace_item_value(
+        "Changed", "23.02.19|00:00:00", Entry2.get_item("Changed").value[0]
     )
-    Entry3.replaceItemValue(
-        "Changed", "22.02.19|00:00:00", Entry3.getItem("Changed").value[0]
+    Entry3.replace_item_value(
+        "Changed", "22.02.19|00:00:00", Entry3.get_item("Changed").value[0]
     )
-    Entry4.replaceItemValue(
-        "Changed", "21.02.19|00:00:00", Entry4.getItem("Changed").value[0]
+    Entry4.replace_item_value(
+        "Changed", "21.02.19|00:00:00", Entry4.get_item("Changed").value[0]
     )
-    Entry5.replaceItemValue(
-        "Changed", "20.02.19|00:00:00", Entry5.getItem("Changed").value[0]
+    Entry5.replace_item_value(
+        "Changed", "20.02.19|00:00:00", Entry5.get_item("Changed").value[0]
     )
-    Entry0.addItemValue("Changed", "25.03.19|01:00:00")
-    Entry1.addItemValue("Changed", "19.03.19|01:00:00")
-    Entry2.addItemValue("Changed", "23.01.19|01:00:00")
-    Entry3.addItemValue("Changed", "22.03.19|01:00:00")
-    Entry4.addItemValue("Changed", "21.03.19|01:00:00")
-    Entry5.addItemValue("Changed", "20.03.19|01:00:00")
+    Entry0.add_item_value("Changed", "25.03.19|01:00:00")
+    Entry1.add_item_value("Changed", "19.03.19|01:00:00")
+    Entry2.add_item_value("Changed", "23.01.19|01:00:00")
+    Entry3.add_item_value("Changed", "22.03.19|01:00:00")
+    Entry4.add_item_value("Changed", "21.03.19|01:00:00")
+    Entry5.add_item_value("Changed", "20.03.19|01:00:00")
     ####
-    Entry0.replaceItemValue(
-        "Opened", "27.02.19|00:00:00", Entry0.getItem("Opened").value[0]
+    Entry0.replace_item_value(
+        "Opened", "27.02.19|00:00:00", Entry0.get_item("Opened").value[0]
     )
-    database.saveMain()
+    database.save_main()
     # shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2") #For testing
     yield database
     # shutil.rmtree(dbRootPath+"/.mimir")
@@ -129,7 +129,7 @@ def test_01_MTF_initDatabase():
     )
     assert isinstance(newDatabase, DataBase)
     assert status == "new"
-    newDatabase.saveMain()
+    newDatabase.save_main()
     loadedDatabase, status = MTF.init_database(dir2tests + "/testStructure")
     assert isinstance(loadedDatabase, DataBase)
     assert status == "loaded"

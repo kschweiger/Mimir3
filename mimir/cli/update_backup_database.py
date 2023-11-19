@@ -25,13 +25,13 @@ def cli(mimir_base):
     database, status = init_database(mimir_base)
     logger.info("Got database at %s with status %s", database, status)
     logger.info("Checking paths")
-    database.checkChangedPaths()
+    database.check_changed_paths()
     logger.info("Checking missing files")
-    database.checkMissingFiles(mod_id=False)
+    database.check_missing_files(mod_id=False)
     logger.info("Resetting entry ids")
     database.reset_entry_ids()
     logger.info("Saving database")
-    database.saveMain()
+    database.save_main()
 
 
 if __name__ == "__main__":

@@ -68,66 +68,66 @@ def preCreatedDB():
     database = DataBase(dbRootPath, "new", config)
     ## Set Ratings for furure tests
     # Expected Order: ["3", "2", "4", "1", "5", "0"]
-    database.modifySingleEntry("1", "Rating", "2", byID=True)
-    database.modifySingleEntry("2", "Rating", "4", byID=True)
-    database.modifySingleEntry("3", "Rating", "5", byID=True)
-    database.modifySingleEntry("4", "Rating", "3", byID=True)
-    database.modifySingleEntry("5", "Rating", "1", byID=True)
+    database.modify_single_entry("1", "Rating", "2", by_id=True)
+    database.modify_single_entry("2", "Rating", "4", by_id=True)
+    database.modify_single_entry("3", "Rating", "5", by_id=True)
+    database.modify_single_entry("4", "Rating", "3", by_id=True)
+    database.modify_single_entry("5", "Rating", "1", by_id=True)
     # Expected Order: ["5", "4", "3", "2", "1", "0"]
-    database.modifySingleEntry("0", "SingleItem", "Xi", byID=True)
-    database.modifySingleEntry("1", "SingleItem", "Tau", byID=True)
-    database.modifySingleEntry("2", "SingleItem", "Ny", byID=True)
-    database.modifySingleEntry("3", "SingleItem", "Eta", byID=True)
-    database.modifySingleEntry("4", "SingleItem", "Bea", byID=True)
-    database.modifySingleEntry("5", "SingleItem", "Alpha", byID=True)
-    database.modifyListEntry("0", "ListItem", "Blue", byID=True)
-    database.modifyListEntry("0", "ListItem", "Double Orange", byID=True)
-    database.modifyListEntry("0", "ListItem", "Triple Orange", byID=True)
-    database.modifyListEntry("3", "ListItem", "Lavender", byID=True)
-    database.modifyListEntry("4", "ListItem", "Lavender", byID=True)
-    database.modifyListEntry("4", "ListItem", "Pinkish", byID=True)
-    database.modifyListEntry("4", "ListItem", "Spring", byID=True)
-    Entry0 = database.getEntryByItemName("ID", "0")[0]
-    Entry1 = database.getEntryByItemName("ID", "1")[0]
-    Entry2 = database.getEntryByItemName("ID", "2")[0]
-    Entry3 = database.getEntryByItemName("ID", "3")[0]
-    Entry4 = database.getEntryByItemName("ID", "4")[0]
-    Entry5 = database.getEntryByItemName("ID", "5")[0]
+    database.modify_single_entry("0", "SingleItem", "Xi", by_id=True)
+    database.modify_single_entry("1", "SingleItem", "Tau", by_id=True)
+    database.modify_single_entry("2", "SingleItem", "Ny", by_id=True)
+    database.modify_single_entry("3", "SingleItem", "Eta", by_id=True)
+    database.modify_single_entry("4", "SingleItem", "Bea", by_id=True)
+    database.modify_single_entry("5", "SingleItem", "Alpha", by_id=True)
+    database.modify_list_entry("0", "ListItem", "Blue", by_id=True)
+    database.modify_list_entry("0", "ListItem", "Double Orange", by_id=True)
+    database.modify_list_entry("0", "ListItem", "Triple Orange", by_id=True)
+    database.modify_list_entry("3", "ListItem", "Lavender", by_id=True)
+    database.modify_list_entry("4", "ListItem", "Lavender", by_id=True)
+    database.modify_list_entry("4", "ListItem", "Pinkish", by_id=True)
+    database.modify_list_entry("4", "ListItem", "Spring", by_id=True)
+    Entry0 = database.get_entry_by_item_name("ID", "0")[0]
+    Entry1 = database.get_entry_by_item_name("ID", "1")[0]
+    Entry2 = database.get_entry_by_item_name("ID", "2")[0]
+    Entry3 = database.get_entry_by_item_name("ID", "3")[0]
+    Entry4 = database.get_entry_by_item_name("ID", "4")[0]
+    Entry5 = database.get_entry_by_item_name("ID", "5")[0]
     # Expected Order: ["0", "2", "3", "5", "1", "4"]
-    Entry0.changeItemValue("Added", "30.01.19|00:00:00")
-    Entry1.changeItemValue("Added", "20.01.19|00:00:00")
-    Entry2.changeItemValue("Added", "29.01.19|00:00:00")
-    Entry3.changeItemValue("Added", "29.01.19|00:00:00")  # Same time: Fall back to ID
-    Entry4.changeItemValue("Added", "15.01.19|00:00:00")
-    Entry5.changeItemValue("Added", "26.01.19|00:00:00")
+    Entry0.change_item_value("Added", "30.01.19|00:00:00")
+    Entry1.change_item_value("Added", "20.01.19|00:00:00")
+    Entry2.change_item_value("Added", "29.01.19|00:00:00")
+    Entry3.change_item_value("Added", "29.01.19|00:00:00")  # Same time: Fall back to ID
+    Entry4.change_item_value("Added", "15.01.19|00:00:00")
+    Entry5.change_item_value("Added", "26.01.19|00:00:00")
     # Expected Order: ["0", "3", "4", "5", "1", "2"]
-    Entry0.replaceItemValue(
-        "Changed", "24.02.19|00:00:00", Entry0.getItem("Changed").value[0]
+    Entry0.replace_item_value(
+        "Changed", "24.02.19|00:00:00", Entry0.get_item("Changed").value[0]
     )
-    Entry1.replaceItemValue(
-        "Changed", "10.02.19|00:00:00", Entry1.getItem("Changed").value[0]
+    Entry1.replace_item_value(
+        "Changed", "10.02.19|00:00:00", Entry1.get_item("Changed").value[0]
     )
-    Entry2.replaceItemValue(
-        "Changed", "23.02.19|00:00:00", Entry2.getItem("Changed").value[0]
+    Entry2.replace_item_value(
+        "Changed", "23.02.19|00:00:00", Entry2.get_item("Changed").value[0]
     )
-    Entry3.replaceItemValue(
-        "Changed", "22.02.19|00:00:00", Entry3.getItem("Changed").value[0]
+    Entry3.replace_item_value(
+        "Changed", "22.02.19|00:00:00", Entry3.get_item("Changed").value[0]
     )
-    Entry4.replaceItemValue(
-        "Changed", "21.02.19|00:00:00", Entry4.getItem("Changed").value[0]
+    Entry4.replace_item_value(
+        "Changed", "21.02.19|00:00:00", Entry4.get_item("Changed").value[0]
     )
-    Entry5.replaceItemValue(
-        "Changed", "20.02.19|00:00:00", Entry5.getItem("Changed").value[0]
+    Entry5.replace_item_value(
+        "Changed", "20.02.19|00:00:00", Entry5.get_item("Changed").value[0]
     )
-    Entry0.addItemValue("Changed", "25.03.19|00:00:00")
-    Entry1.addItemValue("Changed", "19.03.19|00:00:00")
-    Entry2.addItemValue("Changed", "23.01.19|00:00:00")
-    Entry3.addItemValue("Changed", "22.03.19|00:00:00")
-    Entry4.addItemValue("Changed", "21.03.19|00:00:00")
-    Entry5.addItemValue("Changed", "20.03.19|00:00:00")
-    database.saveMain()
+    Entry0.add_item_value("Changed", "25.03.19|00:00:00")
+    Entry1.add_item_value("Changed", "19.03.19|00:00:00")
+    Entry2.add_item_value("Changed", "23.01.19|00:00:00")
+    Entry3.add_item_value("Changed", "22.03.19|00:00:00")
+    Entry4.add_item_value("Changed", "21.03.19|00:00:00")
+    Entry5.add_item_value("Changed", "20.03.19|00:00:00")
+    database.save_main()
     for item in database.model.allItems:
-        database.cacheAllValuebyItemName(item)
+        database.cache_all_value_by_item_name(item)
     # shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2") #For testing
     shutil.rmtree(dbRootPath + "/.mimir")
     return database
@@ -195,8 +195,8 @@ def test_04_DB_save():
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
     # Check database is save
-    assert database.saveMain()
-    assert database.saveMain()
+    assert database.save_main()
+    assert database.save_main()
     # shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2")
     # assert validateDatabaseJSON(database, config, database.savepath)
     # check if backup was created
@@ -237,7 +237,7 @@ def test_06_DB_notequal():
         shutil.rmtree(dbRootPath + "/.mimir")
     database2 = DataBase(dbRootPath, "new", config)
     os.system("touch " + dir2tests + "/testStructure/newfile.mp4")
-    database2.findNewFiles()
+    database2.find_new_files()
     os.system("rm " + dir2tests + "/testStructure/newfile.mp4")
     assert database1 != database2
     del database1, database2
@@ -249,7 +249,7 @@ def test_07_DB_load():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    database.saveMain()
+    database.save_main()
     loadedDB = DataBase(dbRootPath, "load")
     assert database == loadedDB
     assert loadedDB.maxID == len(loadedDB.entries) - 1  # Since 0 is a valid ID
@@ -263,8 +263,8 @@ def test_08_DB_getAllValues():
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
     with pytest.raises(KeyError):
-        database.getAllValuebyItemName("Blubb")
-    values = database.getAllValuebyItemName("Path")
+        database.get_all_value_by_item_name("Blubb")
+    values = database.get_all_value_by_item_name("Path")
     filesindbRoot = glob(dbRootPath + "/**/*.mp4", recursive=True)
     filesindbRoot = [x.replace(dbRootPath + "/", "") for x in filesindbRoot]
     assert values == set(filesindbRoot)
@@ -278,7 +278,7 @@ def test_09_DB_getEntrybyItemName():
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
     with pytest.raises(KeyError):
-        database.getEntryByItemName("Blubb", "folder2file")
+        database.get_entry_by_item_name("Blubb", "folder2file")
     found = False
     for entry in database.entries:
         print(entry.getItem("Name").value)
@@ -286,7 +286,7 @@ def test_09_DB_getEntrybyItemName():
             found = True
             break
     assert found
-    entrybyItemName = database.getEntryByItemName("Name", "folder2file1")
+    entrybyItemName = database.get_entry_by_item_name("Name", "folder2file1")
     assert entry in entrybyItemName
     del database
 
@@ -304,27 +304,27 @@ def test_10_DB_removeEntry_exceptions():
         database.remove(1)
     #    More than one vector specified
     with pytest.raises(RuntimeError):
-        database.remove(1, byID=True, byName=True)
+        database.remove(1, by_id=True, by_name=True)
     ##############################################
     # Raise exception type
     #    ID
     with pytest.raises(TypeError):
-        database.remove([], byID=True)
+        database.remove([], by_id=True)
     with pytest.raises(TypeError):
-        database.remove(1, byID=1)
+        database.remove(1, by_id=1)
     #    Name/Path
     with pytest.raises(TypeError):
-        database.remove(1, byName=True)
+        database.remove(1, by_name=True)
     ##############################################
     # Raise exception by ID: out of range
     with pytest.raises(IndexError):
-        database.remove(1000, byID=True)
+        database.remove(1000, by_id=True)
     ##############################################
     # Raise exception by Name/Path: not in DB
     with pytest.raises(KeyError):
-        database.remove("RandomName", byName=True)
+        database.remove("RandomName", by_name=True)
     with pytest.raises(KeyError):
-        database.remove("RandomPath", byPath=True)
+        database.remove("RandomPath", by_path=True)
     del database
 
 
@@ -337,21 +337,21 @@ def test_11_DB_removeEntry():
     # Remove by ID
     databaseID = copy.deepcopy(database)
     id2remove = 2
-    entry2Remove = databaseID.getEntryByItemName("ID", str(id2remove))[0]
-    databaseID.remove(id2remove, byID=True)
+    entry2Remove = databaseID.get_entry_by_item_name("ID", str(id2remove))[0]
+    databaseID.remove(id2remove, by_id=True)
     assert not entry2Remove in databaseID.entries
     # Remove by Name
     databaseName = copy.deepcopy(database)
     name2remove = "folder2file1"
-    entry2Remove = databaseName.getEntryByItemName("Name", name2remove)[0]
-    databaseName.remove(name2remove, byName=True)
+    entry2Remove = databaseName.get_entry_by_item_name("Name", name2remove)[0]
+    databaseName.remove(name2remove, by_name=True)
     assert not entry2Remove in databaseName.entries
     # Remove by Path
     databasePath = copy.deepcopy(database)
     file2remove = "folder2/folder2file1.mp4"
     path2remove = dbRootPath + "/" + file2remove
-    entry2Remove = databasePath.getEntryByItemName("Path", file2remove)[0]
-    databasePath.remove(file2remove, byPath=True)
+    entry2Remove = databasePath.get_entry_by_item_name("Path", file2remove)[0]
+    databasePath.remove(file2remove, by_path=True)
     assert not entry2Remove in databasePath.entries
     del database
 
@@ -364,7 +364,7 @@ def test_12_DB_findNewFiles_append():
     database = DataBase(dbRootPath, "new", config)
     lastIDbeforeAppend = database.maxID
     os.system("touch " + dir2tests + "/testStructure/newfile.mp4")
-    newFiles, pairs = database.findNewFiles()
+    newFiles, pairs = database.find_new_files()
     os.system("rm " + dir2tests + "/testStructure/newfile.mp4")
     assert "newfile.mp4" in newFiles
     assert len(newFiles) == 1
@@ -386,11 +386,11 @@ def test_13_p1_DB_query():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    updatedEntry1 = database.getEntryByItemName("ID", "0")[0]
-    updatedEntry2 = database.getEntryByItemName("ID", "1")[0]
-    updatedEntry1.changeItemValue("SingleItem", "ReplacedValue")
-    updatedEntry1.addItemValue("ListItem", "AddedValue")
-    updatedEntry2.changeItemValue("SingleItem", "ReplacedValue")
+    updatedEntry1 = database.get_entry_by_item_name("ID", "0")[0]
+    updatedEntry2 = database.get_entry_by_item_name("ID", "1")[0]
+    updatedEntry1.change_item_value("SingleItem", "ReplacedValue")
+    updatedEntry1.add_item_value("ListItem", "AddedValue")
+    updatedEntry2.change_item_value("SingleItem", "ReplacedValue")
     ########################################################
     # First names wrong
     with pytest.raises(KeyError):
@@ -401,7 +401,7 @@ def test_13_p1_DB_query():
     ########################################################
     resultEntry = database.query(["SingleItem", "ListItem"], ["ReplacedValue"])
     resultID = database.query(
-        ["SingleItem", "ListItem"], ["ReplacedValue"], returnIDs=True
+        ["SingleItem", "ListItem"], ["ReplacedValue"], return_ids=True
     )
     found1, found2 = False, False
     if updatedEntry1 in resultEntry:
@@ -411,7 +411,7 @@ def test_13_p1_DB_query():
     foundEntry = found1 and found2
     assert resultID == ["0", "1"]
     resultID = database.query(
-        ["SingleItem", "ListItem"], ["AddedValue", "ReplacedValue"], returnIDs=True
+        ["SingleItem", "ListItem"], ["AddedValue", "ReplacedValue"], return_ids=True
     )
     assert resultID == ["0"]
     del database
@@ -447,10 +447,10 @@ def test_14_DB_modifyEntry():
     thisDate, thisTime = getDataTime()
     # --------------------- SingleItem -------------------------
     # Replace single Item value
-    database.modifySingleEntry("1", "SingleItem", "changedItemValue", byID=True)
-    changedEntry = database.getEntryByItemName("ID", "1")[0]
-    assert "changedItemValue" in changedEntry.getAllValuesbyName("SingleItem")
-    change_datetime = changedEntry.getAllValuesbyName("Changed")
+    database.modify_single_entry("1", "SingleItem", "changedItemValue", by_id=True)
+    changedEntry = database.get_entry_by_item_name("ID", "1")[0]
+    assert "changedItemValue" in changedEntry.get_all_values_by_name("SingleItem")
+    change_datetime = changedEntry.get_all_values_by_name("Changed")
     change_datetime = list(change_datetime)[0]
     assert change_datetime != "emptyChanged"
     date, time = change_datetime.split("|")
@@ -458,79 +458,79 @@ def test_14_DB_modifyEntry():
     assert time[0:1] == thisTime[0:1]
     # Check if Item is present in database
     with pytest.raises(KeyError):
-        database.modifySingleEntry("1", "BLubbb", "changedItemValue", byID=True)
+        database.modify_single_entry("1", "BLubbb", "changedItemValue", by_id=True)
     with pytest.raises(TypeError):
-        database.modifySingleEntry("1", "ListItem", "changedItemValue", byID=True)
+        database.modify_single_entry("1", "ListItem", "changedItemValue", by_id=True)
     # ---------------------- ListItem --------------------------
     with pytest.raises(TypeError):
-        database.modifyListEntry(
-            "1", "SingleItem", "appendedItemValue", "Append", byID=True
+        database.modify_list_entry(
+            "1", "SingleItem", "appendedItemValue", "Append", by_id=True
         )
 
     # Append but first default schould be remove when appending the fist actual value
-    origEntry = database.getEntryByItemName("ID", "1")[0]
-    database.modifyListEntry("1", "ListItem", "initialValue", "Append", byID=True)
-    changedEntry = database.getEntryByItemName("ID", "1")[0]
+    origEntry = database.get_entry_by_item_name("ID", "1")[0]
+    database.modify_list_entry("1", "ListItem", "initialValue", "Append", by_id=True)
+    changedEntry = database.get_entry_by_item_name("ID", "1")[0]
     # print(database.model.getDefaultValue("ListItem"))
     assert (
-        "initialValue" in changedEntry.getAllValuesbyName("ListItem")
-        and database.model.getDefaultValue("ListItem")
-        not in changedEntry.getAllValuesbyName("ListItem")
-        and len(changedEntry.getAllValuesbyName("ListItem")) == 1
+        "initialValue" in changedEntry.get_all_values_by_name("ListItem")
+        and database.model.get_default_value("ListItem")
+        not in changedEntry.get_all_values_by_name("ListItem")
+        and len(changedEntry.get_all_values_by_name("ListItem")) == 1
     )
     # Append
-    change_datetime = changedEntry.getAllValuesbyName("Changed")
+    change_datetime = changedEntry.get_all_values_by_name("Changed")
     change_datetime = list(change_datetime)[0]
     assert change_datetime != "emptyChanged"
     date, time = change_datetime.split("|")
     assert date == thisDate
     assert time[0:1] == thisTime[0:1]
     print("-------- Append ----------")
-    origEntry = database.getEntryByItemName("ID", "1")[0]
+    origEntry = database.get_entry_by_item_name("ID", "1")[0]
     databaseAppend = copy.deepcopy(database)
-    databaseAppend.modifyListEntry(
-        "1", "ListItem", "appendedItemValue", "Append", byID=True
+    databaseAppend.modify_list_entry(
+        "1", "ListItem", "appendedItemValue", "Append", by_id=True
     )
-    changedEntry = databaseAppend.getEntryByItemName("ID", "1")[0]
-    assert "appendedItemValue" in changedEntry.getAllValuesbyName(
+    changedEntry = databaseAppend.get_entry_by_item_name("ID", "1")[0]
+    assert "appendedItemValue" in changedEntry.get_all_values_by_name(
         "ListItem"
-    ) and origEntry.getAllValuesbyName("ListItem").issubset(
-        changedEntry.getAllValuesbyName("ListItem")
+    ) and origEntry.get_all_values_by_name("ListItem").issubset(
+        changedEntry.get_all_values_by_name("ListItem")
     )
     # Replace
     print("-------- Replace ----------")
     databaseReplace = copy.deepcopy(databaseAppend)
-    databaseReplace.modifyListEntry(
-        "1", "ListItem", "replacedItemValue", "Replace", "initialValue", byID=True
+    databaseReplace.modify_list_entry(
+        "1", "ListItem", "replacedItemValue", "Replace", "initialValue", by_id=True
     )
-    changedEntry = databaseReplace.getEntryByItemName("ID", "1")[0]
-    assert "replacedItemValue" in changedEntry.getAllValuesbyName(
+    changedEntry = databaseReplace.get_entry_by_item_name("ID", "1")[0]
+    assert "replacedItemValue" in changedEntry.get_all_values_by_name(
         "ListItem"
-    ) and "initialValue" not in changedEntry.getAllValuesbyName("ListItem")
+    ) and "initialValue" not in changedEntry.get_all_values_by_name("ListItem")
 
     # Remove
     print("-------- Remove I ----------")
-    databaseAppend.modifyListEntry(
-        "1", "ListItem", None, "Remove", "appendedItemValue", byID=True
+    databaseAppend.modify_list_entry(
+        "1", "ListItem", None, "Remove", "appendedItemValue", by_id=True
     )
-    changedEntry = databaseAppend.getEntryByItemName("ID", "1")[0]
-    assert "appendedItemValue" not in changedEntry.getAllValuesbyName("ListItem")
+    changedEntry = databaseAppend.get_entry_by_item_name("ID", "1")[0]
+    assert "appendedItemValue" not in changedEntry.get_all_values_by_name("ListItem")
     # Remove empty entry
     print("-------- Remove II ----------")
-    databaseReplace.modifyListEntry(
-        "1", "ListItem", None, "Remove", "appendedItemValue", byID=True
+    databaseReplace.modify_list_entry(
+        "1", "ListItem", None, "Remove", "appendedItemValue", by_id=True
     )
-    databaseReplace.modifyListEntry(
-        "1", "ListItem", None, "Remove", "replacedItemValue", byID=True
+    databaseReplace.modify_list_entry(
+        "1", "ListItem", None, "Remove", "replacedItemValue", by_id=True
     )
-    changedEntry = databaseReplace.getEntryByItemName("ID", "1")[0]
+    changedEntry = databaseReplace.get_entry_by_item_name("ID", "1")[0]
     assert set(
         databaseReplace.model.listitems["ListItem"]["default"]
-    ) == changedEntry.getAllValuesbyName("ListItem")
+    ) == changedEntry.get_all_values_by_name("ListItem")
     print("-------- Change date for ListItem ----------")
-    database.modifyListEntry("2", "ListItem", "initialValue", "Append", byID=True)
-    changedEntry = database.getEntryByItemName("ID", "2")[0]
-    change_datetime = changedEntry.getAllValuesbyName("Changed")
+    database.modify_list_entry("2", "ListItem", "initialValue", "Append", by_id=True)
+    changedEntry = database.get_entry_by_item_name("ID", "2")[0]
+    change_datetime = changedEntry.get_all_values_by_name("Changed")
     change_datetime = list(change_datetime)[0]
     assert change_datetime != "emptyChanged"
     date, time = change_datetime.split("|")
@@ -545,17 +545,17 @@ def test_15_DB_status():
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
     # DB not saved
-    assert not database.getStatus()
+    assert not database.get_status()
     # DB saved
-    database.saveMain()
-    assert database.getStatus()
+    database.save_main()
+    assert database.get_status()
     # DB changed - new File
     os.system("touch " + dir2tests + "/testStructure/newfile.mp4")
-    newFiles = database.findNewFiles()
+    newFiles = database.find_new_files()
     os.system("rm " + dir2tests + "/testStructure/newfile.mp4")
-    assert not database.getStatus()
-    database.saveMain()
-    assert database.getStatus()
+    assert not database.get_status()
+    database.save_main()
+    assert database.get_status()
     # DB changed - changed Entry
 
 
@@ -565,8 +565,8 @@ def test_16_DB_random():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    all_ids = database.getAllValuebyItemName("ID")
-    randID = database.getRandomEntry(chooseFrom=all_ids)
+    all_ids = database.get_all_value_by_item_name("ID")
+    randID = database.get_random_entry(chooseFrom=all_ids)
     assert randID in all_ids
 
 
@@ -576,8 +576,8 @@ def test_17_DB_random_all():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    all_ids = database.getAllValuebyItemName("ID")
-    randID = database.getRandomEntryAll()
+    all_ids = database.get_all_value_by_item_name("ID")
+    randID = database.get_random_rntry_all()
     assert randID in all_ids
 
 
@@ -587,10 +587,10 @@ def test_18_DB_random_weighted():
     if os.path.exists(dbRootPath + "/.mimir"):
         shutil.rmtree(dbRootPath + "/.mimir")
     database = DataBase(dbRootPath, "new", config)
-    all_ids = database.getAllValuebyItemName("ID")
+    all_ids = database.get_all_value_by_item_name("ID")
 
     with pytest.raises(NotImplementedError):
-        randID = database.getRandomEntry(chooseFrom=all_ids, weighted=True)
+        randID = database.get_random_entry(chooseFrom=all_ids, weighted=True)
     # assert randID in all_ids
 
 
@@ -713,10 +713,10 @@ def test_25_DB_cachedValues(mocker, preCreatedDB):
     mocker.spy(DataBase, "cacheAllValuebyItemName")
     ###### Test caching for ListItem entries
     values_ListItem_preChange = preCreatedDB.getAllValuebyItemName("ListItem")
-    assert DataBase.cacheAllValuebyItemName.call_count == 0
+    assert DataBase.cache_all_value_by_item_name.call_count == 0
     preCreatedDB.modifyListEntry("4", "ListItem", "Cyan", byID=True)
     values_ListItem_postChange = preCreatedDB.getAllValuebyItemName("ListItem")
-    assert DataBase.cacheAllValuebyItemName.call_count == 1
+    assert DataBase.cache_all_value_by_item_name.call_count == 1
     assert list(set(values_ListItem_postChange) - set(values_ListItem_preChange)) == [
         "Cyan"
     ]
@@ -726,7 +726,7 @@ def test_25_DB_cachedValues(mocker, preCreatedDB):
     newValue = "Gamma"
     preCreatedDB.modifySingleEntry("4", "SingleItem", newValue, byID=True)
     values_ListItem_postChange = preCreatedDB.getAllValuebyItemName("SingleItem")
-    assert DataBase.cacheAllValuebyItemName.call_count == 2
+    assert DataBase.cache_all_value_by_item_name.call_count == 2
     assert (
         oldValue not in values_ListItem_postChange
         and newValue in values_ListItem_postChange

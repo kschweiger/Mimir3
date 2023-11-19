@@ -186,16 +186,16 @@ def test_06_plugin_newEntry_wPlugin(mocker):
         shutil.rmtree(dbRootPath + "/.mimir")
 
     database = DataBase(dbRootPath, "new", pluginConf)
-    database.saveMain()
+    database.save_main()
     # shutil.copytree(dbRootPath+"/.mimir", dbRootPath+"/.mimir2") #For testing
     shutil.rmtree(dbRootPath + "/.mimir")
     ########################################################################
 
-    aEntry = database.getEntryByItemName("ID", "0")[0]
-    metadata_height = list(aEntry.getAllValuesbyName("Height"))[0]
-    metadata_width = list(aEntry.getAllValuesbyName("Width"))[0]
-    metadata_duration = list(aEntry.getAllValuesbyName("Duration"))[0]
-    osData_size = list(aEntry.getAllValuesbyName("Size"))[0]
+    aEntry = database.get_entry_by_item_name("ID", "0")[0]
+    metadata_height = list(aEntry.get_all_values_by_name("Height"))[0]
+    metadata_width = list(aEntry.get_all_values_by_name("Width"))[0]
+    metadata_duration = list(aEntry.get_all_values_by_name("Duration"))[0]
+    osData_size = list(aEntry.get_all_values_by_name("Size"))[0]
     assert metadata_height == height
     assert metadata_width == width
     assert metadata_duration == durationExp

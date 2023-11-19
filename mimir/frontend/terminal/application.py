@@ -30,7 +30,7 @@ class App:
                 "Use make MTFconfig.py to create on from the database config"
             )
         self.config = MTFConfig(self.database.mimirdir + "/MTF_model.json")
-        self.lastIDList = self.database.getAllValuebyItemName("ID")
+        self.lastIDList = self.database.get_all_value_by_item_name("ID")
         self.windowHeight = self.config.height
         self.windowWidth = self.config.width
         self.tableColumns = len(self.config.items)
@@ -179,7 +179,7 @@ class App:
                 self.firstInteraction = False
             if ret_val == "1":  # Print All
                 all_ids = sorted(
-                    list(self.database.getAllValuebyItemName("ID")),
+                    list(self.database.get_all_value_by_item_name("ID")),
                     key=lambda x: int(x),
                 )
                 table_elements = self.generate_list(all_ids)
@@ -208,7 +208,7 @@ class App:
                 )
                 this_query = query_string.split(" ")
                 query_ids = self.database.query(
-                    self.config.queryItems, this_query, returnIDs=True
+                    self.config.queryItems, this_query, return_ids=True
                 )
                 query_ids = sorted(query_ids, key=lambda x: int(x))
                 table_elements = self.generate_list(query_ids)
@@ -221,7 +221,7 @@ class App:
                         n_display = int(add_vals[0])
                     except ValueError:
                         pass
-                sorted_ids = self.database.getSortedIDs("Added", reverseOrder=True)[
+                sorted_ids = self.database.get_sorted_ids("Added", reverse_order=True)[
                     0:n_display
                 ]
                 table_elements = self.generate_list(sorted_ids)
@@ -240,7 +240,7 @@ class App:
                         n_display = int(add_vals[0])
                     except ValueError:
                         pass
-                sorted_ids = self.database.getSortedIDs("Opened", reverseOrder=True)[
+                sorted_ids = self.database.get_sorted_ids("Opened", reverse_order=True)[
                     0:n_display
                 ]
                 table_elements = self.generate_list(sorted_ids)
@@ -259,9 +259,9 @@ class App:
                         n_display = int(add_vals[0])
                     except ValueError:
                         pass
-                sorted_ids = self.database.getSortedIDs("Changed", reverseOrder=True)[
-                    0:n_display
-                ]
+                sorted_ids = self.database.get_sorted_ids(
+                    "Changed", reverse_order=True
+                )[0:n_display]
                 table_elements = self.generate_list(sorted_ids)
                 self.listWindow.lines = []
                 self.listWindow.draw_pre_table_title("-", [(" ", "-")])
@@ -277,7 +277,7 @@ class App:
                 )
                 self.toggle_for_deletion(del_id, self.listWindow)
             elif ret_val == "10":
-                query_ids = self.database.query(["DeletionMark"], "1", returnIDs=True)
+                query_ids = self.database.query(["DeletionMark"], "1", return_ids=True)
                 query_ids = sorted(query_ids, key=lambda x: int(x))
                 table_elements = self.generate_list(query_ids)
                 self.listWindow.lines = []
@@ -301,12 +301,12 @@ class App:
             ret_val = self.dbWindow.draw("Enter Value: ")
             if ret_val == "1":
                 self.dbWindow.update("Saving database")
-                self.database.saveMain()
+                self.database.save_main()
             elif ret_val == "2":
-                newFiles, file_id_pair = self.database.findNewFiles()
+                newFiles, file_id_pair = self.database.find_new_files()
                 for newFile, ID in file_id_pair:
                     self.dbWindow.update("Added file %s with ID %s" % (newFile, ID))
-                    suggestedOptions = self.database.getItemsPyPath(newFile)
+                    suggestedOptions = self.database.get_items_by_path(newFile)
                     foundOne = False
                     for item in suggestedOptions:
                         if suggestedOptions[item] != set():
@@ -322,19 +322,19 @@ class App:
                             answer_elements = [a.lower() for a in answer.split(" ")]
                             if any(e in answer_elements for e in ["y", "yes"]):
                                 if item in self.database.model.items:
-                                    self.database.modifySingleEntry(
-                                        ID, item, option, byID=True
+                                    self.database.modify_single_entry(
+                                        ID, item, option, by_id=True
                                     )
                                 elif item in self.database.model.listitems:
-                                    self.database.modifyListEntry(
-                                        ID, item, option, "Append", byID=True
+                                    self.database.modify_list_entry(
+                                        ID, item, option, "Append", by_id=True
                                     )
                                 else:
                                     raise RuntimeError("This should not happen!")
                                 if any(e in answer_elements for e in ["q", "quit"]):
                                     break
             elif ret_val == "3":
-                updatedFiles = self.database.checkChangedPaths()
+                updatedFiles = self.database.check_changed_paths()
                 if updatedFiles:
                     for id_, oldPath_, newPath_ in updatedFiles:
                         self.dbWindow.update(
@@ -344,7 +344,7 @@ class App:
                     self.dbWindow.update("No files with changed paths")
 
             elif ret_val == "4":
-                IDchanges = self.database.checkMissingFiles()
+                IDchanges = self.database.check_missing_files()
                 if IDchanges:
                     for oldID, newID in IDchanges:
                         self.dbWindow.update(
@@ -353,12 +353,12 @@ class App:
                 else:
                     self.dbWindow.update("No Files removed")
             elif ret_val == "5":
-                query_ids = self.database.query(["DeletionMark"], "1", returnIDs=True)
+                query_ids = self.database.query(["DeletionMark"], "1", return_ids=True)
                 query_ids = sorted(query_ids, key=lambda x: int(x))
                 if len(query_ids) > 0:
                     total_size = 0
                     for id_ in query_ids:
-                        e = self.database.getEntryByItemName("ID", id_)[0]
+                        e = self.database.get_entry_by_item_name("ID", id_)[0]
                         total_size += float(e.Size)
                         self.dbWindow.update(
                             f"{id_} is marked for deletion "
@@ -373,7 +373,7 @@ class App:
                     )
                     if del_q == "Y":
                         self.del_ids(query_ids, self.dbWindow)
-                        IDchanges = self.database.checkMissingFiles()
+                        IDchanges = self.database.check_missing_files()
                         if IDchanges:
                             for oldID, newID in IDchanges:
                                 self.dbWindow.update(
@@ -400,7 +400,7 @@ class App:
                 pass
             elif ret_val == "1":
                 entered_id = self.modWindow.draw("Enter ID: ")
-                if entered_id in self.database.getAllValuebyItemName("ID"):
+                if entered_id in self.database.get_all_value_by_item_name("ID"):
                     new_window = False
                     if entered_id not in self.allMultiModWindow.keys():
                         self.allMultiModWindow[entered_id] = deepcopy(
@@ -481,11 +481,11 @@ class App:
         """
         logger.info("Switching to multi modification window for ID %s", ID)
         thisWindow = self.allMultiModWindow[ID]
-        entry = self.database.getEntrybyID(ID)
+        entry = self.database.get_entry_by_id(ID)
         if isNewWindow:
             thisWindow.headerText.append("Entry information:")
             thisWindow.headerText.append("ID: %s" % ID)
-            thisWindow.headerText.append("Path: %s" % entry.getItem("Path").value)
+            thisWindow.headerText.append("Path: %s" % entry.get_item("Path").value)
         for elem in thisWindow.headerOptions:
             modID, name, comment = elem
             if name in self.database.model.allItems:
@@ -581,7 +581,7 @@ class App:
         if item in self.modSingleItems:
             newValue = window.draw("New Value for %s" % item)
             for ID in ids:
-                self.database.modifySingleEntry(ID, item, newValue, byID=True)
+                self.database.modify_single_entry(ID, item, newValue, by_id=True)
         elif item in self.modListItems:
             self.mod_list_item(window, ids, item, verbose=False)
         else:
@@ -598,7 +598,7 @@ class App:
         if name in self.modSingleItems:
             newValue = window.draw("New Value for %s" % name)
             for ID in ids:
-                self.database.modifySingleEntry(ID, name, newValue, byID=True)
+                self.database.modify_single_entry(ID, name, newValue, by_id=True)
             if fromMultiMod:
                 window.headerTextSecondary[name] = self.get_print_item_values(
                     ids[0], name, joinFull=True
@@ -609,12 +609,12 @@ class App:
         Making a singel modification to a ListItem
         """
         if method == "Append":
-            self.database.modifyListEntry(ID, name, newValue, "Append", byID=True)
+            self.database.modify_list_entry(ID, name, newValue, "Append", by_id=True)
             return True
         elif method == "Remove":
             try:
-                self.database.modifyListEntry(
-                    ID, name, None, "Remove", oldValue, byID=True
+                self.database.modify_list_entry(
+                    ID, name, None, "Remove", oldValue, by_id=True
                 )
             except ValueError:
                 return False
@@ -622,8 +622,8 @@ class App:
                 return True
         elif method == "Replace":
             try:
-                self.database.modifyListEntry(
-                    ID, name, newValue, "Replace", oldValue, byID=True
+                self.database.modify_list_entry(
+                    ID, name, newValue, "Replace", oldValue, by_id=True
                 )
             except ValueError:
                 return False
@@ -640,13 +640,13 @@ class App:
 
         After execution the **Opened** will be incrememented.
         """
-        if ID not in self.database.getAllValuebyItemName("ID"):
+        if ID not in self.database.get_all_value_by_item_name("ID"):
             if isinstance(window, ListWindow):
                 window.print("ID %s not in database" % ID)
             else:
                 window.update("ID %s not in database" % ID)
         else:
-            entry2Exec = self.database.getEntryByItemName("ID", ID)[0]
+            entry2Exec = self.database.get_entry_by_item_name("ID", ID)[0]
             path2Exec = self.database.databaseRoot + "/" + entry2Exec.Path
             if not fromList:
                 if isinstance(window, ListWindow):
@@ -657,11 +657,11 @@ class App:
             os.system("{0} {1}".format(self.config.executable, path2Exec))
             self.database.last_executed_ids.append(ID)
             if not silent:
-                self.database.modifyListEntry(
+                self.database.modify_list_entry(
                     ID,
                     "Opened",
                     mimir.backend.helper.getTimeFormatted("Full"),
-                    byID=True,
+                    by_id=True,
                 )
 
     def execute_random(self, window, fromList=False, silent=False, weighted=True):
@@ -672,7 +672,7 @@ class App:
         if not self.lastIDList:
             window.print("No entries to choose from. Maybe requery?")
         else:
-            randID = self.database.getRandomEntry(
+            randID = self.database.get_random_entry(
                 choose_from=self.lastIDList, weighted=weighted
             )
             _listIDList = self.lastIDList
@@ -686,21 +686,21 @@ class App:
             self.execute(randID, window, fromList, silent=silent)
 
     def toggle_for_deletion(self, ID, window):
-        if ID not in self.database.getAllValuebyItemName("ID"):
+        if ID not in self.database.get_all_value_by_item_name("ID"):
             window.update("ID %s not in database" % ID)
         else:
-            e = self.database.getEntryByItemName("ID", ID)[0]
+            e = self.database.get_entry_by_item_name("ID", ID)[0]
             if e.DeletionMark == "0":
                 logger.info("Marking ID %s for deletion", ID)
-                self.database.modifySingleEntry(ID, "DeletionMark", "1", byID=True)
+                self.database.modify_single_entry(ID, "DeletionMark", "1", by_id=True)
             else:
                 logger.info("Unmarking ID %s for deletion", ID)
-                self.database.modifySingleEntry(ID, "DeletionMark", "0", byID=True)
+                self.database.modify_single_entry(ID, "DeletionMark", "0", by_id=True)
 
     def del_ids(self, ids, window):
         window.update("Will delete entries...")
         for id_ in ids:
-            e = self.database.getEntryByItemName("ID", id_)[0]
+            e = self.database.get_entry_by_item_name("ID", id_)[0]
             path2del = self.database.databaseRoot + "/" + e.Path
             window.update(f"Removing {path2del}")
             os.remove(path2del)
@@ -724,7 +724,7 @@ class App:
         tableElements = []
         ids2Print = None
         if get == "All":
-            ids2Print = self.database.getAllValuebyItemName("ID")
+            ids2Print = self.database.get_all_value_by_item_name("ID")
             ids2Print = sorted(list(ids2Print), key=lambda x: int(x))
         elif isinstance(get, list):
             ids2Print = get
@@ -738,8 +738,8 @@ class App:
                     isCounter = True
                 if isCounter:
                     value = str(
-                        self.database.getCount(
-                            id, self.config.itemInfo[item]["Base"], byID=True
+                        self.database.get_count(
+                            id, self.config.itemInfo[item]["Base"], by_id=True
                         )
                     )
                 else:
@@ -750,9 +750,9 @@ class App:
 
     def get_print_item_values(self, ID, item, joinWith=", ", joinFull=False):
         retValue = None
-        thisEntry = self.database.getEntryByItemName("ID", ID)[0]
+        thisEntry = self.database.get_entry_by_item_name("ID", ID)[0]
         if item in self.database.model.items:
-            value = thisEntry.getItem(item).value
+            value = thisEntry.get_item(item).value
             self.mod_disaply(item, value)
             if len(value) > self.config.itemInfo[item]["maxLen"] and not joinFull:
                 retValue = value[: self.config.itemInfo[item]["maxLen"]] + ".."
@@ -794,7 +794,7 @@ class App:
                 and len(thisValue) <= self.config.itemInfo[item]["nDisplay"]
             ):
                 if (
-                    val == self.database.model.getDefaultValue(item)
+                    val == self.database.model.get_default_value(item)
                     and self.config.itemInfo[item]["DisplayDefault"] is not None
                 ):
                     if self.config.itemInfo[item]["DisplayDefault"] != "":

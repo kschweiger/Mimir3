@@ -82,7 +82,7 @@ def test_initialize_raise_exceptions_tuple_objects():
 def test_entry_invalid_name_exception_runtime():
     newEntry = DataBaseEntry([("Item1", "Single", "DefaultForItem1")])
     with pytest.raises(RuntimeError):
-        newEntry.getItem("Blubb")
+        newEntry.get_item("Blubb")
 
 
 ###########################################################
@@ -90,9 +90,9 @@ def test_entry_invalid_name_exception_runtime():
 ###########################################################
 def test_entry_get_item():
     Items, newEntry = getEntry()
-    newEntry.getItem("Item1")
-    isItemType = isinstance(newEntry.getItem("Item1"), Item)
-    isListItemType = isinstance(newEntry.getItem("ListItem1"), ListItem)
+    newEntry.get_item("Item1")
+    isItemType = isinstance(newEntry.get_item("Item1"), Item)
+    isListItemType = isinstance(newEntry.get_item("ListItem1"), ListItem)
     assert isItemType or isListItemType
 
 
@@ -105,9 +105,9 @@ def test_entry_add_new_item():
     newTupleSingle = ("AddedItem", "Single", "AddedItemValue")
     newTupleList = ("AddedListItem", "List", ["AddedItemValue"])
     newName, newType, newValue = newTupleSingle
-    newEntry.addItem(newName, newType, newValue)
+    newEntry.add_item(newName, newType, newValue)
     newName, newType, newValue = newTupleList
-    newEntry.addItem(newName, newType, newValue)
+    newEntry.add_item(newName, newType, newValue)
     assert check_items_in_entry([newTupleSingle, newTupleList], newEntry)
 
 
@@ -115,90 +115,90 @@ def test_entry_add_new_item():
 def test_entry_add_new_item_raise_exception_passed_items():
     Items, newEntry = getEntry()
     with pytest.raises(TypeError):
-        newEntry.addItem(2.5, "Single", "newItem")
+        newEntry.add_item(2.5, "Single", "newItem")
     with pytest.raises(RuntimeError):
-        newEntry.addItem("name", "Blubb", "newItem")
+        newEntry.add_item("name", "Blubb", "newItem")
     with pytest.raises(TypeError):
-        newEntry.addItem("name", "Single", dict)
+        newEntry.add_item("name", "Single", dict)
 
 
 # Raise exception if the new item already exists
 def test_entry_add_new_item_raise_exception_dublication():
     Items, newEntry = getEntry()
     with pytest.raises(RuntimeError):
-        newEntry.addItem("Item1", "Single", "AddedItemValue")
+        newEntry.add_item("Item1", "Single", "AddedItemValue")
 
 
 ############## Modify existing items  ####################
 def test_entry_change_value_Item():
     Items, newEntry = getEntry()
-    newEntry.changeItemValue("Item1", "ReplacedValue")
-    assert newEntry.getItem("Item1").value == "ReplacedValue"
+    newEntry.change_item_value("Item1", "ReplacedValue")
+    assert newEntry.get_item("Item1").value == "ReplacedValue"
     assert newEntry.Item1 == "ReplacedValue"
 
 
 def test_entry_change_value_exception_passedName():
     Items, newEntry = getEntry()
     with pytest.raises(TypeError):
-        newEntry.changeItemValue(2.5, "ReplacedValue")
+        newEntry.change_item_value(2.5, "ReplacedValue")
     with pytest.raises(KeyError):
-        newEntry.changeItemValue("notExisting", "ReplacedValue")
+        newEntry.change_item_value("notExisting", "ReplacedValue")
 
 
 def test_entry_change_value_raise_exception_notItem():
     Items, newEntry = getEntry()
     with pytest.raises(RuntimeError):
-        newEntry.changeItemValue("ListItem1", "ReplacedValue")
+        newEntry.change_item_value("ListItem1", "ReplacedValue")
 
 
 def test_entry_add_value_to_ListItem():
     Items, newEntry = getEntry()
-    newEntry.addItemValue("ListItem1", "AddedListItem1")
-    assert newEntry.getItem("ListItem1").value[-1] == "AddedListItem1"
+    newEntry.add_item_value("ListItem1", "AddedListItem1")
+    assert newEntry.get_item("ListItem1").value[-1] == "AddedListItem1"
 
 
 def test_entry_add_value_to_Item_raise_exception():
     Items, newEntry = getEntry()
     with pytest.raises(TypeError):
-        newEntry.addItemValue(2.5, "ReplacedValue")
+        newEntry.add_item_value(2.5, "ReplacedValue")
     with pytest.raises(KeyError):
-        newEntry.addItemValue("notExisting", "ReplacedValue")
+        newEntry.add_item_value("notExisting", "ReplacedValue")
 
 
 def test_entry_change_value_raise_exception_notListItem():
     Items, newEntry = getEntry()
     with pytest.raises(RuntimeError):
-        newEntry.addItemValue("Item1", "ReplacedValue")
+        newEntry.add_item_value("Item1", "ReplacedValue")
 
 
 def test_entry_remove_value_from_ListItem():
     Items, newEntry = getEntry()
-    newEntry.removeItemValue("ListItem1", "DefaultListItem1")
-    assert "DefaultListItem1" not in newEntry.getItem("ListItem1").value
+    newEntry.remove_item_value("ListItem1", "DefaultListItem1")
+    assert "DefaultListItem1" not in newEntry.get_item("ListItem1").value
 
 
 def test_entry_remove_value_from_Item_raise_exception():
     Items, newEntry = getEntry()
     with pytest.raises(TypeError):
-        newEntry.removeItemValue(2.5, "DefaultListItem1")
+        newEntry.remove_item_value(2.5, "DefaultListItem1")
     with pytest.raises(KeyError):
-        newEntry.removeItemValue("notExisting", "DefaultListItem1")
+        newEntry.remove_item_value("notExisting", "DefaultListItem1")
     with pytest.raises(ValueError):
-        newEntry.removeItemValue("ListItem1", "SomeNonExistingName")
+        newEntry.remove_item_value("ListItem1", "SomeNonExistingName")
 
 
 def test_entry_remove_value_from_ListItem_exception_notListItem():
     Items, newEntry = getEntry()
     with pytest.raises(RuntimeError):
-        newEntry.removeItemValue("Item1", "DefaultListItem1")
+        newEntry.remove_item_value("Item1", "DefaultListItem1")
 
 
 def test_entry_replace_value_of_ListItem():
     Items, newEntry = getEntry()
-    newEntry.replaceItemValue("ListItem1", "ReplacedItem", "DefaultListItem1")
+    newEntry.replace_item_value("ListItem1", "ReplacedItem", "DefaultListItem1")
     assert (
-        "ReplacedItem" in newEntry.getItem("ListItem1").value
-        and "DefaultListItem1" not in newEntry.getItem("ListItem1").value
+        "ReplacedItem" in newEntry.get_item("ListItem1").value
+        and "DefaultListItem1" not in newEntry.get_item("ListItem1").value
     )
 
 
@@ -212,7 +212,7 @@ def test_entry_equal():
 def test_entry_notequal_sameNames():
     Items, newEntry = getEntry()
     Items2, newEntry2 = getEntry()
-    newEntry2.changeItemValue("Item1", "ReplacedValue")
+    newEntry2.change_item_value("Item1", "ReplacedValue")
     assert newEntry != newEntry2
 
 
@@ -221,15 +221,15 @@ def test_entry_notequal_differentNames():
     Items2, newEntry2 = getEntry()
     newTupleSingle = ("AddedItem", "Single", "AddedItemValue")
     newName, newType, newValue = newTupleSingle
-    newEntry2.addItem(newName, newType, newValue)
+    newEntry2.add_item(newName, newType, newValue)
     assert newEntry != newEntry2
 
 
 def test_entry_getAllValues_byName():
     Items, newEntry = getEntry()
     with pytest.raises(KeyError):
-        allValues = newEntry.getAllValuesbyName(["Blubb"])
-    allValues = newEntry.getAllValuesbyName(["Item1", "ListItem1"])
+        allValues = newEntry.get_all_values_by_name(["Blubb"])
+    allValues = newEntry.get_all_values_by_name(["Item1", "ListItem1"])
     assert list(allValues) == list(set(["DefaultForItem1", "DefaultListItem1"]))
 
 
